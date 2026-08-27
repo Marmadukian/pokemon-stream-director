@@ -26,6 +26,7 @@ Includes ready-to-use browser source overlays for showing a target pokemon, the 
 * Python 3.10+
 * pokebase
 * urllib
+* The ability to troubleshoot
 
 ---
 

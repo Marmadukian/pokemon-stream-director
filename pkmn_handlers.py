@@ -478,6 +478,29 @@ def handle_dashboard(params):
 
     # --- HTML Subcomponents ---
 
+    growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
+
+    exp_calc_row = f"""
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
+        <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
+        <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+            <span>EXP Grind Calc</span>
+            <span class="text-amber-400 font-mono font-bold capitalize">{growth_rate_slug.replace('-', ' ')}</span>
+        </div>
+            
+        <div class="flex items-center gap-2 text-slate-300 font-medium">
+            <span>Exp to level from</span>
+            <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+            <span>to</span>
+            <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+            <span>=&gt;</span>
+            <span id="exp-output" class="font-mono font-black text-amber-400 text-sm">46,656 EXP</span>
+            </div>
+        </div>
+    </div>
+    """
+
+
     # Party Pills
     team_pills = "".join([
         f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
@@ -529,6 +552,8 @@ def handle_dashboard(params):
     # Col 1: Target Scanner View
     target_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and inspect a Pokémon to load stats.</div>'
     if target:
+        growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
+
         stat_bars = "".join([
             f"""<div>
                 <div class="flex justify-between text-[11px] font-medium mb-1">
@@ -563,6 +588,24 @@ def handle_dashboard(params):
             <div class="grid grid-cols-2 gap-2">
                 <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800"><div class="text-[10px] text-slate-400 uppercase font-semibold">Catch Rate</div><div class="text-base font-mono font-bold text-emerald-400">{target.get('catch_rate', 0)}</div></div>
                 <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800"><div class="text-[10px] text-slate-400 uppercase font-semibold">Base EXP</div><div class="text-base font-mono font-bold text-sky-400">{target.get('base_experience', 0)}</div></div>
+            </div>
+
+            <!-- EXP Grind Calculator Row -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
+                <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
+                <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                    <span>EXP Grind Calc</span>
+                    <span class="text-amber-400 font-mono font-bold capitalize">{growth_rate_slug.replace('-', ' ')}</span>
+                </div>
+                
+                <div class="flex items-center gap-2 text-slate-300 font-medium">
+                    <span>Exp from</span>
+                    <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+                    <span>to</span>
+                    <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+                    <span class="text-slate-500 font-bold">=&gt;</span>
+                    <span id="exp-output" class="font-mono font-black text-amber-400 text-sm">46,656 EXP</span>
+                </div>
             </div>
 
             <div>
@@ -670,6 +713,56 @@ def handle_dashboard(params):
                 box.appendChild(item);
             }});
             box.style.display = 'block';
+        }}
+
+    function getExpForLevel(growthRate, lvl) {{
+            if (lvl <= 1) return 0;
+            if (lvl > 100) lvl = 100;
+            const n = lvl;
+
+            switch (growthRate) {{
+                case "fast":
+                    return Math.floor(0.8 * Math.pow(n, 3));
+                case "medium-fast":
+                case "medium":
+                    return Math.floor(Math.pow(n, 3));
+                case "medium-slow":
+                    return Math.max(0, Math.floor(1.2 * Math.pow(n, 3) - 15 * Math.pow(n, 2) + 100 * n - 140));
+                case "slow":
+                    return Math.floor(1.25 * Math.pow(n, 3));
+                case "erratic":
+                    if (n <= 50) return Math.floor((Math.pow(n, 3) * (100 - n)) / 50);
+                    if (n <= 68) return Math.floor((Math.pow(n, 3) * (150 - n)) / 100);
+                    if (n <= 98) return Math.floor((Math.pow(n, 3) * Math.floor((1911 - 10 * n) / 3)) / 500);
+                    return Math.floor((Math.pow(n, 3) * (160 - n)) / 100);
+                case "fluctuating":
+                    if (n <= 15) return Math.floor(Math.pow(n, 3) * (Math.floor((n + 1) / 3) + 24) / 50);
+                    if (n <= 36) return Math.floor(Math.pow(n, 3) * (n + 14) / 50);
+                    return Math.floor(Math.pow(n, 3) * (Math.floor(n / 2) + 32) / 50);
+                default:
+                    return Math.floor(Math.pow(n, 3));
+            }}
+        }}
+
+        function calcExpGap() {{
+            const rateElem = document.getElementById('target-growth-rate');
+            const rate = rateElem ? rateElem.value : 'medium-fast';
+            const fromLvl = parseInt(document.getElementById('exp-from')?.value) || 1;
+            const toLvl = parseInt(document.getElementById('exp-to')?.value) || 1;
+            const outElem = document.getElementById('exp-output');
+
+            if (!outElem) return;
+
+            if (toLvl <= fromLvl) {{
+                outElem.innerText = "0 EXP";
+                return;
+            }}
+
+            const expFrom = getExpForLevel(rate, fromLvl);
+            const expTo = getExpForLevel(rate, toLvl);
+            const needed = Math.max(0, expTo - expFrom);
+
+            outElem.innerText = needed.toLocaleString() + " EXP";
         }}
 
         function filterLocations() {{
