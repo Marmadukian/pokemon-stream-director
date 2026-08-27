@@ -7,3 +7,5 @@ all_pokemon_names.json
 pokemon_list.txt
 shiny_hunt.json
 team_list.json
+tasks_list.json
+current_task.txt

@@ -103,6 +103,52 @@ def load_all_location_areas():
 
     return all_location_areas
 
+def parse_location_encounters_by_game(location_area_data):
+  """Groups route encounters by game version, deduplicating species per version
+
+  and aggregating their encounter methods and levels.
+  """
+  games = {}
+
+  for p_enc in location_area_data.get("pokemon_encounters", []):
+    p_name = p_enc.get("pokemon", {}).get("name", "").title()
+
+    for v_detail in p_enc.get("version_details", []):
+      version_name = (
+          v_detail.get("version", {}).get("name", "unknown").replace("-", " ")
+      )
+
+      if version_name not in games:
+        games[version_name] = {}
+
+      if p_name not in games[version_name]:
+        games[version_name][p_name] = {
+            "methods": set(),
+            "min_level": 100,
+            "max_level": 1,
+            "chance": 0,
+        }
+
+      # Aggregate methods, levels, and max chances
+      for enc in v_detail.get("encounter_details", []):
+        method_name = enc.get("method", {}).get("name", "").replace("-", " ")
+        if method_name:
+          games[version_name][p_name]["methods"].add(method_name)
+
+        min_lvl = enc.get("min_level", 1)
+        max_lvl = enc.get("max_level", 1)
+        chance = enc.get("chance", 0)
+
+        games[version_name][p_name]["min_level"] = min(
+            games[version_name][p_name]["min_level"], min_lvl
+        )
+        games[version_name][p_name]["max_level"] = max(
+            games[version_name][p_name]["max_level"], max_lvl
+        )
+        games[version_name][p_name]["chance"] += chance
+
+  return games
+
 
 # --- Persistence Helpers ---
 
@@ -132,18 +178,155 @@ def save_team(team):
     with open(TEAM_FILE, "w", encoding="utf-8") as f:
         json.dump(team, f, indent=2)
 
-def load_active_target():
-    if os.path.exists(ACTIVE_TARGET_FILE):
-        try:
-            with open(ACTIVE_TARGET_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {}
+def load_active_target(default_pokemon="golem"):
+  if os.path.exists(ACTIVE_TARGET_FILE):
+    try:
+      with open(ACTIVE_TARGET_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+      # Check if cached data is missing 'vg' in level_moves
+      needs_rebuild = False
+      if data and "level_moves" in data and len(data["level_moves"]) > 0:
+        if "vg" not in data["level_moves"][0]:
+          needs_rebuild = True
+
+      if needs_rebuild and data.get("slug"):
+        print(
+            f"[Sync] Upgrading target '{data['slug']}' with version group"
+            " tags..."
+        )
+        return fetch_and_build_target_dict(data["slug"])
+
+      return data
+    except Exception as e:
+      print(f"[Warn] Failed reading active target: {e}")
+
+  # If no file or empty, fetch default initial Pokémon
+  return fetch_and_build_target_dict(default_pokemon)
+
 
 def save_active_target(data):
-    with open(ACTIVE_TARGET_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+  with open(ACTIVE_TARGET_FILE, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+def fetch_and_build_target_dict(pokemon_name_or_id):
+    try:
+        slug = str(pokemon_name_or_id).lower().strip()
+        headers = {"User-Agent": "Mozilla/5.0"}
+        
+        # 1. Fetch Main Pokemon JSON
+        req = urllib.request.Request(f"https://pokeapi.co/api/v2/pokemon/{slug}", headers=headers)
+        with urllib.request.urlopen(req) as resp:
+            p = json.loads(resp.read().decode('utf-8'))
+
+        # 2. Fetch Species JSON (for catch rate, growth rate, evolutions)
+        species_url = p.get("species", {}).get("url")
+        s_raw = {}
+        if species_url:
+            s_req = urllib.request.Request(species_url, headers=headers)
+            with urllib.request.urlopen(s_req) as resp:
+                s_raw = json.loads(resp.read().decode('utf-8'))
+
+        # Base Stats
+        stats = {s["stat"]["name"]: s["base_stat"] for s in p.get("stats", [])}
+        bst = sum(stats.values())
+        types = [t["type"]["name"].title() for t in p.get("types", [])]
+
+        # Level-Up Moves with Guaranteed "vg" Slugs
+        level_moves = []
+        for m in p.get("moves", []):
+            move_name = m.get("move", {}).get("name", "").replace("-", " ").title()
+            for vgd in m.get("version_group_details", []):
+                method = vgd.get("move_learn_method", {}).get("name", "")
+                if method == "level-up":
+                    lvl = vgd.get("level_learned_at", 0)
+                    vg_slug = vgd.get("version_group", {}).get("name", "all")
+                    level_moves.append({
+                        "move": move_name,
+                        "level": int(lvl),
+                        "vg": str(vg_slug).lower().replace("_", "-")
+                    })
+
+        level_moves.sort(key=lambda x: (x["level"], x["move"]))
+
+        # Weaknesses / Resistances / Immunities
+        multipliers = {}
+        for t_entry in p.get("types", []):
+            t_url = t_entry.get("type", {}).get("url")
+            if t_url:
+                t_req = urllib.request.Request(t_url, headers=headers)
+                with urllib.request.urlopen(t_req) as resp:
+                    t_raw = json.loads(resp.read().decode('utf-8'))
+                    dmg = t_raw.get("damage_relations", {})
+                    for d in dmg.get("double_damage_from", []):
+                        multipliers[d["name"]] = multipliers.get(d["name"], 1.0) * 2.0
+                    for h in dmg.get("half_damage_from", []):
+                        multipliers[h["name"]] = multipliers.get(h["name"], 1.0) * 0.5
+                    for n in dmg.get("no_damage_from", []):
+                        multipliers[n["name"]] = multipliers.get(n["name"], 1.0) * 0.0
+
+        weaknesses = {k.title(): v for k, v in multipliers.items() if v > 1.0}
+        resistances = {k.title(): v for k, v in multipliers.items() if 0.0 < v < 1.0}
+        immunities = [k.title() for k, v in multipliers.items() if v == 0.0]
+
+        # Evolutions
+        evolutions = [p.get("name", "").title()]
+        try:
+            evo_url = s_raw.get("evolution_chain", {}).get("url")
+            if evo_url:
+                e_req = urllib.request.Request(evo_url, headers=headers)
+                with urllib.request.urlopen(e_req) as resp:
+                    e_raw = json.loads(resp.read().decode('utf-8'))
+
+                def parse_chain(node):
+                    name = node.get("species", {}).get("name", "").title()
+                    triggers = []
+                    for detail in node.get("evolution_details", []):
+                        trig = detail.get("trigger", {}).get("name", "").replace("-", " ")
+                        if detail.get("min_level"):
+                            triggers.append(f"Lv. {detail['min_level']}")
+                        elif detail.get("item"):
+                            triggers.append(f"Use {detail['item']['name'].replace('-', ' ').title()}")
+                        elif detail.get("known_move"):
+                            triggers.append(f"Knows {detail['known_move']['name'].replace('-', ' ').title()}")
+                        elif detail.get("min_happiness"):
+                            triggers.append(f"Happiness >= {detail['min_happiness']}")
+                        else:
+                            triggers.append(trig.title())
+
+                    trig_str = f" ({', '.join(triggers)})" if triggers else ""
+                    evolutions.append(f"{name}{trig_str}")
+                    for next_node in node.get("evolves_to", []):
+                        parse_chain(next_node)
+
+                evolutions = []
+                parse_chain(e_raw.get("chain", {}))
+        except Exception:
+            evolutions = [p.get("name", "").title()]
+
+        target_data = {
+            "name": p.get("name", "").title(),
+            "id": p.get("id", 1),
+            "slug": p.get("name", "").lower(),
+            "sprite": f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p.get('id', 1)}.png",
+            "types": types,
+            "bst": bst,
+            "stats": stats,
+            "weaknesses": weaknesses,
+            "resistances": resistances,
+            "immunities": immunities,
+            "catch_rate": s_raw.get("capture_rate", 0),
+            "base_experience": p.get("base_experience", 0) or 0,
+            "growth_rate": s_raw.get("growth_rate", {}).get("name", "medium-fast").title().replace("-", " "),
+            "evolutions": evolutions,
+            "level_moves": level_moves
+        }
+
+        save_active_target(target_data)
+        return target_data
+
+    except Exception as e:
+        print(f"[Error] Direct API fetch failed for '{pokemon_name_or_id}': {e}")
+        return {}
 
 def load_tasks_state():
     if os.path.exists(TASKS_DATA_FILE):
@@ -347,6 +530,42 @@ def fetch_complete_pokemon_info(name):
 
     sprite_url = p.sprites.front_default or ""
 
+# Locate where level_moves is generated in that function:
+    level_moves = []
+    for m in getattr(p, "moves", []):
+      m_name = getattr(m.move, "name", "").replace("-", " ").title()
+
+      for vgd in getattr(m, "version_group_details", []):
+        # Learn method
+        method = ""
+        if hasattr(vgd, "move_learn_method"):
+          method = getattr(
+              vgd.move_learn_method, "name", str(vgd.move_learn_method)
+          )
+        elif isinstance(vgd, dict):
+          method = vgd.get("move_learn_method", {}).get("name", "")
+
+        if "level-up" in str(method).lower():
+          # Level
+          lvl = getattr(vgd, "level_learned_at", 0)
+          if isinstance(vgd, dict):
+            lvl = vgd.get("level_learned_at", 0)
+
+          # Version group slug (e.g. 'red-blue', 'yellow', 'emerald')
+          vg_slug = "all"
+          if hasattr(vgd, "version_group"):
+            vg_slug = getattr(vgd.version_group, "name", str(vgd.version_group))
+          elif isinstance(vgd, dict):
+            vg_slug = vgd.get("version_group", {}).get("name", "all")
+
+          level_moves.append({
+              "move": m_name,
+              "level": int(lvl),
+              "vg": str(vg_slug).lower().replace("_", "-"),
+          })
+
+    level_moves.sort(key=lambda x: (x["level"], x["move"]))
+
     return {
         "name": p.name.title(),
         "id": p.id,
@@ -368,152 +587,150 @@ def fetch_complete_pokemon_info(name):
     }
 
 # --- Router Endpoints ---
-
 def handle_dashboard(params):
-    action = params.get("action", [""])[0] if isinstance(params, dict) else ""
+  action = params.get("action", [""])[0] if isinstance(params, dict) else ""
 
-    if action == "team_add":
-        name = params.get("name", [""])[0].strip()
-        if name:
-            team = load_team()
-            try:
-                p_id = pb.pokemon(name.lower()).id
-            except Exception:
-                p_id = 1
-            team.append({"name": name.title(), "sprite": f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png"})
-            save_team(team)
-    elif action == "team_remove":
-        idx = int(params.get("index", [-1])[0])
-        team = load_team()
-        if 0 <= idx < len(team):
-            team.pop(idx)
-            save_team(team)
-    elif action == "set_target":
-        name = params.get("name", [""])[0].strip()
-        if name:
-            data = fetch_complete_pokemon_info(name)
-            if data:
-                save_active_target(data)
-    elif action == "set_location":
-        slug = params.get("slug", [""])[0].strip()
-        if slug:
-            route_data = fetch_route_encounter_info(slug)
-            if route_data:
-                save_active_route(route_data)
-    elif action == "set_tasks":
-        raw = params.get("tasks", [""])[0]
-        parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
-        if parsed:
-            save_tasks_state({"tasks": parsed, "index": 0})
-    elif action == "task_nav":
-        step = params.get("step", [""])[0]
-        state = load_tasks_state()
-        if state["tasks"]:
-            if step == "next":
-                state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
-            elif step == "prev":
-                state["index"] = max(state["index"] - 1, 0)
-            save_tasks_state(state)
-    elif action == "dec_counter":
-        p_name = unquote_plus(params.get("name", [""])[0])
-        if p_name:
-            c = load_pokemon_counters()
-            c[p_name] = c.get(p_name, 0) - 1
-            if c[p_name] <= 0:
-                del(c[p_name])
-            save_pokemon_counters(c)
-    elif action == "set_counters":
-        raw = unquote_plus(params.get("counter_list", [""])[0])
-        new_c = {}
-        for item in raw.split(","):
-            item = item.strip()
-            if not item:
-                continue
-            parts = item.rsplit(" ", 1)
-            if len(parts) == 2 and parts[1].isdigit():
-                new_c[parts[0].strip().title()] = int(parts[1])
-            else:
-                new_c[item.title()] = 0
-        save_pokemon_counters(new_c)
-    elif action == "shiny_inc":
-        hunt = load_shiny_hunt()
-        hunt["count"] += 1
-        save_shiny_hunt(hunt)
-    elif action == "shiny_dec":
-        hunt = load_shiny_hunt()
-        hunt["count"] = max(0, hunt["count"] - 1)
-        save_shiny_hunt(hunt)
-    elif action == "shiny_reset":
-        hunt = load_shiny_hunt()
-        hunt["count"] = 0
-        save_shiny_hunt(hunt)
-    elif action == "set_shiny_target":
-        target_name = unquote_plus(params.get("name", [""])[0]).strip().title()
-        method = (
-            unquote_plus(params.get("method", ["Random Encounters"])[0])
-            .strip()
-            .title()
-        )
-        if target_name:
-          hunt = load_shiny_hunt()
-          hunt["target"] = target_name
-          hunt["method"] = method if method else "Random Encounters"
-          save_shiny_hunt(hunt)
-
-    # Data collections for layout
-    pkmn_list = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
-    area_list = load_all_location_areas()
+  if action == "team_add":
+    name = params.get("name", [""])[0].strip()
+    if name:
+      team = load_team()
+      try:
+        p_id = pb.pokemon(name.lower()).id
+      except Exception:
+        p_id = 1
+      team.append({
+          "name": name.title(),
+          "sprite": (
+              "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"
+              f"{p_id}.png"
+          ),
+      })
+      save_team(team)
+  elif action == "team_remove":
+    idx = int(params.get("index", [-1])[0])
     team = load_team()
-    target = load_active_target()
-    active_route = load_active_route()
-    tasks_state = load_tasks_state()
-    counters = load_pokemon_counters()
+    if 0 <= idx < len(team):
+      team.pop(idx)
+      save_team(team)
+  elif action == "set_target":
+    name = params.get("name", [""])[0].strip()
+    if name:
+      data = fetch_complete_pokemon_info(name)
+      if data:
+        save_active_target(data)
+  elif action == "set_location":
+    slug = params.get("slug", [""])[0].strip()
+    if slug:
+      route_data = fetch_route_encounter_info(slug)
+      if route_data:
+        save_active_route(route_data)
+  elif action == "set_tasks":
+    raw = params.get("tasks", [""])[0]
+    parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
+    if parsed:
+      save_tasks_state({"tasks": parsed, "index": 0})
+  elif action == "task_nav":
+    step = params.get("step", [""])[0]
+    state = load_tasks_state()
+    if state["tasks"]:
+      if step == "next":
+        state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
+      elif step == "prev":
+        state["index"] = max(state["index"] - 1, 0)
+      save_tasks_state(state)
+  elif action == "dec_counter":
+    p_name = unquote_plus(params.get("name", [""])[0])
+    if p_name:
+      c = load_pokemon_counters()
+      c[p_name] = c.get(p_name, 0) - 1
+      if c[p_name] <= 0:
+        del c[p_name]
+      save_pokemon_counters(c)
+  elif action == "set_counters":
+    raw = unquote_plus(params.get("counter_list", [""])[0])
+    new_c = {}
+    for item in raw.split(","):
+      item = item.strip()
+      if not item:
+        continue
+      parts = item.rsplit(" ", 1)
+      if len(parts) == 2 and parts[1].isdigit():
+        new_c[parts[0].strip().title()] = int(parts[1])
+      else:
+        new_c[item.title()] = 0
+    save_pokemon_counters(new_c)
+  elif action == "shiny_inc":
     hunt = load_shiny_hunt()
+    hunt["count"] += 1
+    save_shiny_hunt(hunt)
+  elif action == "shiny_dec":
+    hunt = load_shiny_hunt()
+    hunt["count"] = max(0, hunt["count"] - 1)
+    save_shiny_hunt(hunt)
+  elif action == "shiny_reset":
+    hunt = load_shiny_hunt()
+    hunt["count"] = 0
+    save_shiny_hunt(hunt)
+  elif action == "set_shiny_target":
+    target_name = unquote_plus(params.get("name", [""])[0]).strip().title()
+    method = (
+        unquote_plus(params.get("method", ["Random Encounters"])[0])
+        .strip()
+        .title()
+    )
+    if target_name:
+      hunt = load_shiny_hunt()
+      hunt["target"] = target_name
+      hunt["method"] = method if method else "Random Encounters"
+      save_shiny_hunt(hunt)
 
-    js_pokemon_array = json.dumps(pkmn_list)
-    js_location_array = json.dumps(area_list)
+  # Data collections for layout
+  pkmn_list = (
+      all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
+  )
+  area_list = load_all_location_areas()
+  team = load_team()
+  target = load_active_target()
+  active_route = load_active_route()
+  tasks_state = load_tasks_state()
+  counters = load_pokemon_counters()
+  hunt = load_shiny_hunt()
 
-    active_task = tasks_state["tasks"][tasks_state["index"]] if (tasks_state["tasks"] and 0 <= tasks_state["index"] < len(tasks_state["tasks"])) else "No active task"
-    task_count_str = f"{tasks_state['index'] + 1} / {len(tasks_state['tasks'])}" if tasks_state["tasks"] else "0 / 0"
+  js_pokemon_array = json.dumps(pkmn_list)
+  js_location_array = json.dumps(area_list)
 
-    # --- HTML Subcomponents ---
+  active_task = (
+      tasks_state["tasks"][tasks_state["index"]]
+      if (
+          tasks_state["tasks"]
+          and 0 <= tasks_state["index"] < len(tasks_state["tasks"])
+      )
+      else "No active task"
+  )
+  task_count_str = (
+      f"{tasks_state['index'] + 1} / {len(tasks_state['tasks'])}"
+      if tasks_state["tasks"]
+      else "0 / 0"
+  )
 
-    growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
-
-    exp_calc_row = f"""
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
-        <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
-        <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-            <span>EXP Grind Calc</span>
-            <span class="text-amber-400 font-mono font-bold capitalize">{growth_rate_slug.replace('-', ' ')}</span>
-        </div>
-            
-        <div class="flex items-center gap-2 text-slate-300 font-medium">
-            <span>Exp to level from</span>
-            <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
-            <span>to</span>
-            <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
-            <span>=&gt;</span>
-            <span id="exp-output" class="font-mono font-black text-amber-400 text-sm">46,656 EXP</span>
-            </div>
-        </div>
-    </div>
-    """
-
-
-    # Party Pills
-    team_pills = "".join([
-        f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
+  # --- Party Pills ---
+  team_pills = (
+      "".join([
+          f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-slate-400">#{i+1}</span>
                 <span class="font-semibold text-sm">{m['name']}</span>
                 {f'<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">Active 6</span>' if i < 6 else ''}
             </div>
             <a href="/?action=team_remove&index={i}" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</a>
-        </div>""" for i, m in enumerate(team)
-    ]) or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
+        </div>"""
+          for i, m in enumerate(team)
+      ])
+      or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
+  )
 
-    shiny_card = f"""
+  # --- Shiny Hunting Card ---
+  shiny_card = f"""
     <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
             <h3 class="text-xs uppercase font-bold text-amber-400 flex items-center gap-1.5">
@@ -541,47 +758,105 @@ def handle_dashboard(params):
     </div>
     """
 
-    # Catch Targets
-    counter_pills = "".join([
-        f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
+  # --- Catch Targets Pills ---
+  counter_pills = (
+      "".join([
+          f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
             <span class="font-bold text-slate-200 text-sm">{name}</span>
             <span class="bg-indigo-600 text-white font-mono px-2.5 py-0.5 rounded-full text-xs font-bold">{count}</span>
-        </a>""" for name, count in counters.items()
-    ]) or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
+        </a>"""
+          for name, count in counters.items()
+      ])
+      or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
+  )
 
-    # Col 1: Target Scanner View
-    target_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and inspect a Pokémon to load stats.</div>'
-    if target:
-        growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
+  # --- Col 1: Target Scanner View ---
+  target_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and inspect a Pokémon to load stats.</div>'
+  if target:
+    growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
+    default_sprite = target.get("sprite", "")
 
-        stat_bars = "".join([
-            f"""<div>
-                <div class="flex justify-between text-[11px] font-medium mb-1">
-                    <span class="text-slate-400 uppercase">{k.replace('-', ' ')}</span>
-                    <span class="font-mono text-slate-200">{v}</span>
-                </div>
-                <div class="w-full bg-slate-700/70 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-amber-400 h-full rounded-full" style="width: {min(100, int((v / 255) * 100))}%"></div>
-                </div>
-            </div>""" for k, v in target.get("stats", {}).items()
+    stat_bars = "".join([
+        f"""<div>
+            <div class="flex justify-between text-[11px] font-medium mb-1">
+                <span class="text-slate-400 uppercase">{k.replace('-', ' ')}</span>
+                <span class="font-mono text-slate-200">{v}</span>
+            </div>
+            <div class="w-full bg-slate-700/70 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: {min(100, int((v / 255) * 100))}%"></div>
+            </div>
+        </div>"""
+        for k, v in target.get("stats", {}).items()
+    ])
+    weakness_tags = (
+        "".join([
+            f'<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold'
+            f' bg-rose-500/20 text-rose-300 border border-rose-500/30">{k.title()}'
+            f' {v}x</span>'
+            for k, v in target.get("weaknesses", {}).items()
         ])
-        weakness_tags = "".join([f'<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">{k.title()} {v}x</span>' for k, v in target.get("weaknesses", {}).items()]) or '<span class="text-xs text-slate-400">None</span>'
-        evos_list = "".join([f'<li class="text-xs text-slate-300">{evo}</li>' for evo in target.get("evolutions", [])])
-        moves_list = "".join([f'<div class="flex justify-between text-xs py-1 border-b border-slate-700/40"><span class="text-slate-300">{m["move"]}</span><span class="font-mono text-amber-400">Lv. {m["level"]}</span></div>' for m in target.get("level_moves", [])[:12]])
+        or '<span class="text-xs text-slate-400">None</span>'
+    )
+    resistance_tags = (
+        "".join([
+            f'<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold'
+            f' bg-emerald-500/20 text-emerald-300 border'
+            f' border-emerald-500/30">{k.title()} {v}x</span>'
+            for k, v in target.get("resistances", {}).items()
+        ])
+        or '<span class="text-xs text-slate-400">None</span>'
+    )
+    immunities_tags = (
+        "".join([
+            f'<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold'
+            f' bg-purple-500/20 text-purple-300 border'
+            f' border-purple-500/30">{t.title()} 0x</span>'
+            for t in target.get("immunities", [])
+        ])
+        or '<span class="text-xs text-slate-400">None</span>'
+    )
+    evos_list = "".join([
+        f'<li class="text-xs text-slate-300">{evo}</li>'
+        for evo in target.get("evolutions", [])
+    ])
 
-        target_view = f"""
+    moves_list = "".join([
+        f"""<div class="target-move-row flex justify-between text-xs py-1 border-b border-slate-700/40" data-vg="{m.get('vg', 'all')}" data-move="{m.get('move', '')}">
+            <span class="text-slate-300">{m['move']} <span class="text-[10px] text-slate-500">({m.get('vg', '')})</span></span>
+            <span class="font-mono text-amber-400 font-bold">Lv. {m['level']}</span>
+        </div>"""
+        for m in target.get("level_moves", [])
+    ])
+
+    target_view = f"""
         <div class="space-y-4">
-            <div class="flex items-center gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700/50">
-                <img src="{target.get('sprite', '')}" class="w-16 h-16 bg-slate-800 rounded-lg p-1 border border-slate-700" />
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-xl font-black text-white">{target['name']}</h3>
-                        <span class="text-slate-400 text-xs font-mono">#{target['id']}</span>
+            <!-- Header Card with Sprite & Gen Dropdown -->
+            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50 space-y-3">
+                <div class="flex items-center gap-3">
+                    <img id="target-sprite-img" src="{default_sprite}" class="w-16 h-16 bg-slate-800 rounded-lg p-1 border border-slate-700 object-contain image-render-pixelated" />
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-xl font-black text-white">{target['name']}</h3>
+                            <span class="text-slate-400 text-xs font-mono">#{target['id']}</span>
+                        </div>
+                        <div class="flex gap-1.5 mt-1">
+                            {"".join([f'<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">{t}</span>' for t in target['types']])}
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300">BST {target['bst']}</span>
+                        </div>
                     </div>
-                    <div class="flex gap-1.5 mt-1">
-                        {"".join([f'<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">{t}</span>' for t in target['types']])}
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300">BST {target['bst']}</span>
-                    </div>
+                </div>
+
+                <!-- Generation / Game Selector for Target -->
+                <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                    <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Inspect Gen:</span>
+                    <select id="target-gen-select" onchange="updateTargetGenView()" class="w-44 bg-slate-950 border border-slate-700 text-amber-400 font-bold rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-400">
+                        <option value="gen-modern">Modern / All</option>
+                        <option value="gen-1">Gen 1 (R/B/Y)</option>
+                        <option value="gen-2">Gen 2 (G/S/C)</option>
+                        <option value="gen-3">Gen 3 (R/S/E/FRLG)</option>
+                        <option value="gen-4">Gen 4 (D/P/Pt/HGSS)</option>
+                        <option value="gen-5">Gen 5 (B/W/B2W2)</option>
+                    </select>
                 </div>
             </div>
 
@@ -614,8 +889,12 @@ def handle_dashboard(params):
             </div>
 
             <div>
-                <h4 class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Weaknesses</h4>
-                <div class="flex flex-wrap gap-1 bg-slate-900/40 p-2.5 rounded-xl border border-slate-800">{weakness_tags}</div>
+                <h4 class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Matchups</h4>
+                <div class="space-y-2 bg-slate-900/40 p-2.5 rounded-xl border border-slate-800">
+                    <div><span class="text-[10px] font-bold text-rose-400 uppercase">Weaknesses:</span> <div class="flex flex-wrap gap-1 mt-1">{weakness_tags}</div></div>
+                    <div><span class="text-[10px] font-bold text-emerald-400 uppercase">Resistances:</span> <div class="flex flex-wrap gap-1 mt-1">{resistance_tags}</div></div>
+                    <div><span class="text-[10px] font-bold text-purple-400 uppercase">Immunities:</span> <div class="flex flex-wrap gap-1 mt-1">{immunities_tags}</div></div>
+                </div>
             </div>
 
             <div>
@@ -625,55 +904,114 @@ def handle_dashboard(params):
 
             <div>
                 <h4 class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Level-Up Moves</h4>
-                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 max-h-48 overflow-y-auto">{moves_list}</div>
+                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 max-h-48 overflow-y-auto space-y-0.5" id="moves-container">
+                    {moves_list or '<span class="text-xs text-slate-500 italic">No level-up moves listed.</span>'}
+                </div>
             </div>
         </div>
         """
 
-    # Col 2: Route Encounters View
-    route_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and select a Route to load wild encounter tables.</div>'
-    if active_route:
-        enc_cards = []
-        for p in active_route.get("pokemon", []):
-            detail_pills = "".join([
-                f"""<div class="flex justify-between items-center text-[11px] py-0.5 border-b border-slate-800 last:border-none">
-                    <span class="text-slate-300 font-medium">{d['method']} <span class="text-slate-500">({d['version']})</span></span>
-                    <div class="flex gap-2">
-                        <span class="text-amber-400 font-mono">{d['level']}</span>
-                        <span class="text-emerald-400 font-mono font-bold">{d['chance']}%</span>
-                    </div>
-                </div>""" for d in p["details"][:4]
-            ])
+  # --- Col 2: Route Encounters View ---
+  route_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and select a Route to load wild encounter tables.</div>'
+  if active_route:
+    games = {}
+    for p in active_route.get("pokemon", []):
+      p_name = p.get("name", "Unknown")
+      p_slug = p.get("slug", p_name.lower())
 
-            enc_cards.append(f"""
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-white text-sm">{p['name']}</span>
-                    <div class="flex gap-1.5">
-                        <a href="/?action=set_target&name={p['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded">Target</a>
-                        <a href="/?action=team_add&name={p['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2 py-0.5 rounded">+ Party</a>
+      for d in p.get("details", []):
+        ver = d.get("version", "Other").title()
+        if ver not in games:
+          games[ver] = {}
+
+        if p_name not in games[ver]:
+          games[ver][p_name] = {
+              "slug": p_slug,
+              "methods": set(),
+              "levels": [],
+              "total_chance": 0,
+          }
+
+        if d.get("method"):
+          games[ver][p_name]["methods"].add(d["method"].title())
+        if d.get("level"):
+          games[ver][p_name]["levels"].append(str(d["level"]))
+        games[ver][p_name]["total_chance"] += d.get("chance", 0)
+
+    game_options = ['<option value="ALL">All Versions</option>']
+    game_sections = []
+
+    for ver_name, species_dict in sorted(games.items()):
+      ver_slug = ver_name.lower().replace(" ", "-")
+      game_options.append(
+          f'<option value="{ver_slug}">{ver_name}'
+          f" ({len(species_dict)})</option>"
+      )
+
+      poke_rows = []
+      for p_name, data in sorted(species_dict.items()):
+        methods_str = ", ".join(sorted(data["methods"])) or "Wild"
+        levels_str = ", ".join(data["levels"][:2]) if data["levels"] else "Any"
+        chance_str = (
+            f"{min(100, data['total_chance'])}%"
+            if data["total_chance"] > 0
+            else ""
+        )
+
+        poke_rows.append(f"""
+                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                    <div>
+                        <div class="font-bold text-white text-xs">{p_name}</div>
+                        <div class="text-[10px] text-slate-400">{methods_str}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-right">
+                            <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
+                            {f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''}
+                        </div>
+                        <div class="flex gap-1 ml-1">
+                            <a href="/?action=set_target&name={data['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">Target</a>
+                            <a href="/?action=team_add&name={data['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded">+ Party</a>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-slate-950/60 rounded-lg p-2 space-y-1">
-                    {detail_pills or '<span class="text-xs text-slate-500 italic">No specific encounter rates.</span>'}
+                """)
+
+      game_sections.append(f"""
+            <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-950/50 px-2 py-1 rounded border border-indigo-900/50 flex justify-between">
+                    <span>{ver_name}</span>
+                    <span class="text-indigo-400 text-[10px]">{len(species_dict)} species</span>
+                </div>
+                <div class="space-y-1">
+                    {''.join(poke_rows)}
                 </div>
             </div>
             """)
 
-        route_view = f"""
+    route_view = f"""
         <div class="space-y-3">
             <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
                 <div class="text-xs uppercase font-bold text-emerald-400">Current Location</div>
                 <div class="text-lg font-black text-white">{active_route['name']}</div>
-                <div class="text-xs text-slate-400 mt-0.5">{active_route['total_species']} species available in this area</div>
+                <div class="text-xs text-slate-400 mt-0.5">{active_route['total_species']} total species across all versions</div>
             </div>
-            <div class="space-y-2 max-h-[750px] overflow-y-auto pr-1">
-                {"".join(enc_cards) or '<div class="text-slate-500 text-xs italic">No encounter tables for this sub-area.</div>'}
+
+            <!-- Game Version Selector Row -->
+            <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
+                <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
+                <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-bold rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-400">
+                    {''.join(game_options)}
+                </select>
+            </div>
+
+            <div class="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                {"".join(game_sections) or '<div class="text-slate-500 text-xs italic">No encounter tables for this sub-area.</div>'}
             </div>
         </div>
         """
 
-    html = f"""<!DOCTYPE html>
+  html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -683,6 +1021,7 @@ def handle_dashboard(params):
     <script>
         const pokemonNames = {js_pokemon_array};
         const locationAreas = {js_location_array};
+        const targetId = {target['id'] if target else 0};
 
         function filterPokemon() {{
             const input = document.getElementById('search-input');
@@ -715,7 +1054,52 @@ def handle_dashboard(params):
             box.style.display = 'block';
         }}
 
-    function getExpForLevel(growthRate, lvl) {{
+        function filterLocations() {{
+            const input = document.getElementById('location-input');
+            const val = input.value.toLowerCase().trim();
+            const box = document.getElementById('location-results');
+            if (!val || val.length < 2) {{
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }}
+            const matches = locationAreas.filter(loc => loc.name.toLowerCase().includes(val)).slice(0, 10);
+            if (matches.length === 0) {{
+                box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400 italic">No locations found.</div>';
+                box.style.display = 'block';
+                return;
+            }}
+            box.innerHTML = '';
+            matches.forEach(loc => {{
+                const item = document.createElement('div');
+                item.className = "px-4 py-2 hover:bg-slate-700/80 flex items-center justify-between border-b border-slate-700/40 last:border-none transition";
+                item.innerHTML = `
+                    <span class="font-bold text-slate-200 text-xs">${{loc.name}}</span>
+                    <div class="flex gap-1.5">
+                        <a href="/?action=set_location&slug=${{encodeURIComponent(loc.slug)}}" onclick="document.getElementById('location-input').value='';" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded">View Route</a>
+                    </div>
+                `;
+                box.appendChild(item);
+            }});
+            box.style.display = 'block';
+        }}
+
+        function filterGameVersion() {{
+            const select = document.getElementById('game-filter-select');
+            if (!select) return;
+            const chosen = select.value;
+            const cards = document.querySelectorAll('.game-version-card');
+
+            cards.forEach(card => {{
+                if (chosen === 'ALL' || card.getAttribute('data-version') === chosen) {{
+                    card.style.display = 'block';
+                }} else {{
+                    card.style.display = 'none';
+                }}
+            }});
+        }}
+
+        function getExpForLevel(growthRate, lvl) {{
             if (lvl <= 1) return 0;
             if (lvl > 100) lvl = 100;
             const n = lvl;
@@ -765,34 +1149,91 @@ def handle_dashboard(params):
             outElem.innerText = needed.toLocaleString() + " EXP";
         }}
 
-        function filterLocations() {{
-            const input = document.getElementById('location-input');
-            const val = input.value.toLowerCase().trim();
-            const box = document.getElementById('location-results');
-            if (!val || val.length < 2) {{
-                box.style.display = 'none';
-                box.innerHTML = '';
-                return;
+        function getSpriteForGen(gen) {{
+            if (!targetId || targetId <= 0) return '';
+            switch (gen) {{
+                case 'gen-1':
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-i/red-blue/${{targetId}}.png`;
+                case 'gen-2':
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ii/crystal/${{targetId}}.png`;
+                case 'gen-3':
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/emerald/${{targetId}}.png`;
+                case 'gen-4':
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iv/platinum/${{targetId}}.png`;
+                case 'gen-5':
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${{targetId}}.png`;
+                default:
+                    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${{targetId}}.png`;
             }}
-            const matches = locationAreas.filter(loc => loc.name.toLowerCase().includes(val)).slice(0, 10);
-            if (matches.length === 0) {{
-                box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400 italic">No locations found.</div>';
-                box.style.display = 'block';
-                return;
+        }}
+
+        const genToVersionGroups = {{
+            'gen-1': ['red-blue', 'yellow'],
+            'gen-2': ['gold-silver', 'crystal'],
+            'gen-3': ['ruby-sapphire', 'emerald', 'firered-leafgreen', 'colosseum', 'xd'],
+            'gen-4': ['diamond-pearl', 'platinum', 'heartgold-soulsilver'],
+            'gen-5': ['black-white', 'black-2-white-2'],
+            'gen-6': ['x-y', 'omega-ruby-alpha-sapphire'],
+            'gen-7': ['sun-moon', 'ultra-sun-ultra-moon', 'lets-go-pikachu-lets-go-eevee'],
+            'gen-8': ['sword-shield', 'brilliant-diamond-and-shining-pearl', 'legends-arceus'],
+            'gen-9': ['scarlet-violet']
+        }};
+
+        function updateTargetGenView() {{
+            const select = document.getElementById('target-gen-select');
+            const img = document.getElementById('target-sprite-img');
+            const movesContainer = document.getElementById('moves-container');
+            if (!select) return;
+
+            const chosenGen = select.value;
+
+            // 1. Update Sprite
+            if (img) {{
+                img.src = getSpriteForGen(chosenGen);
             }}
-            box.innerHTML = '';
-            matches.forEach(loc => {{
-                const item = document.createElement('div');
-                item.className = "px-4 py-2 hover:bg-slate-700/80 flex items-center justify-between border-b border-slate-700/40 last:border-none transition";
-                item.innerHTML = `
-                    <span class="font-bold text-slate-200 text-xs">${{loc.name}}</span>
-                    <div class="flex gap-1.5">
-                        <a href="/?action=set_location&slug=${{encodeURIComponent(loc.slug)}}" onclick="document.getElementById('location-input').value='';" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded">View Route</a>
-                    </div>
-                `;
-                box.appendChild(item);
+
+            // 2. Filter Move Rows
+            const moveRows = document.querySelectorAll('.target-move-row');
+            const allowedVgs = genToVersionGroups[chosenGen] || [];
+            const seenMovesInGen = new Set();
+            let visibleCount = 0;
+
+            moveRows.forEach(row => {{
+                // Normalize hyphens/underscores
+                const rowVg = (row.getAttribute('data-vg') || '').toLowerCase().trim().replace(/_/g, '-');
+                const moveName = (row.getAttribute('data-move') || '').toLowerCase().trim();
+
+                if (chosenGen === 'gen-modern') {{
+                    row.style.display = 'flex';
+                    visibleCount++;
+                }} else if (allowedVgs.includes(rowVg)) {{
+                    if (!seenMovesInGen.has(moveName)) {{
+                        seenMovesInGen.add(moveName);
+                        row.style.display = 'flex';
+                        visibleCount++;
+                    }} else {{
+                        row.style.display = 'none';
+                    }}
+                }} else {{
+                    row.style.display = 'none';
+                }}
             }});
-            box.style.display = 'block';
+
+            // 3. Empty state handling
+            let emptyMsg = document.getElementById('moves-empty-notice');
+            if (visibleCount === 0) {{
+                if (!emptyMsg && movesContainer) {{
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.id = 'moves-empty-notice';
+                    emptyMsg.className = 'text-xs text-slate-500 italic py-2 text-center';
+                    emptyMsg.innerText = 'No moves learned in this generation (or Pokemon debuted later).';
+                    movesContainer.appendChild(emptyMsg);
+                }} else if (emptyMsg) {{
+                    emptyMsg.style.display = 'block';
+                }}
+            }} else if (emptyMsg) {{
+                emptyMsg.style.display = 'none';
+            }}
         }}
     </script>
 </head>
@@ -835,6 +1276,9 @@ def handle_dashboard(params):
         <!-- Col 3: Stream Management, Queue, & Counters (4 Cols) -->
         <section class="lg:col-span-4 space-y-4">
             
+            <!-- Shiny Hunting Card -->
+            {shiny_card}
+
             <!-- Party Queue -->
             <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
                 <div class="flex items-center justify-between mb-2">
@@ -890,7 +1334,7 @@ def handle_dashboard(params):
     </main>
 </body>
 </html>"""
-    return html, ("Content-Type", "text/html")
+  return html, ("Content-Type", "text/html")
 
 # --- OBS Views ---
 
