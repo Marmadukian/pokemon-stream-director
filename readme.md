@@ -32,8 +32,10 @@ Includes ready-to-use browser source overlays for showing a target pokemon, the 
 ## Installation & Setup
 
 1. Clone or download this repo:
+	```
 	git clone [https://github.com/marmadukian/pokemon-stream-director.git](https://github.com/marmadukian/pokemon-stream-director.git)
 	cd pokemon-stream-director
+	```
 
 2. Install dependencies:
 	pip install pokebase, urllib
