@@ -1,1 +1,9 @@
 team_list.json
+__pycache__
+active_route.json
+active_target.json
+all_location_areas.json
+all_pokemon_names.json
+pokemon_list.txt
+shiny_hunt.json
+team_list.json
