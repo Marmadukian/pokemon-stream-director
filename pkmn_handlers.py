@@ -1490,56 +1490,66 @@ def handle_pokemon_stream(params=None):
 
 def handle_pokemon_remote(params):
   # --- Action Handlers ---
-  task_action = params.get("task_action", [""])[0]
-  if task_action:
-    state = load_tasks_state()
-    if state["tasks"]:
-      if task_action == "next":
-        state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
-      elif task_action == "prev":
-        state["index"] = max(state["index"] - 1, 0)
-      save_tasks_state(state)
+  action = params.get("action", [""])[0] if isinstance(params, dict) else ""
 
-  set_tasks_raw = params.get("set_tasks", [""])[0]
-  if set_tasks_raw:
-    parsed = [
-        t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()
-    ]
+  if action == "team_add":
+    name = params.get("name", [""])[0].strip()
+    if name:
+      team = load_team()
+      try:
+        p_id = pb.pokemon(name.lower()).id
+      except Exception:
+        p_id = 1
+      team.append({
+          "name": name.title(),
+          "sprite": (
+              "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"
+              f"{p_id}.png"
+          ),
+      })
+      save_team(team)
+  elif action == "team_remove":
+    idx = int(params.get("index", [-1])[0])
+    team = load_team()
+    if 0 <= idx < len(team):
+      team.pop(idx)
+      save_team(team)
+  elif action == "set_target":
+    name = params.get("name", [""])[0].strip()
+    if name:
+      data = fetch_complete_pokemon_info(name)
+      if data:
+        save_active_target(data)
+  elif action == "set_location":
+    slug = params.get("slug", [""])[0].strip()
+    if slug:
+      route_data = fetch_route_encounter_info(slug)
+      if route_data:
+        save_active_route(route_data)
+  elif action == "set_tasks":
+    raw = params.get("tasks", [""])[0]
+    parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
     if parsed:
       save_tasks_state({"tasks": parsed, "index": 0})
-
-  shiny_action = params.get("shiny_action", [""])[0]
-  if shiny_action:
-    hunt = load_shiny_hunt()
-    if shiny_action == "inc":
-      hunt["count"] += 1
-    elif shiny_action == "dec":
-      hunt["count"] = max(0, hunt["count"] - 1)
-    elif shiny_action == "reset":
-      hunt["count"] = 0
-    save_shiny_hunt(hunt)
-
-  set_shiny_name = params.get("set_shiny_name", [""])[0]
-  if set_shiny_name:
-    hunt = load_shiny_hunt()
-    hunt["target"] = unquote_plus(set_shiny_name).strip().title()
-    method = params.get("set_shiny_method", [""])[0]
-    if method:
-      hunt["method"] = unquote_plus(method).strip().title()
-    save_shiny_hunt(hunt)
-
-  inc_counter_name = params.get("inc_counter", [""])[0]
-  if inc_counter_name:
-    c = load_pokemon_counters()
-    p_name = unquote_plus(inc_counter_name)
-    c[p_name] = c.get(p_name, 0) - 1
-    if c[p_name] <= 0:
-      del c[p_name]
-    save_pokemon_counters(c)
-
-  set_list_raw = params.get("set_list", [""])[0]
-  if set_list_raw:
-    raw = unquote_plus(set_list_raw)
+  elif action == "task_nav":
+    step = params.get("step", [""])[0]
+    state = load_tasks_state()
+    if state["tasks"]:
+      if step == "next":
+        state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
+      elif step == "prev":
+        state["index"] = max(state["index"] - 1, 0)
+      save_tasks_state(state)
+  elif action == "dec_counter":
+    p_name = unquote_plus(params.get("name", [""])[0])
+    if p_name:
+      c = load_pokemon_counters()
+      c[p_name] = c.get(p_name, 0) - 1
+      if c[p_name] <= 0:
+        del c[p_name]
+      save_pokemon_counters(c)
+  elif action == "set_counters":
+    raw = unquote_plus(params.get("counter_list", [""])[0])
     new_c = {}
     for item in raw.split(","):
       item = item.strip()
@@ -1551,6 +1561,32 @@ def handle_pokemon_remote(params):
       else:
         new_c[item.title()] = 0
     save_pokemon_counters(new_c)
+  elif action == "shiny_inc":
+    hunt = load_shiny_hunt()
+    hunt["count"] += 1
+    save_shiny_hunt(hunt)
+  elif action == "shiny_dec":
+    hunt = load_shiny_hunt()
+    hunt["count"] = max(0, hunt["count"] - 1)
+    save_shiny_hunt(hunt)
+  elif action == "shiny_reset":
+    hunt = load_shiny_hunt()
+    hunt["count"] = 0
+    save_shiny_hunt(hunt)
+  elif action == "set_shiny_target":
+    target_name = unquote_plus(params.get("name", [""])[0]).strip().title()
+    method = (
+        unquote_plus(params.get("method", ["Random Encounters"])[0])
+        .strip()
+        .title()
+    )
+    if target_name:
+      hunt = load_shiny_hunt()
+      hunt["target"] = target_name
+      hunt["method"] = method if method else "Random Encounters"
+      save_shiny_hunt(hunt)
+
+
 
   # --- Data Prep ---
   tasks_state = load_tasks_state()
@@ -1578,9 +1614,64 @@ def handle_pokemon_remote(params):
         </a>"""
       for name, count in counters.items()
   ]) or '<div style="color: #6b7280; font-style: italic; margin-bottom: 16px;">No catch targets left!</div>'
+  target = load_active_target()
+    
+  mobile_target_card = ""
+  if target:
+      types_badges = "".join([f'<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">{t}</span>' for t in target.get("types", [])])
+      weakness_badges = "".join([f'<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">{k} {v}x</span>' for k, v in target.get("weaknesses", {}).items()]) or '<span class="text-xs text-slate-500">None</span>'
+      
+      # Next few level-up moves for quick mobile reference
+      moves_preview = "".join([
+          f"""<div class="flex justify-between text-xs py-0.5 border-b border-slate-800 last:border-none">
+              <span class="text-slate-300">{m['move']}</span>
+              <span class="font-mono text-amber-400 font-bold">Lv. {m['level']}</span>
+          </div>""" for m in target.get("level_moves", [])[:5]
+      ])
+      mobile_target_card = f"""
+      <!-- Mobile Target Summary Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-amber-400">Active Target</span>
+              <span class="text-xs font-mono text-slate-400">#{target.get('id', 0)}</span>
+          </div>
 
+           <div class="flex items-center gap-3">
+                <img src="{target.get('sprite', '')}" class="w-14 h-14 bg-slate-950 rounded-xl p-1 border border-slate-800 object-contain" />
+                <div class="flex-1">
+                    <h3 class="text-lg font-black text-white leading-tight">{target.get('name', 'Unknown')}</h3>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        {types_badges}
+                    </div>
+                </div>
+                <div class="text-right bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <div class="text-[9px] uppercase font-bold text-slate-400">Catch Rate</div>
+                    <div class="text-sm font-black font-mono text-emerald-400">{target.get('catch_rate', 0)}</div>
+                </div>
+            </div>
+
+            <!-- Weaknesses Quick View -->
+            <div class="bg-slate-950/60 rounded-xl p-2.5 space-y-1 border border-slate-800/60">
+                <div class="text-[10px] font-bold uppercase text-rose-400">Weaknesses:</div>
+                <div class="flex flex-wrap gap-1">
+                    {weakness_badges}
+                </div>
+            </div>
+
+            <!-- Next Moves Mini-Drawer -->
+            <details class="group bg-slate-950/40 rounded-xl border border-slate-800/60">
+                <summary class="flex justify-between items-center p-2.5 cursor-pointer text-xs font-bold text-slate-300 select-none">
+                    <span>Level-Up Moves ({len(target.get('level_moves', []))})</span>
+                    <span class="text-slate-500 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="p-2.5 pt-0 max-h-40 overflow-y-auto space-y-1">
+                    {moves_preview or '<span class="text-xs text-slate-500 italic">No moves recorded.</span>'}
+                </div>
+            </details>
+        </div>
+    """
   return (
-      f"""<!DOCTYPE html>
+         f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -1589,8 +1680,10 @@ def handle_pokemon_remote(params):
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; padding: 16px; margin: 0; -webkit-tap-highlight-color: transparent; }}
         h3 {{ margin-top: 0; }}
-        textarea {{ width: 100%; height: 60px; box-sizing: border-box; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-family: inherit; }}
+        textarea, input[type="text"] {{ width: 100%; height: 44px; box-sizing: border-box; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; font-family: inherit; font-size: 1rem; }}
+        textarea {{ height: 60px; }}
         button {{ width: 100%; padding: 12px; background: #10b981; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; }}
+        button:active {{ opacity: 0.9; transform: scale(0.99); }}
         .card {{ background: #1e1e1e; padding: 14px; border-radius: 10px; margin-top: 20px; }}
         .nav-btn {{ flex: 1; padding: 16px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; text-decoration: none; text-align: center; color: #fff; background: #374151; }}
         .nav-btn:active {{ background: #4b5563; }}
@@ -1599,8 +1692,11 @@ def handle_pokemon_remote(params):
     </style>
 </head>
 <body>
+    <!-- Active Target Info -->
+    {mobile_target_card}
+
     <!-- Shiny Hunting Hero Remote -->
-    <div class="card" style="margin-top: 0; border: 2px solid #f59e0b; background: #18150f;">
+    <div class="card" style="border: 2px solid #f59e0b; background: #18150f;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
             <div style="font-size: 0.85rem; color: #fbbf24; text-transform: uppercase; font-weight: bold;">✨ {hunt.get('target', 'None')}</div>
             <div style="font-size: 0.75rem; color: #92400e;">{hunt.get('method', 'Encounters')}</div>
@@ -1627,6 +1723,16 @@ def handle_pokemon_remote(params):
     <h3 style="margin-top: 24px; margin-bottom: 8px;">Tap to Complete (-1)</h3>
     <div>
         {buttons_html}
+    </div>
+
+    <!-- Search & Set Target Pokémon -->
+    <div class="card" style="border: 1px solid #f59e0b;">
+        <h3 style="color: #fbbf24;">Inspect New Target</h3>
+        <form action="/remote" method="GET">
+            <input type="hidden" name="action" value="set_target" />
+            <input type="text" name="name" placeholder="Target Pokémon (e.g. gengar, lapras)..." autocomplete="off" />
+            <button type="submit" style="background: #f59e0b; color: #0f172a;">Set Active Target</button>
+        </form>
     </div>
 
     <!-- Set Task Queue -->
@@ -1657,8 +1763,8 @@ def handle_pokemon_remote(params):
     </div>
 </body>
 </html>""",
-      ("Content-Type", "text/html"),
-  )
+        ("Content-Type", "text/html"),
+    )
 
 
 def handle_obs_shiny(params):
