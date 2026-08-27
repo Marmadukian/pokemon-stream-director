@@ -41,7 +41,7 @@ Includes ready-to-use browser source overlays for showing a target pokemon, the 
 	pip install pokebase, urllib
 
 3. Run the server:
-	python server.py
+	python pkmn_server.py
 
 4. READ THE ENDPOINTS PRINTED:
 	I assume that you are technically adept enough to parse a url. 
