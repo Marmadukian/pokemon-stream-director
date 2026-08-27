@@ -195,14 +195,14 @@ def load_active_target(default_pokemon="golem"):
             f"[Sync] Upgrading target '{data['slug']}' with version group"
             " tags..."
         )
-        return fetch_and_build_target_dict(data["slug"])
+        return fetch_complete_pokemon_info(data["slug"])
 
       return data
     except Exception as e:
       print(f"[Warn] Failed reading active target: {e}")
 
   # If no file or empty, fetch default initial Pokémon
-  return fetch_and_build_target_dict(default_pokemon)
+  return fetch_complete_pokemon_info(default_pokemon)
 
 
 def save_active_target(data):
@@ -866,7 +866,7 @@ def handle_dashboard(params):
             </div>
 
             <!-- EXP Grind Calculator Row -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-2.5">
                 <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
                 <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                     <span>EXP Grind Calc</span>
@@ -874,12 +874,24 @@ def handle_dashboard(params):
                 </div>
                 
                 <div class="flex items-center gap-2 text-slate-300 font-medium">
-                    <span>Exp from</span>
-                    <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+                    <span>Lvl</span>
+                    <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
                     <span>to</span>
-                    <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
+                    <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
                     <span class="text-slate-500 font-bold">=&gt;</span>
-                    <span id="exp-output" class="font-mono font-black text-amber-400 text-sm">46,656 EXP</span>
+                    <span id="exp-output" class="font-mono font-black text-amber-400 text-xs ml-auto">46,656 EXP</span>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-slate-400">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px]">Avg EXP/Kill:</span>
+                        <input id="exp-per-kill" type="number" min="1" value="120" oninput="calcExpGap()" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-amber-300 font-mono font-bold text-xs focus:outline-none focus:border-amber-400" />
+                    </div>
+                    <div class="text-right font-mono text-[11px]">
+                        <span id="grind-battles" class="text-slate-300 font-semibold">389 kills</span>
+                        <span class="text-slate-600 mx-1">•</span>
+                        <span id="grind-time" class="text-emerald-400 font-bold">~1h 37m</span>
+                    </div>
                 </div>
             </div>
 
@@ -1128,17 +1140,24 @@ def handle_dashboard(params):
             }}
         }}
 
+
         function calcExpGap() {{
             const rateElem = document.getElementById('target-growth-rate');
             const rate = rateElem ? rateElem.value : 'medium-fast';
             const fromLvl = parseInt(document.getElementById('exp-from')?.value) || 1;
             const toLvl = parseInt(document.getElementById('exp-to')?.value) || 1;
+            const expPerKill = parseInt(document.getElementById('exp-per-kill')?.value) || 1;
+
             const outElem = document.getElementById('exp-output');
+            const battlesElem = document.getElementById('grind-battles');
+            const timeElem = document.getElementById('grind-time');
 
             if (!outElem) return;
 
             if (toLvl <= fromLvl) {{
                 outElem.innerText = "0 EXP";
+                if (battlesElem) battlesElem.innerText = "0 kills";
+                if (timeElem) timeElem.innerText = "~0m";
                 return;
             }}
 
@@ -1147,6 +1166,24 @@ def handle_dashboard(params):
             const needed = Math.max(0, expTo - expFrom);
 
             outElem.innerText = needed.toLocaleString() + " EXP";
+
+            // Estimated battles & time (assuming ~15 seconds per wild encounter/kill)
+            const kills = Math.ceil(needed / Math.max(1, expPerKill));
+            const totalSeconds = kills * 15;
+            const hours = Math.floor(totalSeconds / 3600);
+            const mins = Math.ceil((totalSeconds % 3600) / 60);
+
+            if (battlesElem) {{
+                battlesElem.innerText = kills.toLocaleString() + " kills";
+            }}
+
+            if (timeElem) {{
+                if (hours > 0) {{
+                    timeElem.innerText = `~${{hours}}h ${{mins}}m`;
+                }} else {{
+                    timeElem.innerText = `~${{mins}}m`;
+                }}
+            }}
         }}
 
         function getSpriteForGen(gen) {{
