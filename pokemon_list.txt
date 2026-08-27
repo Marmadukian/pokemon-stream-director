@@ -1,0 +1,3 @@
+Caterpie,2
+Pikachu,2
+Pidgey,3

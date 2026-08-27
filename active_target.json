@@ -1,0 +1,56 @@
+{
+  "name": "Caterpie",
+  "id": 10,
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10.png",
+  "types": [
+    "Bug"
+  ],
+  "bst": 195,
+  "stats": {
+    "hp": 45,
+    "attack": 30,
+    "defense": 35,
+    "special-attack": 20,
+    "special-defense": 20,
+    "speed": 45
+  },
+  "weaknesses": {
+    "flying": 2.0,
+    "rock": 2.0,
+    "fire": 2.0
+  },
+  "resistances": {
+    "fighting": 0.5,
+    "ground": 0.5,
+    "grass": 0.5
+  },
+  "immunities": [],
+  "catch_rate": 255,
+  "base_experience": 39,
+  "growth_rate": "Medium",
+  "egg_groups": [
+    "Bug"
+  ],
+  "hatch_steps": 4080,
+  "evolutions": [
+    "Caterpie \u2794 Metapod (Level 7)",
+    "Metapod \u2794 Butterfree (Level 10)"
+  ],
+  "level_moves": [
+    {
+      "move": "Tackle",
+      "level": 1
+    },
+    {
+      "move": "String Shot",
+      "level": 1
+    },
+    {
+      "move": "Bug Bite",
+      "level": 15
+    }
+  ],
+  "tm_moves": [
+    "Electroweb"
+  ]
+}

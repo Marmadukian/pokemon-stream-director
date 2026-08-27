@@ -1,0 +1,6158 @@
+[
+  {
+    "slug": "canalave-city-area",
+    "name": "Canalave City"
+  },
+  {
+    "slug": "eterna-city-area",
+    "name": "Eterna City"
+  },
+  {
+    "slug": "pastoria-city-area",
+    "name": "Pastoria City"
+  },
+  {
+    "slug": "sunyshore-city-area",
+    "name": "Sunyshore City"
+  },
+  {
+    "slug": "sinnoh-pokemon-league-area",
+    "name": "Sinnoh Pokemon League"
+  },
+  {
+    "slug": "oreburgh-mine-1f",
+    "name": "Oreburgh Mine 1F"
+  },
+  {
+    "slug": "oreburgh-mine-b1f",
+    "name": "Oreburgh Mine B1F"
+  },
+  {
+    "slug": "valley-windworks-area",
+    "name": "Valley Windworks"
+  },
+  {
+    "slug": "eterna-forest-area",
+    "name": "Eterna Forest"
+  },
+  {
+    "slug": "fuego-ironworks-area",
+    "name": "Fuego Ironworks"
+  },
+  {
+    "slug": "mt-coronet-1f-route-207",
+    "name": "Mt Coronet 1F Route 207"
+  },
+  {
+    "slug": "mt-coronet-2f",
+    "name": "Mt Coronet 2F"
+  },
+  {
+    "slug": "mt-coronet-3f",
+    "name": "Mt Coronet 3F"
+  },
+  {
+    "slug": "mt-coronet-exterior-snowfall",
+    "name": "Mt Coronet Exterior Snowfall"
+  },
+  {
+    "slug": "mt-coronet-exterior-blizzard",
+    "name": "Mt Coronet Exterior Blizzard"
+  },
+  {
+    "slug": "mt-coronet-4f",
+    "name": "Mt Coronet 4F"
+  },
+  {
+    "slug": "mt-coronet-4f-small-room",
+    "name": "Mt Coronet 4F Small Room"
+  },
+  {
+    "slug": "mt-coronet-5f",
+    "name": "Mt Coronet 5F"
+  },
+  {
+    "slug": "mt-coronet-6f",
+    "name": "Mt Coronet 6F"
+  },
+  {
+    "slug": "mt-coronet-1f-from-exterior",
+    "name": "Mt Coronet 1F From Exterior"
+  },
+  {
+    "slug": "mt-coronet-1f-route-216",
+    "name": "Mt Coronet 1F Route 216"
+  },
+  {
+    "slug": "mt-coronet-1f-route-211",
+    "name": "Mt Coronet 1F Route 211"
+  },
+  {
+    "slug": "mt-coronet-b1f",
+    "name": "Mt Coronet B1F"
+  },
+  {
+    "slug": "great-marsh-area-1",
+    "name": "Great Marsh Area 1"
+  },
+  {
+    "slug": "great-marsh-area-2",
+    "name": "Great Marsh Area 2"
+  },
+  {
+    "slug": "great-marsh-area-3",
+    "name": "Great Marsh Area 3"
+  },
+  {
+    "slug": "great-marsh-area-4",
+    "name": "Great Marsh Area 4"
+  },
+  {
+    "slug": "great-marsh-area-5",
+    "name": "Great Marsh Area 5"
+  },
+  {
+    "slug": "great-marsh-area-6",
+    "name": "Great Marsh Area 6"
+  },
+  {
+    "slug": "solaceon-ruins-2f",
+    "name": "Solaceon Ruins 2F"
+  },
+  {
+    "slug": "solaceon-ruins-1f",
+    "name": "Solaceon Ruins 1F"
+  },
+  {
+    "slug": "solaceon-ruins-b1f-a",
+    "name": "Solaceon Ruins B1F A"
+  },
+  {
+    "slug": "solaceon-ruins-b1f-b",
+    "name": "Solaceon Ruins B1F B"
+  },
+  {
+    "slug": "solaceon-ruins-b1f-c",
+    "name": "Solaceon Ruins B1F C"
+  },
+  {
+    "slug": "solaceon-ruins-b2f-a",
+    "name": "Solaceon Ruins B2F A"
+  },
+  {
+    "slug": "solaceon-ruins-b2f-b",
+    "name": "Solaceon Ruins B2F B"
+  },
+  {
+    "slug": "solaceon-ruins-b2f-c",
+    "name": "Solaceon Ruins B2F C"
+  },
+  {
+    "slug": "solaceon-ruins-b3f-a",
+    "name": "Solaceon Ruins B3F A"
+  },
+  {
+    "slug": "solaceon-ruins-b3f-b",
+    "name": "Solaceon Ruins B3F B"
+  },
+  {
+    "slug": "solaceon-ruins-b3f-c",
+    "name": "Solaceon Ruins B3F C"
+  },
+  {
+    "slug": "solaceon-ruins-b3f-d",
+    "name": "Solaceon Ruins B3F D"
+  },
+  {
+    "slug": "solaceon-ruins-b3f-e",
+    "name": "Solaceon Ruins B3F E"
+  },
+  {
+    "slug": "solaceon-ruins-b4f-a",
+    "name": "Solaceon Ruins B4F A"
+  },
+  {
+    "slug": "solaceon-ruins-b4f-b",
+    "name": "Solaceon Ruins B4F B"
+  },
+  {
+    "slug": "solaceon-ruins-b4f-c",
+    "name": "Solaceon Ruins B4F C"
+  },
+  {
+    "slug": "solaceon-ruins-b4f-d",
+    "name": "Solaceon Ruins B4F D"
+  },
+  {
+    "slug": "solaceon-ruins-b5f",
+    "name": "Solaceon Ruins B5F"
+  },
+  {
+    "slug": "sinnoh-victory-road-1f",
+    "name": "Sinnoh Victory Road 1F"
+  },
+  {
+    "slug": "sinnoh-victory-road-2f",
+    "name": "Sinnoh Victory Road 2F"
+  },
+  {
+    "slug": "sinnoh-victory-road-b1f",
+    "name": "Sinnoh Victory Road B1F"
+  },
+  {
+    "slug": "sinnoh-victory-road-inside-b1f",
+    "name": "Sinnoh Victory Road Inside B1F"
+  },
+  {
+    "slug": "sinnoh-victory-road-inside",
+    "name": "Sinnoh Victory Road Inside"
+  },
+  {
+    "slug": "sinnoh-victory-road-inside-exit",
+    "name": "Sinnoh Victory Road Inside Exit"
+  },
+  {
+    "slug": "ravaged-path-area",
+    "name": "Ravaged Path"
+  },
+  {
+    "slug": "oreburgh-gate-1f",
+    "name": "Oreburgh Gate 1F"
+  },
+  {
+    "slug": "oreburgh-gate-b1f",
+    "name": "Oreburgh Gate B1F"
+  },
+  {
+    "slug": "stark-mountain-area",
+    "name": "Stark Mountain"
+  },
+  {
+    "slug": "stark-mountain-entrance",
+    "name": "Stark Mountain Entrance"
+  },
+  {
+    "slug": "stark-mountain-inside",
+    "name": "Stark Mountain Inside"
+  },
+  {
+    "slug": "sendoff-spring-area",
+    "name": "Sendoff Spring"
+  },
+  {
+    "slug": "turnback-cave-pillar-1",
+    "name": "Turnback Cave Pillar 1"
+  },
+  {
+    "slug": "turnback-cave-pillar-2",
+    "name": "Turnback Cave Pillar 2"
+  },
+  {
+    "slug": "turnback-cave-pillar-3",
+    "name": "Turnback Cave Pillar 3"
+  },
+  {
+    "slug": "turnback-cave-before-pillar-1",
+    "name": "Turnback Cave Before Pillar 1"
+  },
+  {
+    "slug": "turnback-cave-between-pillars-1-and-2",
+    "name": "Turnback Cave Between Pillars 1 And 2"
+  },
+  {
+    "slug": "turnback-cave-between-pillars-2-and-3",
+    "name": "Turnback Cave Between Pillars 2 And 3"
+  },
+  {
+    "slug": "turnback-cave-after-pillar-3",
+    "name": "Turnback Cave After Pillar 3"
+  },
+  {
+    "slug": "snowpoint-temple-1f",
+    "name": "Snowpoint Temple 1F"
+  },
+  {
+    "slug": "snowpoint-temple-b1f",
+    "name": "Snowpoint Temple B1F"
+  },
+  {
+    "slug": "snowpoint-temple-b2f",
+    "name": "Snowpoint Temple B2F"
+  },
+  {
+    "slug": "snowpoint-temple-b3f",
+    "name": "Snowpoint Temple B3F"
+  },
+  {
+    "slug": "snowpoint-temple-b4f",
+    "name": "Snowpoint Temple B4F"
+  },
+  {
+    "slug": "snowpoint-temple-b5f",
+    "name": "Snowpoint Temple B5F"
+  },
+  {
+    "slug": "wayward-cave-1f",
+    "name": "Wayward Cave 1F"
+  },
+  {
+    "slug": "wayward-cave-b1f",
+    "name": "Wayward Cave B1F"
+  },
+  {
+    "slug": "ruin-maniac-cave-0-9-different-unown-caught",
+    "name": "Ruin Maniac Cave 0 9 Different Unown Caught"
+  },
+  {
+    "slug": "ruin-maniac-cave-10-25-different-unown-caught",
+    "name": "Ruin Maniac Cave 10 25 Different Unown Caught"
+  },
+  {
+    "slug": "maniac-tunnel-26-plus-different-unown-caught",
+    "name": "Maniac Tunnel 26 Plus Different Unown Caught"
+  },
+  {
+    "slug": "trophy-garden-area",
+    "name": "Trophy Garden"
+  },
+  {
+    "slug": "iron-island-area",
+    "name": "Iron Island"
+  },
+  {
+    "slug": "iron-island-1f",
+    "name": "Iron Island 1F"
+  },
+  {
+    "slug": "iron-island-b1f-left",
+    "name": "Iron Island B1F Left"
+  },
+  {
+    "slug": "iron-island-b1f-right",
+    "name": "Iron Island B1F Right"
+  },
+  {
+    "slug": "iron-island-b2f-right",
+    "name": "Iron Island B2F Right"
+  },
+  {
+    "slug": "iron-island-b2f-left",
+    "name": "Iron Island B2F Left"
+  },
+  {
+    "slug": "iron-island-b3f",
+    "name": "Iron Island B3F"
+  },
+  {
+    "slug": "old-chateau-entrance",
+    "name": "Old Chateau Entrance"
+  },
+  {
+    "slug": "old-chateau-dining-room",
+    "name": "Old Chateau Dining Room"
+  },
+  {
+    "slug": "old-chateau-2f-private-room",
+    "name": "Old Chateau 2F Private Room"
+  },
+  {
+    "slug": "old-chateau-2f",
+    "name": "Old Chateau 2F"
+  },
+  {
+    "slug": "old-chateau-2f-leftmost-room",
+    "name": "Old Chateau 2F Leftmost Room"
+  },
+  {
+    "slug": "old-chateau-2f-left-room",
+    "name": "Old Chateau 2F Left Room"
+  },
+  {
+    "slug": "old-chateau-2f-middle-room",
+    "name": "Old Chateau 2F Middle Room"
+  },
+  {
+    "slug": "old-chateau-2f-right-room",
+    "name": "Old Chateau 2F Right Room"
+  },
+  {
+    "slug": "old-chateau-2f-rightmost-room",
+    "name": "Old Chateau 2F Rightmost Room"
+  },
+  {
+    "slug": "lake-verity-before-galactic-intervention",
+    "name": "Lake Verity Before Galactic Intervention"
+  },
+  {
+    "slug": "lake-verity-after-galactic-intervention",
+    "name": "Lake Verity After Galactic Intervention"
+  },
+  {
+    "slug": "lake-valor-area",
+    "name": "Lake Valor"
+  },
+  {
+    "slug": "lake-acuity-area",
+    "name": "Lake Acuity"
+  },
+  {
+    "slug": "valor-lakefront-area",
+    "name": "Valor Lakefront"
+  },
+  {
+    "slug": "acuity-lakefront-area",
+    "name": "Acuity Lakefront"
+  },
+  {
+    "slug": "sinnoh-route-201-area",
+    "name": "Sinnoh Route 201"
+  },
+  {
+    "slug": "sinnoh-route-202-area",
+    "name": "Sinnoh Route 202"
+  },
+  {
+    "slug": "sinnoh-route-203-area",
+    "name": "Sinnoh Route 203"
+  },
+  {
+    "slug": "sinnoh-route-204-south-towards-jubilife-city",
+    "name": "Sinnoh Route 204 South Towards Jubilife City"
+  },
+  {
+    "slug": "sinnoh-route-204-north-towards-floaroma-town",
+    "name": "Sinnoh Route 204 North Towards Floaroma Town"
+  },
+  {
+    "slug": "sinnoh-route-205-south-towards-floaroma-town",
+    "name": "Sinnoh Route 205 South Towards Floaroma Town"
+  },
+  {
+    "slug": "sinnoh-route-205-east-towards-eterna-city",
+    "name": "Sinnoh Route 205 East Towards Eterna City"
+  },
+  {
+    "slug": "sinnoh-route-206-area",
+    "name": "Sinnoh Route 206"
+  },
+  {
+    "slug": "sinnoh-route-207-area",
+    "name": "Sinnoh Route 207"
+  },
+  {
+    "slug": "sinnoh-route-208-area",
+    "name": "Sinnoh Route 208"
+  },
+  {
+    "slug": "sinnoh-route-209-area",
+    "name": "Sinnoh Route 209"
+  },
+  {
+    "slug": "lost-tower-1f",
+    "name": "Lost Tower 1F"
+  },
+  {
+    "slug": "lost-tower-2f",
+    "name": "Lost Tower 2F"
+  },
+  {
+    "slug": "lost-tower-3f",
+    "name": "Lost Tower 3F"
+  },
+  {
+    "slug": "lost-tower-4f",
+    "name": "Lost Tower 4F"
+  },
+  {
+    "slug": "lost-tower-5f",
+    "name": "Lost Tower 5F"
+  },
+  {
+    "slug": "sinnoh-route-210-south-towards-solaceon-town",
+    "name": "Sinnoh Route 210 South Towards Solaceon Town"
+  },
+  {
+    "slug": "sinnoh-route-210-west-towards-celestic-town",
+    "name": "Sinnoh Route 210 West Towards Celestic Town"
+  },
+  {
+    "slug": "sinnoh-route-211-west-towards-eterna-city",
+    "name": "Sinnoh Route 211 West Towards Eterna City"
+  },
+  {
+    "slug": "sinnoh-route-211-east-towards-celestic-town",
+    "name": "Sinnoh Route 211 East Towards Celestic Town"
+  },
+  {
+    "slug": "sinnoh-route-212-north-towards-hearthome-city",
+    "name": "Sinnoh Route 212 North Towards Hearthome City"
+  },
+  {
+    "slug": "sinnoh-route-212-east-towards-pastoria-city",
+    "name": "Sinnoh Route 212 East Towards Pastoria City"
+  },
+  {
+    "slug": "sinnoh-route-213-area",
+    "name": "Sinnoh Route 213"
+  },
+  {
+    "slug": "sinnoh-route-214-area",
+    "name": "Sinnoh Route 214"
+  },
+  {
+    "slug": "sinnoh-route-215-area",
+    "name": "Sinnoh Route 215"
+  },
+  {
+    "slug": "sinnoh-route-216-area",
+    "name": "Sinnoh Route 216"
+  },
+  {
+    "slug": "sinnoh-route-217-area",
+    "name": "Sinnoh Route 217"
+  },
+  {
+    "slug": "sinnoh-route-218-area",
+    "name": "Sinnoh Route 218"
+  },
+  {
+    "slug": "sinnoh-route-219-area",
+    "name": "Sinnoh Route 219"
+  },
+  {
+    "slug": "sinnoh-route-221-area",
+    "name": "Sinnoh Route 221"
+  },
+  {
+    "slug": "sinnoh-route-222-area",
+    "name": "Sinnoh Route 222"
+  },
+  {
+    "slug": "sinnoh-route-224-area",
+    "name": "Sinnoh Route 224"
+  },
+  {
+    "slug": "sinnoh-route-225-area",
+    "name": "Sinnoh Route 225"
+  },
+  {
+    "slug": "sinnoh-route-227-area",
+    "name": "Sinnoh Route 227"
+  },
+  {
+    "slug": "sinnoh-route-228-area",
+    "name": "Sinnoh Route 228"
+  },
+  {
+    "slug": "sinnoh-route-229-area",
+    "name": "Sinnoh Route 229"
+  },
+  {
+    "slug": "twinleaf-town-area",
+    "name": "Twinleaf Town"
+  },
+  {
+    "slug": "celestic-town-area",
+    "name": "Celestic Town"
+  },
+  {
+    "slug": "resort-area-area",
+    "name": "Resort Area"
+  },
+  {
+    "slug": "sinnoh-sea-route-220-area",
+    "name": "Sinnoh Sea Route 220"
+  },
+  {
+    "slug": "sinnoh-sea-route-223-area",
+    "name": "Sinnoh Sea Route 223"
+  },
+  {
+    "slug": "sinnoh-sea-route-226-area",
+    "name": "Sinnoh Sea Route 226"
+  },
+  {
+    "slug": "sinnoh-sea-route-230-area",
+    "name": "Sinnoh Sea Route 230"
+  },
+  {
+    "slug": "new-bark-town-area",
+    "name": "New Bark Town"
+  },
+  {
+    "slug": "johto-route-29-area",
+    "name": "Johto Route 29"
+  },
+  {
+    "slug": "cherrygrove-city-area",
+    "name": "Cherrygrove City"
+  },
+  {
+    "slug": "johto-route-30-area",
+    "name": "Johto Route 30"
+  },
+  {
+    "slug": "johto-route-31-area",
+    "name": "Johto Route 31"
+  },
+  {
+    "slug": "violet-city-area",
+    "name": "Violet City"
+  },
+  {
+    "slug": "sprout-tower-2f",
+    "name": "Sprout Tower 2F"
+  },
+  {
+    "slug": "sprout-tower-3f",
+    "name": "Sprout Tower 3F"
+  },
+  {
+    "slug": "johto-route-32-area",
+    "name": "Johto Route 32"
+  },
+  {
+    "slug": "ruins-of-alph-outside",
+    "name": "Ruins Of Alph Outside"
+  },
+  {
+    "slug": "ruins-of-alph-interior-a",
+    "name": "Ruins Of Alph Interior A"
+  },
+  {
+    "slug": "ruins-of-alph-interior-b",
+    "name": "Ruins Of Alph Interior B"
+  },
+  {
+    "slug": "ruins-of-alph-interior-c",
+    "name": "Ruins Of Alph Interior C"
+  },
+  {
+    "slug": "ruins-of-alph-interior-d",
+    "name": "Ruins Of Alph Interior D"
+  },
+  {
+    "slug": "union-cave-1f",
+    "name": "Union Cave 1F"
+  },
+  {
+    "slug": "union-cave-b1f",
+    "name": "Union Cave B1F"
+  },
+  {
+    "slug": "union-cave-b2f",
+    "name": "Union Cave B2F"
+  },
+  {
+    "slug": "johto-route-33-area",
+    "name": "Johto Route 33"
+  },
+  {
+    "slug": "slowpoke-well-1f",
+    "name": "Slowpoke Well 1F"
+  },
+  {
+    "slug": "slowpoke-well-b1f",
+    "name": "Slowpoke Well B1F"
+  },
+  {
+    "slug": "ilex-forest-area",
+    "name": "Ilex Forest"
+  },
+  {
+    "slug": "johto-route-34-area",
+    "name": "Johto Route 34"
+  },
+  {
+    "slug": "johto-route-35-area",
+    "name": "Johto Route 35"
+  },
+  {
+    "slug": "national-park-area",
+    "name": "National Park"
+  },
+  {
+    "slug": "unknown-all-bugs-area",
+    "name": "Unknown All Bugs"
+  },
+  {
+    "slug": "johto-route-36-area",
+    "name": "Johto Route 36"
+  },
+  {
+    "slug": "johto-route-37-area",
+    "name": "Johto Route 37"
+  },
+  {
+    "slug": "ecruteak-city-area",
+    "name": "Ecruteak City"
+  },
+  {
+    "slug": "burned-tower-1f",
+    "name": "Burned Tower 1F"
+  },
+  {
+    "slug": "burned-tower-b1f",
+    "name": "Burned Tower B1F"
+  },
+  {
+    "slug": "bell-tower-2f",
+    "name": "Bell Tower 2F"
+  },
+  {
+    "slug": "bell-tower-3f",
+    "name": "Bell Tower 3F"
+  },
+  {
+    "slug": "bell-tower-4f",
+    "name": "Bell Tower 4F"
+  },
+  {
+    "slug": "bell-tower-5f",
+    "name": "Bell Tower 5F"
+  },
+  {
+    "slug": "bell-tower-6f",
+    "name": "Bell Tower 6F"
+  },
+  {
+    "slug": "bell-tower-7f",
+    "name": "Bell Tower 7F"
+  },
+  {
+    "slug": "bell-tower-8f",
+    "name": "Bell Tower 8F"
+  },
+  {
+    "slug": "bell-tower-9f",
+    "name": "Bell Tower 9F"
+  },
+  {
+    "slug": "johto-route-38-area",
+    "name": "Johto Route 38"
+  },
+  {
+    "slug": "johto-route-39-area",
+    "name": "Johto Route 39"
+  },
+  {
+    "slug": "olivine-city-area",
+    "name": "Olivine City"
+  },
+  {
+    "slug": "johto-sea-route-40-area",
+    "name": "Johto Sea Route 40"
+  },
+  {
+    "slug": "johto-sea-route-41-area",
+    "name": "Johto Sea Route 41"
+  },
+  {
+    "slug": "whirl-islands-1f",
+    "name": "Whirl Islands 1F"
+  },
+  {
+    "slug": "whirl-islands-b1f",
+    "name": "Whirl Islands B1F"
+  },
+  {
+    "slug": "whirl-islands-empty-floor-x",
+    "name": "Whirl Islands Empty Floor X"
+  },
+  {
+    "slug": "whirl-islands-b2f",
+    "name": "Whirl Islands B2F"
+  },
+  {
+    "slug": "whirl-islands-empty-floor-y",
+    "name": "Whirl Islands Empty Floor Y"
+  },
+  {
+    "slug": "whirl-islands-b3f",
+    "name": "Whirl Islands B3F"
+  },
+  {
+    "slug": "cianwood-city-area",
+    "name": "Cianwood City"
+  },
+  {
+    "slug": "johto-route-42-area",
+    "name": "Johto Route 42"
+  },
+  {
+    "slug": "mt-mortar-1f",
+    "name": "Mt Mortar 1F"
+  },
+  {
+    "slug": "mt-mortar-lower-cave",
+    "name": "Mt Mortar Lower Cave"
+  },
+  {
+    "slug": "mt-mortar-upper-cave",
+    "name": "Mt Mortar Upper Cave"
+  },
+  {
+    "slug": "mt-mortar-b1f",
+    "name": "Mt Mortar B1F"
+  },
+  {
+    "slug": "johto-route-43-area",
+    "name": "Johto Route 43"
+  },
+  {
+    "slug": "lake-of-rage-area",
+    "name": "Lake Of Rage"
+  },
+  {
+    "slug": "johto-route-44-area",
+    "name": "Johto Route 44"
+  },
+  {
+    "slug": "ice-path-1f",
+    "name": "Ice Path 1F"
+  },
+  {
+    "slug": "ice-path-b1f",
+    "name": "Ice Path B1F"
+  },
+  {
+    "slug": "ice-path-b2f",
+    "name": "Ice Path B2F"
+  },
+  {
+    "slug": "ice-path-b3f",
+    "name": "Ice Path B3F"
+  },
+  {
+    "slug": "blackthorn-city-area",
+    "name": "Blackthorn City"
+  },
+  {
+    "slug": "dragons-den-area",
+    "name": "Dragons Den"
+  },
+  {
+    "slug": "johto-route-45-area",
+    "name": "Johto Route 45"
+  },
+  {
+    "slug": "johto-route-46-area",
+    "name": "Johto Route 46"
+  },
+  {
+    "slug": "dark-cave-violet-city-entrance",
+    "name": "Dark Cave Violet City Entrance"
+  },
+  {
+    "slug": "dark-cave-blackthorn-city-entrance",
+    "name": "Dark Cave Blackthorn City Entrance"
+  },
+  {
+    "slug": "johto-route-47-area",
+    "name": "Johto Route 47"
+  },
+  {
+    "slug": "mt-moon-mt-moon-square",
+    "name": "Mt Moon Mt Moon Square"
+  },
+  {
+    "slug": "unknown-all-poliwag-area",
+    "name": "Unknown All Poliwag"
+  },
+  {
+    "slug": "seafoam-islands-1f",
+    "name": "Seafoam Islands 1F"
+  },
+  {
+    "slug": "seafoam-islands-b1f",
+    "name": "Seafoam Islands B1F"
+  },
+  {
+    "slug": "seafoam-islands-b2f",
+    "name": "Seafoam Islands B2F"
+  },
+  {
+    "slug": "seafoam-islands-b3f",
+    "name": "Seafoam Islands B3F"
+  },
+  {
+    "slug": "seafoam-islands-b4f",
+    "name": "Seafoam Islands B4F"
+  },
+  {
+    "slug": "mt-silver-2f",
+    "name": "Mt Silver 2F"
+  },
+  {
+    "slug": "mt-silver-1f-top",
+    "name": "Mt Silver 1F Top"
+  },
+  {
+    "slug": "mt-silver-4f",
+    "name": "Mt Silver 4F"
+  },
+  {
+    "slug": "johto-route-47-cave-gate",
+    "name": "Johto Route 47 Cave Gate"
+  },
+  {
+    "slug": "johto-route-47-inside-cave",
+    "name": "Johto Route 47 Inside Cave"
+  },
+  {
+    "slug": "bell-tower-10f",
+    "name": "Bell Tower 10F"
+  },
+  {
+    "slug": "mt-silver-outside",
+    "name": "Mt Silver Outside"
+  },
+  {
+    "slug": "mt-silver-1f",
+    "name": "Mt Silver 1F"
+  },
+  {
+    "slug": "mt-silver-mountainside",
+    "name": "Mt Silver Mountainside"
+  },
+  {
+    "slug": "mt-silver-3f",
+    "name": "Mt Silver 3F"
+  },
+  {
+    "slug": "mt-silver-top",
+    "name": "Mt Silver Top"
+  },
+  {
+    "slug": "unknown-all-rattata-area",
+    "name": "Unknown All Rattata"
+  },
+  {
+    "slug": "kanto-route-12-area",
+    "name": "Kanto Route 12"
+  },
+  {
+    "slug": "kanto-sea-route-19-area",
+    "name": "Kanto Sea Route 19"
+  },
+  {
+    "slug": "kanto-sea-route-20-area",
+    "name": "Kanto Sea Route 20"
+  },
+  {
+    "slug": "cinnabar-island-area",
+    "name": "Cinnabar Island"
+  },
+  {
+    "slug": "viridian-city-area",
+    "name": "Viridian City"
+  },
+  {
+    "slug": "cerulean-city-area",
+    "name": "Cerulean City"
+  },
+  {
+    "slug": "vermilion-city-area",
+    "name": "Vermilion City"
+  },
+  {
+    "slug": "celadon-city-area",
+    "name": "Celadon City"
+  },
+  {
+    "slug": "fuchsia-city-area",
+    "name": "Fuchsia City"
+  },
+  {
+    "slug": "pallet-town-area",
+    "name": "Pallet Town"
+  },
+  {
+    "slug": "johto-route-48-area",
+    "name": "Johto Route 48"
+  },
+  {
+    "slug": "kanto-route-26-area",
+    "name": "Kanto Route 26"
+  },
+  {
+    "slug": "kanto-route-27-area",
+    "name": "Kanto Route 27"
+  },
+  {
+    "slug": "kanto-route-28-area",
+    "name": "Kanto Route 28"
+  },
+  {
+    "slug": "mt-moon-1f",
+    "name": "Mt Moon 1F"
+  },
+  {
+    "slug": "mt-moon-2f",
+    "name": "Mt Moon 2F"
+  },
+  {
+    "slug": "rock-tunnel-1f",
+    "name": "Rock Tunnel 1F"
+  },
+  {
+    "slug": "rock-tunnel-b1f",
+    "name": "Rock Tunnel B1F"
+  },
+  {
+    "slug": "kanto-victory-road-1-1f",
+    "name": "Kanto Victory Road 1 1F"
+  },
+  {
+    "slug": "kanto-route-1-area",
+    "name": "Kanto Route 1"
+  },
+  {
+    "slug": "kanto-route-2-south-towards-viridian-city",
+    "name": "Kanto Route 2 South Towards Viridian City"
+  },
+  {
+    "slug": "kanto-route-3-area",
+    "name": "Kanto Route 3"
+  },
+  {
+    "slug": "kanto-route-4-area",
+    "name": "Kanto Route 4"
+  },
+  {
+    "slug": "kanto-route-5-area",
+    "name": "Kanto Route 5"
+  },
+  {
+    "slug": "kanto-route-6-area",
+    "name": "Kanto Route 6"
+  },
+  {
+    "slug": "kanto-route-7-area",
+    "name": "Kanto Route 7"
+  },
+  {
+    "slug": "kanto-route-8-area",
+    "name": "Kanto Route 8"
+  },
+  {
+    "slug": "kanto-route-9-area",
+    "name": "Kanto Route 9"
+  },
+  {
+    "slug": "kanto-route-10-area",
+    "name": "Kanto Route 10"
+  },
+  {
+    "slug": "kanto-route-11-area",
+    "name": "Kanto Route 11"
+  },
+  {
+    "slug": "kanto-route-13-area",
+    "name": "Kanto Route 13"
+  },
+  {
+    "slug": "kanto-route-14-area",
+    "name": "Kanto Route 14"
+  },
+  {
+    "slug": "kanto-route-15-area",
+    "name": "Kanto Route 15"
+  },
+  {
+    "slug": "kanto-route-16-area",
+    "name": "Kanto Route 16"
+  },
+  {
+    "slug": "kanto-route-17-area",
+    "name": "Kanto Route 17"
+  },
+  {
+    "slug": "kanto-route-18-area",
+    "name": "Kanto Route 18"
+  },
+  {
+    "slug": "kanto-sea-route-21-area",
+    "name": "Kanto Sea Route 21"
+  },
+  {
+    "slug": "kanto-route-22-area",
+    "name": "Kanto Route 22"
+  },
+  {
+    "slug": "kanto-route-24-area",
+    "name": "Kanto Route 24"
+  },
+  {
+    "slug": "kanto-route-25-area",
+    "name": "Kanto Route 25"
+  },
+  {
+    "slug": "tohjo-falls-area",
+    "name": "Tohjo Falls"
+  },
+  {
+    "slug": "digletts-cave-area",
+    "name": "Digletts Cave"
+  },
+  {
+    "slug": "kanto-victory-road-1-2f",
+    "name": "Kanto Victory Road 1 2F"
+  },
+  {
+    "slug": "kanto-victory-road-1-3f",
+    "name": "Kanto Victory Road 1 3F"
+  },
+  {
+    "slug": "kanto-route-2-north-towards-pewter-city",
+    "name": "Kanto Route 2 North Towards Pewter City"
+  },
+  {
+    "slug": "viridian-forest-area",
+    "name": "Viridian Forest"
+  },
+  {
+    "slug": "cerulean-cave-1f",
+    "name": "Cerulean Cave 1F"
+  },
+  {
+    "slug": "cerulean-cave-2f",
+    "name": "Cerulean Cave 2F"
+  },
+  {
+    "slug": "cerulean-cave-b1f",
+    "name": "Cerulean Cave B1F"
+  },
+  {
+    "slug": "mt-moon-b1f",
+    "name": "Mt Moon B1F"
+  },
+  {
+    "slug": "mt-moon-b2f",
+    "name": "Mt Moon B2F"
+  },
+  {
+    "slug": "rock-tunnel-b2f",
+    "name": "Rock Tunnel B2F"
+  },
+  {
+    "slug": "kanto-route-23-area",
+    "name": "Kanto Route 23"
+  },
+  {
+    "slug": "kanto-power-plant-area",
+    "name": "Kanto Power Plant"
+  },
+  {
+    "slug": "kanto-victory-road-2-1f",
+    "name": "Kanto Victory Road 2 1F"
+  },
+  {
+    "slug": "kanto-victory-road-2-2f",
+    "name": "Kanto Victory Road 2 2F"
+  },
+  {
+    "slug": "kanto-victory-road-2-3f",
+    "name": "Kanto Victory Road 2 3F"
+  },
+  {
+    "slug": "pokemon-tower-1f",
+    "name": "Pokemon Tower 1F"
+  },
+  {
+    "slug": "pokemon-tower-2f",
+    "name": "Pokemon Tower 2F"
+  },
+  {
+    "slug": "pokemon-tower-3f",
+    "name": "Pokemon Tower 3F"
+  },
+  {
+    "slug": "pokemon-tower-4f",
+    "name": "Pokemon Tower 4F"
+  },
+  {
+    "slug": "pokemon-tower-5f",
+    "name": "Pokemon Tower 5F"
+  },
+  {
+    "slug": "pokemon-tower-6f",
+    "name": "Pokemon Tower 6F"
+  },
+  {
+    "slug": "pokemon-tower-7f",
+    "name": "Pokemon Tower 7F"
+  },
+  {
+    "slug": "pokemon-mansion-1f",
+    "name": "Pokemon Mansion 1F"
+  },
+  {
+    "slug": "pokemon-mansion-2f",
+    "name": "Pokemon Mansion 2F"
+  },
+  {
+    "slug": "pokemon-mansion-3f",
+    "name": "Pokemon Mansion 3F"
+  },
+  {
+    "slug": "pokemon-mansion-b1f",
+    "name": "Pokemon Mansion B1F"
+  },
+  {
+    "slug": "kanto-safari-zone-middle",
+    "name": "Kanto Safari Zone Middle"
+  },
+  {
+    "slug": "kanto-safari-zone-area-1-east",
+    "name": "Kanto Safari Zone Area 1 East"
+  },
+  {
+    "slug": "kanto-safari-zone-area-2-north",
+    "name": "Kanto Safari Zone Area 2 North"
+  },
+  {
+    "slug": "kanto-safari-zone-area-3-west",
+    "name": "Kanto Safari Zone Area 3 West"
+  },
+  {
+    "slug": "vermilion-city-ss-anne-dock",
+    "name": "Vermilion City Ss Anne Dock"
+  },
+  {
+    "slug": "petalburg-city-area",
+    "name": "Petalburg City"
+  },
+  {
+    "slug": "slateport-city-area",
+    "name": "Slateport City"
+  },
+  {
+    "slug": "lilycove-city-area",
+    "name": "Lilycove City"
+  },
+  {
+    "slug": "mossdeep-city-area",
+    "name": "Mossdeep City"
+  },
+  {
+    "slug": "sootopolis-city-area",
+    "name": "Sootopolis City"
+  },
+  {
+    "slug": "ever-grande-city-area",
+    "name": "Ever Grande City"
+  },
+  {
+    "slug": "meteor-falls-area",
+    "name": "Meteor Falls"
+  },
+  {
+    "slug": "meteor-falls-back",
+    "name": "Meteor Falls Back"
+  },
+  {
+    "slug": "meteor-falls-b1f",
+    "name": "Meteor Falls B1F"
+  },
+  {
+    "slug": "meteor-falls-backsmall-room",
+    "name": "Meteor Falls Backsmall Room"
+  },
+  {
+    "slug": "rusturf-tunnel-area",
+    "name": "Rusturf Tunnel"
+  },
+  {
+    "slug": "granite-cave-1f",
+    "name": "Granite Cave 1F"
+  },
+  {
+    "slug": "granite-cave-b1f",
+    "name": "Granite Cave B1F"
+  },
+  {
+    "slug": "granite-cave-b2f",
+    "name": "Granite Cave B2F"
+  },
+  {
+    "slug": "granite-cave-1fsmall-room",
+    "name": "Granite Cave 1Fsmall Room"
+  },
+  {
+    "slug": "petalburg-woods-area",
+    "name": "Petalburg Woods"
+  },
+  {
+    "slug": "jagged-pass-area",
+    "name": "Jagged Pass"
+  },
+  {
+    "slug": "fiery-path-area",
+    "name": "Fiery Path"
+  },
+  {
+    "slug": "mt-pyre-1f",
+    "name": "Mt Pyre 1F"
+  },
+  {
+    "slug": "mt-pyre-2f",
+    "name": "Mt Pyre 2F"
+  },
+  {
+    "slug": "mt-pyre-3f",
+    "name": "Mt Pyre 3F"
+  },
+  {
+    "slug": "mt-pyre-4f",
+    "name": "Mt Pyre 4F"
+  },
+  {
+    "slug": "mt-pyre-5f",
+    "name": "Mt Pyre 5F"
+  },
+  {
+    "slug": "mt-pyre-6f",
+    "name": "Mt Pyre 6F"
+  },
+  {
+    "slug": "mt-pyre-outside",
+    "name": "Mt Pyre Outside"
+  },
+  {
+    "slug": "mt-pyre-summit",
+    "name": "Mt Pyre Summit"
+  },
+  {
+    "slug": "seafloor-cavern-area",
+    "name": "Seafloor Cavern"
+  },
+  {
+    "slug": "cave-of-origin-entrance",
+    "name": "Cave Of Origin Entrance"
+  },
+  {
+    "slug": "cave-of-origin-1f",
+    "name": "Cave Of Origin 1F"
+  },
+  {
+    "slug": "cave-of-origin-b1f",
+    "name": "Cave Of Origin B1F"
+  },
+  {
+    "slug": "cave-of-origin-b2f",
+    "name": "Cave Of Origin B2F"
+  },
+  {
+    "slug": "cave-of-origin-b3f",
+    "name": "Cave Of Origin B3F"
+  },
+  {
+    "slug": "hoenn-victory-road-1f",
+    "name": "Hoenn Victory Road 1F"
+  },
+  {
+    "slug": "hoenn-victory-road-b1f",
+    "name": "Hoenn Victory Road B1F"
+  },
+  {
+    "slug": "hoenn-victory-road-b2f",
+    "name": "Hoenn Victory Road B2F"
+  },
+  {
+    "slug": "shoal-cave-high-tide",
+    "name": "Shoal Cave High Tide"
+  },
+  {
+    "slug": "shoal-cave-b1f",
+    "name": "Shoal Cave B1F"
+  },
+  {
+    "slug": "new-mauville-entrance",
+    "name": "New Mauville Entrance"
+  },
+  {
+    "slug": "new-mauville-area",
+    "name": "New Mauville"
+  },
+  {
+    "slug": "abandoned-ship-area",
+    "name": "Abandoned Ship"
+  },
+  {
+    "slug": "sky-pillar-1f",
+    "name": "Sky Pillar 1F"
+  },
+  {
+    "slug": "sky-pillar-3f",
+    "name": "Sky Pillar 3F"
+  },
+  {
+    "slug": "sky-pillar-5f",
+    "name": "Sky Pillar 5F"
+  },
+  {
+    "slug": "hoenn-route-101-area",
+    "name": "Hoenn Route 101"
+  },
+  {
+    "slug": "hoenn-route-102-area",
+    "name": "Hoenn Route 102"
+  },
+  {
+    "slug": "hoenn-route-103-area",
+    "name": "Hoenn Route 103"
+  },
+  {
+    "slug": "hoenn-route-104-area",
+    "name": "Hoenn Route 104"
+  },
+  {
+    "slug": "hoenn-route-105-area",
+    "name": "Hoenn Route 105"
+  },
+  {
+    "slug": "hoenn-route-106-area",
+    "name": "Hoenn Route 106"
+  },
+  {
+    "slug": "hoenn-route-107-area",
+    "name": "Hoenn Route 107"
+  },
+  {
+    "slug": "hoenn-route-108-area",
+    "name": "Hoenn Route 108"
+  },
+  {
+    "slug": "hoenn-route-109-area",
+    "name": "Hoenn Route 109"
+  },
+  {
+    "slug": "hoenn-route-110-area",
+    "name": "Hoenn Route 110"
+  },
+  {
+    "slug": "hoenn-route-111-area",
+    "name": "Hoenn Route 111"
+  },
+  {
+    "slug": "hoenn-route-112-area",
+    "name": "Hoenn Route 112"
+  },
+  {
+    "slug": "hoenn-route-113-area",
+    "name": "Hoenn Route 113"
+  },
+  {
+    "slug": "hoenn-route-114-area",
+    "name": "Hoenn Route 114"
+  },
+  {
+    "slug": "hoenn-route-115-area",
+    "name": "Hoenn Route 115"
+  },
+  {
+    "slug": "hoenn-route-116-area",
+    "name": "Hoenn Route 116"
+  },
+  {
+    "slug": "hoenn-route-117-area",
+    "name": "Hoenn Route 117"
+  },
+  {
+    "slug": "hoenn-route-118-area",
+    "name": "Hoenn Route 118"
+  },
+  {
+    "slug": "hoenn-route-119-area",
+    "name": "Hoenn Route 119"
+  },
+  {
+    "slug": "hoenn-route-120-area",
+    "name": "Hoenn Route 120"
+  },
+  {
+    "slug": "hoenn-route-121-area",
+    "name": "Hoenn Route 121"
+  },
+  {
+    "slug": "hoenn-route-122-area",
+    "name": "Hoenn Route 122"
+  },
+  {
+    "slug": "hoenn-route-123-area",
+    "name": "Hoenn Route 123"
+  },
+  {
+    "slug": "hoenn-route-124-area",
+    "name": "Hoenn Route 124"
+  },
+  {
+    "slug": "hoenn-route-124-underwater",
+    "name": "Hoenn Route 124 Underwater"
+  },
+  {
+    "slug": "hoenn-route-125-area",
+    "name": "Hoenn Route 125"
+  },
+  {
+    "slug": "hoenn-route-126-area",
+    "name": "Hoenn Route 126"
+  },
+  {
+    "slug": "hoenn-route-126-underwater",
+    "name": "Hoenn Route 126 Underwater"
+  },
+  {
+    "slug": "hoenn-route-127-area",
+    "name": "Hoenn Route 127"
+  },
+  {
+    "slug": "hoenn-route-128-area",
+    "name": "Hoenn Route 128"
+  },
+  {
+    "slug": "hoenn-route-129-area",
+    "name": "Hoenn Route 129"
+  },
+  {
+    "slug": "hoenn-route-130-area",
+    "name": "Hoenn Route 130"
+  },
+  {
+    "slug": "hoenn-route-131-area",
+    "name": "Hoenn Route 131"
+  },
+  {
+    "slug": "hoenn-route-132-area",
+    "name": "Hoenn Route 132"
+  },
+  {
+    "slug": "hoenn-route-133-area",
+    "name": "Hoenn Route 133"
+  },
+  {
+    "slug": "hoenn-route-134-area",
+    "name": "Hoenn Route 134"
+  },
+  {
+    "slug": "hoenn-safari-zone-nwmach-bike-area",
+    "name": "Hoenn Safari Zone Nwmach Bike"
+  },
+  {
+    "slug": "hoenn-safari-zone-neacro-bike-area",
+    "name": "Hoenn Safari Zone Neacro Bike"
+  },
+  {
+    "slug": "hoenn-safari-zone-sw",
+    "name": "Hoenn Safari Zone Sw"
+  },
+  {
+    "slug": "hoenn-safari-zone-se",
+    "name": "Hoenn Safari Zone Se"
+  },
+  {
+    "slug": "dewford-town-area",
+    "name": "Dewford Town"
+  },
+  {
+    "slug": "pacifidlog-town-area",
+    "name": "Pacifidlog Town"
+  },
+  {
+    "slug": "hoenn-safari-zone-expansion-south",
+    "name": "Hoenn Safari Zone Expansion South"
+  },
+  {
+    "slug": "hoenn-safari-zone-expansion-north",
+    "name": "Hoenn Safari Zone Expansion North"
+  },
+  {
+    "slug": "magma-hideout-area",
+    "name": "Magma Hideout"
+  },
+  {
+    "slug": "mirage-tower-area",
+    "name": "Mirage Tower"
+  },
+  {
+    "slug": "desert-underpass-area",
+    "name": "Desert Underpass"
+  },
+  {
+    "slug": "artisan-cave-area",
+    "name": "Artisan Cave"
+  },
+  {
+    "slug": "hoenn-altering-cave-area",
+    "name": "Hoenn Altering Cave"
+  },
+  {
+    "slug": "monean-chamber-area",
+    "name": "Monean Chamber"
+  },
+  {
+    "slug": "liptoo-chamber-area",
+    "name": "Liptoo Chamber"
+  },
+  {
+    "slug": "weepth-chamber-area",
+    "name": "Weepth Chamber"
+  },
+  {
+    "slug": "dilford-chamber-area",
+    "name": "Dilford Chamber"
+  },
+  {
+    "slug": "scufib-chamber-area",
+    "name": "Scufib Chamber"
+  },
+  {
+    "slug": "rixy-chamber-area",
+    "name": "Rixy Chamber"
+  },
+  {
+    "slug": "viapos-chamber-area",
+    "name": "Viapos Chamber"
+  },
+  {
+    "slug": "ss-anne-area",
+    "name": "Ss Anne"
+  },
+  {
+    "slug": "mt-ember-area",
+    "name": "Mt Ember"
+  },
+  {
+    "slug": "mt-ember-cave",
+    "name": "Mt Ember Cave"
+  },
+  {
+    "slug": "mt-ember-inside",
+    "name": "Mt Ember Inside"
+  },
+  {
+    "slug": "mt-ember-1f-cave-behind-team-rocket",
+    "name": "Mt Ember 1F Cave Behind Team Rocket"
+  },
+  {
+    "slug": "mt-ember-b1f",
+    "name": "Mt Ember B1F"
+  },
+  {
+    "slug": "mt-ember-b2f",
+    "name": "Mt Ember B2F"
+  },
+  {
+    "slug": "mt-ember-b3f",
+    "name": "Mt Ember B3F"
+  },
+  {
+    "slug": "berry-forest-area",
+    "name": "Berry Forest"
+  },
+  {
+    "slug": "icefall-cave-entrance",
+    "name": "Icefall Cave Entrance"
+  },
+  {
+    "slug": "icefall-cave-1f",
+    "name": "Icefall Cave 1F"
+  },
+  {
+    "slug": "icefall-cave-b1f",
+    "name": "Icefall Cave B1F"
+  },
+  {
+    "slug": "icefall-cave-waterfall",
+    "name": "Icefall Cave Waterfall"
+  },
+  {
+    "slug": "pattern-bush-area",
+    "name": "Pattern Bush"
+  },
+  {
+    "slug": "lost-cave-room-1",
+    "name": "Lost Cave Room 1"
+  },
+  {
+    "slug": "lost-cave-room-2",
+    "name": "Lost Cave Room 2"
+  },
+  {
+    "slug": "lost-cave-room-3",
+    "name": "Lost Cave Room 3"
+  },
+  {
+    "slug": "lost-cave-room-4",
+    "name": "Lost Cave Room 4"
+  },
+  {
+    "slug": "lost-cave-room-5",
+    "name": "Lost Cave Room 5"
+  },
+  {
+    "slug": "lost-cave-room-6",
+    "name": "Lost Cave Room 6"
+  },
+  {
+    "slug": "lost-cave-room-7",
+    "name": "Lost Cave Room 7"
+  },
+  {
+    "slug": "lost-cave-room-8",
+    "name": "Lost Cave Room 8"
+  },
+  {
+    "slug": "lost-cave-room-9",
+    "name": "Lost Cave Room 9"
+  },
+  {
+    "slug": "lost-cave-room-10",
+    "name": "Lost Cave Room 10"
+  },
+  {
+    "slug": "lost-cave-item-rooms",
+    "name": "Lost Cave Item Rooms"
+  },
+  {
+    "slug": "kindle-road-area",
+    "name": "Kindle Road"
+  },
+  {
+    "slug": "treasure-beach-area",
+    "name": "Treasure Beach"
+  },
+  {
+    "slug": "cape-brink-area",
+    "name": "Cape Brink"
+  },
+  {
+    "slug": "bond-bridge-area",
+    "name": "Bond Bridge"
+  },
+  {
+    "slug": "three-isle-port-area",
+    "name": "Three Isle Port"
+  },
+  {
+    "slug": "resort-gorgeous-area",
+    "name": "Resort Gorgeous"
+  },
+  {
+    "slug": "water-labyrinth-area",
+    "name": "Water Labyrinth"
+  },
+  {
+    "slug": "five-isle-meadow-area",
+    "name": "Five Isle Meadow"
+  },
+  {
+    "slug": "memorial-pillar-area",
+    "name": "Memorial Pillar"
+  },
+  {
+    "slug": "outcast-island-area",
+    "name": "Outcast Island"
+  },
+  {
+    "slug": "green-path-area",
+    "name": "Green Path"
+  },
+  {
+    "slug": "water-path-area",
+    "name": "Water Path"
+  },
+  {
+    "slug": "ruin-valley-area",
+    "name": "Ruin Valley"
+  },
+  {
+    "slug": "trainer-tower-area",
+    "name": "Trainer Tower"
+  },
+  {
+    "slug": "canyon-entrance-area",
+    "name": "Canyon Entrance"
+  },
+  {
+    "slug": "sevault-canyon-area",
+    "name": "Sevault Canyon"
+  },
+  {
+    "slug": "tanoby-ruins-area",
+    "name": "Tanoby Ruins"
+  },
+  {
+    "slug": "one-island-area",
+    "name": "One Island"
+  },
+  {
+    "slug": "four-island-area",
+    "name": "Four Island"
+  },
+  {
+    "slug": "five-island-area",
+    "name": "Five Island"
+  },
+  {
+    "slug": "kanto-altering-cave-a",
+    "name": "Kanto Altering Cave A"
+  },
+  {
+    "slug": "kanto-altering-cave-b",
+    "name": "Kanto Altering Cave B"
+  },
+  {
+    "slug": "kanto-altering-cave-c",
+    "name": "Kanto Altering Cave C"
+  },
+  {
+    "slug": "kanto-altering-cave-d",
+    "name": "Kanto Altering Cave D"
+  },
+  {
+    "slug": "kanto-altering-cave-e",
+    "name": "Kanto Altering Cave E"
+  },
+  {
+    "slug": "kanto-altering-cave-f",
+    "name": "Kanto Altering Cave F"
+  },
+  {
+    "slug": "kanto-altering-cave-g",
+    "name": "Kanto Altering Cave G"
+  },
+  {
+    "slug": "kanto-altering-cave-h",
+    "name": "Kanto Altering Cave H"
+  },
+  {
+    "slug": "kanto-altering-cave-i",
+    "name": "Kanto Altering Cave I"
+  },
+  {
+    "slug": "striaton-city-area",
+    "name": "Striaton City"
+  },
+  {
+    "slug": "driftveil-city-area",
+    "name": "Driftveil City"
+  },
+  {
+    "slug": "icirrus-city-area",
+    "name": "Icirrus City"
+  },
+  {
+    "slug": "dreamyard-area",
+    "name": "Dreamyard"
+  },
+  {
+    "slug": "dreamyard-b1f",
+    "name": "Dreamyard B1F"
+  },
+  {
+    "slug": "pinwheel-forest-outside",
+    "name": "Pinwheel Forest Outside"
+  },
+  {
+    "slug": "pinwheel-forest-inside",
+    "name": "Pinwheel Forest Inside"
+  },
+  {
+    "slug": "desert-resort-entrance",
+    "name": "Desert Resort Entrance"
+  },
+  {
+    "slug": "desert-resort-area",
+    "name": "Desert Resort"
+  },
+  {
+    "slug": "relic-castle-a",
+    "name": "Relic Castle A"
+  },
+  {
+    "slug": "relic-castle-b",
+    "name": "Relic Castle B"
+  },
+  {
+    "slug": "relic-castle-c",
+    "name": "Relic Castle C"
+  },
+  {
+    "slug": "relic-castle-d",
+    "name": "Relic Castle D"
+  },
+  {
+    "slug": "cold-storage-area",
+    "name": "Cold Storage"
+  },
+  {
+    "slug": "chargestone-cave-1f",
+    "name": "Chargestone Cave 1F"
+  },
+  {
+    "slug": "chargestone-cave-b1f",
+    "name": "Chargestone Cave B1F"
+  },
+  {
+    "slug": "chargestone-cave-b2f",
+    "name": "Chargestone Cave B2F"
+  },
+  {
+    "slug": "twist-mountain-b1f-3f",
+    "name": "Twist Mountain B1F 3F"
+  },
+  {
+    "slug": "dragonspiral-tower-entrance",
+    "name": "Dragonspiral Tower Entrance"
+  },
+  {
+    "slug": "dragonspiral-tower-outside",
+    "name": "Dragonspiral Tower Outside"
+  },
+  {
+    "slug": "dragonspiral-tower-1f",
+    "name": "Dragonspiral Tower 1F"
+  },
+  {
+    "slug": "dragonspiral-tower-2f",
+    "name": "Dragonspiral Tower 2F"
+  },
+  {
+    "slug": "unova-victory-road-outside",
+    "name": "Unova Victory Road Outside"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-53",
+    "name": "Unova Victory Road Unknown Area 53"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-54",
+    "name": "Unova Victory Road Unknown Area 54"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-55",
+    "name": "Unova Victory Road Unknown Area 55"
+  },
+  {
+    "slug": "unova-victory-road-4f-middle-room",
+    "name": "Unova Victory Road 4F Middle Room"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-57",
+    "name": "Unova Victory Road Unknown Area 57"
+  },
+  {
+    "slug": "unova-victory-road-1f-unknown-room",
+    "name": "Unova Victory Road 1F Unknown Room"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-59",
+    "name": "Unova Victory Road Unknown Area 59"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-60",
+    "name": "Unova Victory Road Unknown Area 60"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-61",
+    "name": "Unova Victory Road Unknown Area 61"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-62",
+    "name": "Unova Victory Road Unknown Area 62"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-63",
+    "name": "Unova Victory Road Unknown Area 63"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-64",
+    "name": "Unova Victory Road Unknown Area 64"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-65",
+    "name": "Unova Victory Road Unknown Area 65"
+  },
+  {
+    "slug": "unova-victory-road-unknown-area-66",
+    "name": "Unova Victory Road Unknown Area 66"
+  },
+  {
+    "slug": "trial-chamber-area",
+    "name": "Trial Chamber"
+  },
+  {
+    "slug": "giant-chasm-outside",
+    "name": "Giant Chasm Outside"
+  },
+  {
+    "slug": "giant-chasm-area",
+    "name": "Giant Chasm"
+  },
+  {
+    "slug": "giant-chasm-forest",
+    "name": "Giant Chasm Forest"
+  },
+  {
+    "slug": "giant-chasm-forest-cave",
+    "name": "Giant Chasm Forest Cave"
+  },
+  {
+    "slug": "p2-laboratory-area",
+    "name": "P2 Laboratory"
+  },
+  {
+    "slug": "undella-bay-area",
+    "name": "Undella Bay"
+  },
+  {
+    "slug": "driftveil-drawbridge-area",
+    "name": "Driftveil Drawbridge"
+  },
+  {
+    "slug": "village-bridge-area",
+    "name": "Village Bridge"
+  },
+  {
+    "slug": "marvelous-bridge-area",
+    "name": "Marvelous Bridge"
+  },
+  {
+    "slug": "unova-route-1-area",
+    "name": "Unova Route 1"
+  },
+  {
+    "slug": "unova-route-2-area",
+    "name": "Unova Route 2"
+  },
+  {
+    "slug": "unova-route-3-area",
+    "name": "Unova Route 3"
+  },
+  {
+    "slug": "wellspring-cave-area",
+    "name": "Wellspring Cave"
+  },
+  {
+    "slug": "unova-route-4-area",
+    "name": "Unova Route 4"
+  },
+  {
+    "slug": "unova-route-5-area",
+    "name": "Unova Route 5"
+  },
+  {
+    "slug": "unova-route-6-area",
+    "name": "Unova Route 6"
+  },
+  {
+    "slug": "mistralton-cave-area",
+    "name": "Mistralton Cave"
+  },
+  {
+    "slug": "guidance-chamber-area",
+    "name": "Guidance Chamber"
+  },
+  {
+    "slug": "unova-route-7-area",
+    "name": "Unova Route 7"
+  },
+  {
+    "slug": "celestial-tower-2f",
+    "name": "Celestial Tower 2F"
+  },
+  {
+    "slug": "celestial-tower-3f",
+    "name": "Celestial Tower 3F"
+  },
+  {
+    "slug": "celestial-tower-4f",
+    "name": "Celestial Tower 4F"
+  },
+  {
+    "slug": "celestial-tower-5f",
+    "name": "Celestial Tower 5F"
+  },
+  {
+    "slug": "unova-route-8-area",
+    "name": "Unova Route 8"
+  },
+  {
+    "slug": "moor-of-icirrus-area",
+    "name": "Moor Of Icirrus"
+  },
+  {
+    "slug": "unova-route-9-area",
+    "name": "Unova Route 9"
+  },
+  {
+    "slug": "challengers-cave-1f",
+    "name": "Challengers Cave 1F"
+  },
+  {
+    "slug": "challengers-cave-b1f",
+    "name": "Challengers Cave B1F"
+  },
+  {
+    "slug": "challengers-cave-b2f",
+    "name": "Challengers Cave B2F"
+  },
+  {
+    "slug": "unova-route-10-area",
+    "name": "Unova Route 10"
+  },
+  {
+    "slug": "unova-route-10-victory-road-gate",
+    "name": "Unova Route 10 Victory Road Gate"
+  },
+  {
+    "slug": "unova-route-11-area",
+    "name": "Unova Route 11"
+  },
+  {
+    "slug": "unova-route-12-area",
+    "name": "Unova Route 12"
+  },
+  {
+    "slug": "unova-route-13-area",
+    "name": "Unova Route 13"
+  },
+  {
+    "slug": "unova-route-14-area",
+    "name": "Unova Route 14"
+  },
+  {
+    "slug": "abundant-shrine-area",
+    "name": "Abundant Shrine"
+  },
+  {
+    "slug": "unova-route-15-area",
+    "name": "Unova Route 15"
+  },
+  {
+    "slug": "unova-route-16-area",
+    "name": "Unova Route 16"
+  },
+  {
+    "slug": "lostlorn-forest-area",
+    "name": "Lostlorn Forest"
+  },
+  {
+    "slug": "unova-route-18-area",
+    "name": "Unova Route 18"
+  },
+  {
+    "slug": "undella-town-area",
+    "name": "Undella Town"
+  },
+  {
+    "slug": "unova-route-17-area",
+    "name": "Unova Route 17"
+  },
+  {
+    "slug": "castelia-city-area",
+    "name": "Castelia City"
+  },
+  {
+    "slug": "aspertia-city-area",
+    "name": "Aspertia City"
+  },
+  {
+    "slug": "virbank-city-area",
+    "name": "Virbank City"
+  },
+  {
+    "slug": "humilau-city-area",
+    "name": "Humilau City"
+  },
+  {
+    "slug": "unova-victory-road-7f",
+    "name": "Unova Victory Road 7F"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-71",
+    "name": "Unova Victory Road 2 Unknown Area 71"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-72",
+    "name": "Unova Victory Road 2 Unknown Area 72"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-73",
+    "name": "Unova Victory Road 2 Unknown Area 73"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-74",
+    "name": "Unova Victory Road 2 Unknown Area 74"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-75",
+    "name": "Unova Victory Road 2 Unknown Area 75"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-76",
+    "name": "Unova Victory Road 2 Unknown Area 76"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-77",
+    "name": "Unova Victory Road 2 Unknown Area 77"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-78",
+    "name": "Unova Victory Road 2 Unknown Area 78"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-79",
+    "name": "Unova Victory Road 2 Unknown Area 79"
+  },
+  {
+    "slug": "unova-victory-road-2-unknown-area-80",
+    "name": "Unova Victory Road 2 Unknown Area 80"
+  },
+  {
+    "slug": "castelia-sewers-area",
+    "name": "Castelia Sewers"
+  },
+  {
+    "slug": "castelia-sewers-unknown-area-38",
+    "name": "Castelia Sewers Unknown Area 38"
+  },
+  {
+    "slug": "floccesy-ranch-outer",
+    "name": "Floccesy Ranch Outer"
+  },
+  {
+    "slug": "floccesy-ranch-inner",
+    "name": "Floccesy Ranch Inner"
+  },
+  {
+    "slug": "virbank-complex-outer",
+    "name": "Virbank Complex Outer"
+  },
+  {
+    "slug": "virbank-complex-inner",
+    "name": "Virbank Complex Inner"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-48",
+    "name": "Reversal Mountain Unknown Area 48"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-49",
+    "name": "Reversal Mountain Unknown Area 49"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-50",
+    "name": "Reversal Mountain Unknown Area 50"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-51",
+    "name": "Reversal Mountain Unknown Area 51"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-52",
+    "name": "Reversal Mountain Unknown Area 52"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-53",
+    "name": "Reversal Mountain Unknown Area 53"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-54",
+    "name": "Reversal Mountain Unknown Area 54"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-55",
+    "name": "Reversal Mountain Unknown Area 55"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-56",
+    "name": "Reversal Mountain Unknown Area 56"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-57",
+    "name": "Reversal Mountain Unknown Area 57"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-58",
+    "name": "Reversal Mountain Unknown Area 58"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-59",
+    "name": "Reversal Mountain Unknown Area 59"
+  },
+  {
+    "slug": "reversal-mountain-unknown-area-60",
+    "name": "Reversal Mountain Unknown Area 60"
+  },
+  {
+    "slug": "strange-house-1f",
+    "name": "Strange House 1F"
+  },
+  {
+    "slug": "strange-house-b1f",
+    "name": "Strange House B1F"
+  },
+  {
+    "slug": "relic-passage-castelia-sewers-entrance",
+    "name": "Relic Passage Castelia Sewers Entrance"
+  },
+  {
+    "slug": "relic-passage-relic-castle-entrance",
+    "name": "Relic Passage Relic Castle Entrance"
+  },
+  {
+    "slug": "relic-passage-pwt-entrance",
+    "name": "Relic Passage Pwt Entrance"
+  },
+  {
+    "slug": "clay-tunnel-area",
+    "name": "Clay Tunnel"
+  },
+  {
+    "slug": "underground-ruins-area",
+    "name": "Underground Ruins"
+  },
+  {
+    "slug": "rocky-mountain-room-area",
+    "name": "Rocky Mountain Room"
+  },
+  {
+    "slug": "glacier-room-area",
+    "name": "Glacier Room"
+  },
+  {
+    "slug": "iron-room-area",
+    "name": "Iron Room"
+  },
+  {
+    "slug": "seaside-cave-1f",
+    "name": "Seaside Cave 1F"
+  },
+  {
+    "slug": "seaside-cave-b1f",
+    "name": "Seaside Cave B1F"
+  },
+  {
+    "slug": "nature-sanctuary-area",
+    "name": "Nature Sanctuary"
+  },
+  {
+    "slug": "unova-route-19-area",
+    "name": "Unova Route 19"
+  },
+  {
+    "slug": "unova-route-20-area",
+    "name": "Unova Route 20"
+  },
+  {
+    "slug": "unova-route-22-area",
+    "name": "Unova Route 22"
+  },
+  {
+    "slug": "unova-route-23-area",
+    "name": "Unova Route 23"
+  },
+  {
+    "slug": "unova-route-21-area",
+    "name": "Unova Route 21"
+  },
+  {
+    "slug": "couriway-town-area",
+    "name": "Couriway Town"
+  },
+  {
+    "slug": "ambrette-town-area",
+    "name": "Ambrette Town"
+  },
+  {
+    "slug": "cyllage-city-area",
+    "name": "Cyllage City"
+  },
+  {
+    "slug": "shalour-city-area",
+    "name": "Shalour City"
+  },
+  {
+    "slug": "laverre-city-area",
+    "name": "Laverre City"
+  },
+  {
+    "slug": "kalos-route-2-area",
+    "name": "Kalos Route 2"
+  },
+  {
+    "slug": "kalos-route-3-area",
+    "name": "Kalos Route 3"
+  },
+  {
+    "slug": "kalos-route-4-area",
+    "name": "Kalos Route 4"
+  },
+  {
+    "slug": "kalos-route-5-area",
+    "name": "Kalos Route 5"
+  },
+  {
+    "slug": "kalos-route-6-area",
+    "name": "Kalos Route 6"
+  },
+  {
+    "slug": "kalos-route-7-area",
+    "name": "Kalos Route 7"
+  },
+  {
+    "slug": "kalos-route-8-area",
+    "name": "Kalos Route 8"
+  },
+  {
+    "slug": "kalos-route-9-area",
+    "name": "Kalos Route 9"
+  },
+  {
+    "slug": "kalos-route-10-area",
+    "name": "Kalos Route 10"
+  },
+  {
+    "slug": "kalos-route-11-area",
+    "name": "Kalos Route 11"
+  },
+  {
+    "slug": "kalos-route-12-area",
+    "name": "Kalos Route 12"
+  },
+  {
+    "slug": "kalos-route-13-area",
+    "name": "Kalos Route 13"
+  },
+  {
+    "slug": "kalos-route-14-area",
+    "name": "Kalos Route 14"
+  },
+  {
+    "slug": "kalos-route-15-area",
+    "name": "Kalos Route 15"
+  },
+  {
+    "slug": "kalos-route-16-area",
+    "name": "Kalos Route 16"
+  },
+  {
+    "slug": "kalos-route-17-area",
+    "name": "Kalos Route 17"
+  },
+  {
+    "slug": "kalos-route-18-area",
+    "name": "Kalos Route 18"
+  },
+  {
+    "slug": "kalos-route-19-area",
+    "name": "Kalos Route 19"
+  },
+  {
+    "slug": "kalos-route-20-area",
+    "name": "Kalos Route 20"
+  },
+  {
+    "slug": "kalos-route-21-area",
+    "name": "Kalos Route 21"
+  },
+  {
+    "slug": "kalos-route-22-area",
+    "name": "Kalos Route 22"
+  },
+  {
+    "slug": "santalune-forest-area",
+    "name": "Santalune Forest"
+  },
+  {
+    "slug": "parfum-palace-area",
+    "name": "Parfum Palace"
+  },
+  {
+    "slug": "glittering-cave-unknown-area-303",
+    "name": "Glittering Cave Unknown Area 303"
+  },
+  {
+    "slug": "glittering-cave-unknown-area-304",
+    "name": "Glittering Cave Unknown Area 304"
+  },
+  {
+    "slug": "reflection-cave-unknown-area-305",
+    "name": "Reflection Cave Unknown Area 305"
+  },
+  {
+    "slug": "reflection-cave-unknown-area-306",
+    "name": "Reflection Cave Unknown Area 306"
+  },
+  {
+    "slug": "reflection-cave-unknown-area-307",
+    "name": "Reflection Cave Unknown Area 307"
+  },
+  {
+    "slug": "reflection-cave-unknown-area-308",
+    "name": "Reflection Cave Unknown Area 308"
+  },
+  {
+    "slug": "frost-cavern-unknown-area-313",
+    "name": "Frost Cavern Unknown Area 313"
+  },
+  {
+    "slug": "frost-cavern-unknown-area-314",
+    "name": "Frost Cavern Unknown Area 314"
+  },
+  {
+    "slug": "frost-cavern-unknown-area-315",
+    "name": "Frost Cavern Unknown Area 315"
+  },
+  {
+    "slug": "frost-cavern-unknown-area-316",
+    "name": "Frost Cavern Unknown Area 316"
+  },
+  {
+    "slug": "frost-cavern-unknown-area-317",
+    "name": "Frost Cavern Unknown Area 317"
+  },
+  {
+    "slug": "pokemon-village-area",
+    "name": "Pokemon Village"
+  },
+  {
+    "slug": "kalos-victory-road-unknown-area-322",
+    "name": "Kalos Victory Road Unknown Area 322"
+  },
+  {
+    "slug": "kalos-victory-road-unknown-area-324",
+    "name": "Kalos Victory Road Unknown Area 324"
+  },
+  {
+    "slug": "kalos-victory-road-unknown-area-326",
+    "name": "Kalos Victory Road Unknown Area 326"
+  },
+  {
+    "slug": "kalos-victory-road-outside",
+    "name": "Kalos Victory Road Outside"
+  },
+  {
+    "slug": "kalos-victory-road-unknown-area-328",
+    "name": "Kalos Victory Road Unknown Area 328"
+  },
+  {
+    "slug": "connecting-cave-area",
+    "name": "Connecting Cave"
+  },
+  {
+    "slug": "terminus-cave-1f",
+    "name": "Terminus Cave 1F"
+  },
+  {
+    "slug": "terminus-cave-b1f-left",
+    "name": "Terminus Cave B1F Left"
+  },
+  {
+    "slug": "terminus-cave-b1f-right",
+    "name": "Terminus Cave B1F Right"
+  },
+  {
+    "slug": "terminus-cave-b2f",
+    "name": "Terminus Cave B2F"
+  },
+  {
+    "slug": "terminus-cave-zygardes-chamber",
+    "name": "Terminus Cave Zygardes Chamber"
+  },
+  {
+    "slug": "lost-hotel-area",
+    "name": "Lost Hotel"
+  },
+  {
+    "slug": "azure-bay-area",
+    "name": "Azure Bay"
+  },
+  {
+    "slug": "kanto-route-4-pokemon-center",
+    "name": "Kanto Route 4 Pokemon Center"
+  },
+  {
+    "slug": "saffron-city-fighting-dojo",
+    "name": "Saffron City Fighting Dojo"
+  },
+  {
+    "slug": "celadon-city-celadon-mansion",
+    "name": "Celadon City Celadon Mansion"
+  },
+  {
+    "slug": "saffron-city-silph-co-7f",
+    "name": "Saffron City Silph Co 7F"
+  },
+  {
+    "slug": "goldenrod-city-north-gate",
+    "name": "Goldenrod City North Gate"
+  },
+  {
+    "slug": "goldenrod-city-bills-house",
+    "name": "Goldenrod City Bills House"
+  },
+  {
+    "slug": "cianwood-city-manias-house",
+    "name": "Cianwood City Manias House"
+  },
+  {
+    "slug": "hoenn-route-119-weather-institute",
+    "name": "Hoenn Route 119 Weather Institute"
+  },
+  {
+    "slug": "mossdeep-city-stevens-house",
+    "name": "Mossdeep City Stevens House"
+  },
+  {
+    "slug": "littleroot-town-area",
+    "name": "Littleroot Town"
+  },
+  {
+    "slug": "hearthome-city-area",
+    "name": "Hearthome City"
+  },
+  {
+    "slug": "veilstone-city-area",
+    "name": "Veilstone City"
+  },
+  {
+    "slug": "cianwood-city-kirks-house",
+    "name": "Cianwood City Kirks House"
+  },
+  {
+    "slug": "nuvema-town-area",
+    "name": "Nuvema Town"
+  },
+  {
+    "slug": "castelia-city-game-freak-hq-1f",
+    "name": "Castelia City Game Freak Hq 1F"
+  },
+  {
+    "slug": "unova-route-6-weather-institute",
+    "name": "Unova Route 6 Weather Institute"
+  },
+  {
+    "slug": "floccesy-town-area",
+    "name": "Floccesy Town"
+  },
+  {
+    "slug": "aquacorde-town-area",
+    "name": "Aquacorde Town"
+  },
+  {
+    "slug": "lumiose-city-area",
+    "name": "Lumiose City"
+  },
+  {
+    "slug": "tower-of-mastery-area",
+    "name": "Tower Of Mastery"
+  },
+  {
+    "slug": "slateport-city-contest-hall",
+    "name": "Slateport City Contest Hall"
+  },
+  {
+    "slug": "verdanturf-town-contest-hall",
+    "name": "Verdanturf Town Contest Hall"
+  },
+  {
+    "slug": "fallarbor-town-contest-hall",
+    "name": "Fallarbor Town Contest Hall"
+  },
+  {
+    "slug": "lilycove-city-contest-hall",
+    "name": "Lilycove City Contest Hall"
+  },
+  {
+    "slug": "southern-island-area",
+    "name": "Southern Island"
+  },
+  {
+    "slug": "battle-resort-area",
+    "name": "Battle Resort"
+  },
+  {
+    "slug": "lavaridge-town-area",
+    "name": "Lavaridge Town"
+  },
+  {
+    "slug": "eterna-city-west-gate",
+    "name": "Eterna City West Gate"
+  },
+  {
+    "slug": "hearthome-city-west-gate",
+    "name": "Hearthome City West Gate"
+  },
+  {
+    "slug": "violet-city-poke-mart",
+    "name": "Violet City Poke Mart"
+  },
+  {
+    "slug": "violet-city-pokemon-center",
+    "name": "Violet City Pokemon Center"
+  },
+  {
+    "slug": "nacrene-city-west-gate",
+    "name": "Nacrene City West Gate"
+  },
+  {
+    "slug": "bell-tower-roof",
+    "name": "Bell Tower Roof"
+  },
+  {
+    "slug": "roaming-kanto-area",
+    "name": "Roaming Kanto"
+  },
+  {
+    "slug": "roaming-johto-area",
+    "name": "Roaming Johto"
+  },
+  {
+    "slug": "roaming-hoenn-area",
+    "name": "Roaming Hoenn"
+  },
+  {
+    "slug": "roaming-sinnoh-area",
+    "name": "Roaming Sinnoh"
+  },
+  {
+    "slug": "azalea-town-area",
+    "name": "Azalea Town"
+  },
+  {
+    "slug": "mahogany-town-area",
+    "name": "Mahogany Town"
+  },
+  {
+    "slug": "cave-of-origin-b4f",
+    "name": "Cave Of Origin B4F"
+  },
+  {
+    "slug": "terra-cave-area",
+    "name": "Terra Cave"
+  },
+  {
+    "slug": "marine-cave-area",
+    "name": "Marine Cave"
+  },
+  {
+    "slug": "sky-pillar-apex",
+    "name": "Sky Pillar Apex"
+  },
+  {
+    "slug": "bell-tower-1f",
+    "name": "Bell Tower 1F"
+  },
+  {
+    "slug": "birth-island-area",
+    "name": "Birth Island"
+  },
+  {
+    "slug": "navel-rock-area",
+    "name": "Navel Rock"
+  },
+  {
+    "slug": "faraway-island-area",
+    "name": "Faraway Island"
+  },
+  {
+    "slug": "hoenn-battle-frontier-area",
+    "name": "Hoenn Battle Frontier"
+  },
+  {
+    "slug": "desert-ruins-area",
+    "name": "Desert Ruins"
+  },
+  {
+    "slug": "island-cave-area",
+    "name": "Island Cave"
+  },
+  {
+    "slug": "ancient-tomb-area",
+    "name": "Ancient Tomb"
+  },
+  {
+    "slug": "johto-safari-zone-peak",
+    "name": "Johto Safari Zone Peak"
+  },
+  {
+    "slug": "johto-safari-zone-desert",
+    "name": "Johto Safari Zone Desert"
+  },
+  {
+    "slug": "johto-safari-zone-plains",
+    "name": "Johto Safari Zone Plains"
+  },
+  {
+    "slug": "johto-safari-zone-meadow",
+    "name": "Johto Safari Zone Meadow"
+  },
+  {
+    "slug": "johto-safari-zone-forest",
+    "name": "Johto Safari Zone Forest"
+  },
+  {
+    "slug": "johto-safari-zone-swamp",
+    "name": "Johto Safari Zone Swamp"
+  },
+  {
+    "slug": "johto-safari-zone-marshland",
+    "name": "Johto Safari Zone Marshland"
+  },
+  {
+    "slug": "johto-safari-zone-mountain",
+    "name": "Johto Safari Zone Mountain"
+  },
+  {
+    "slug": "johto-safari-zone-rocky-beach",
+    "name": "Johto Safari Zone Rocky Beach"
+  },
+  {
+    "slug": "johto-safari-zone-wasteland",
+    "name": "Johto Safari Zone Wasteland"
+  },
+  {
+    "slug": "johto-safari-zone-savannah",
+    "name": "Johto Safari Zone Savannah"
+  },
+  {
+    "slug": "johto-safari-zone-wetland",
+    "name": "Johto Safari Zone Wetland"
+  },
+  {
+    "slug": "mt-ember-summit",
+    "name": "Mt Ember Summit"
+  },
+  {
+    "slug": "embedded-tower-kyogre-room",
+    "name": "Embedded Tower Kyogre Room"
+  },
+  {
+    "slug": "embedded-tower-groundon-room",
+    "name": "Embedded Tower Groundon Room"
+  },
+  {
+    "slug": "embedded-tower-rayquaza-room",
+    "name": "Embedded Tower Rayquaza Room"
+  },
+  {
+    "slug": "lake-acuity-cavern",
+    "name": "Lake Acuity Cavern"
+  },
+  {
+    "slug": "lake-valor-cavern",
+    "name": "Lake Valor Cavern"
+  },
+  {
+    "slug": "spear-pillar-area",
+    "name": "Spear Pillar"
+  },
+  {
+    "slug": "kanto-route-3-pokemon-center",
+    "name": "Kanto Route 3 Pokemon Center"
+  },
+  {
+    "slug": "cinnabar-island-cinnabar-lab",
+    "name": "Cinnabar Island Cinnabar Lab"
+  },
+  {
+    "slug": "rustboro-city-area",
+    "name": "Rustboro City"
+  },
+  {
+    "slug": "saffron-city-silph-co",
+    "name": "Saffron City Silph Co"
+  },
+  {
+    "slug": "cianwood-city-pokemon-center",
+    "name": "Cianwood City Pokemon Center"
+  },
+  {
+    "slug": "stark-mountain-heatran-chamber",
+    "name": "Stark Mountain Heatran Chamber"
+  },
+  {
+    "slug": "newmoon-island-area",
+    "name": "Newmoon Island"
+  },
+  {
+    "slug": "flower-paradise-area",
+    "name": "Flower Paradise"
+  },
+  {
+    "slug": "sinnoh-hall-of-origin-1-area",
+    "name": "Sinnoh Hall Of Origin 1"
+  },
+  {
+    "slug": "team-rocket-hq-area",
+    "name": "Team Rocket Hq"
+  },
+  {
+    "slug": "sinjoh-ruins-area",
+    "name": "Sinjoh Ruins"
+  },
+  {
+    "slug": "galar-route-1-area",
+    "name": "Galar Route 1"
+  },
+  {
+    "slug": "galar-route-2-main",
+    "name": "Galar Route 2 Main"
+  },
+  {
+    "slug": "galar-route-3-east",
+    "name": "Galar Route 3 East"
+  },
+  {
+    "slug": "galar-route-4-area",
+    "name": "Galar Route 4"
+  },
+  {
+    "slug": "galar-route-5-area",
+    "name": "Galar Route 5"
+  },
+  {
+    "slug": "galar-route-6-area",
+    "name": "Galar Route 6"
+  },
+  {
+    "slug": "galar-route-7-area",
+    "name": "Galar Route 7"
+  },
+  {
+    "slug": "galar-route-8-main",
+    "name": "Galar Route 8 Main"
+  },
+  {
+    "slug": "galar-route-8-steamdrift-way",
+    "name": "Galar Route 8 Steamdrift Way"
+  },
+  {
+    "slug": "galar-route-9-main",
+    "name": "Galar Route 9 Main"
+  },
+  {
+    "slug": "galar-route-9-circhester-bay",
+    "name": "Galar Route 9 Circhester Bay"
+  },
+  {
+    "slug": "galar-route-9-outer-spikemuth",
+    "name": "Galar Route 9 Outer Spikemuth"
+  },
+  {
+    "slug": "galar-route-10-main",
+    "name": "Galar Route 10 Main"
+  },
+  {
+    "slug": "galar-route-10-near-station",
+    "name": "Galar Route 10 Near Station"
+  },
+  {
+    "slug": "axews-eye-area",
+    "name": "Axews Eye"
+  },
+  {
+    "slug": "ballimere-lake-area",
+    "name": "Ballimere Lake"
+  },
+  {
+    "slug": "ballonlea-area",
+    "name": "Ballonlea"
+  },
+  {
+    "slug": "galar-battle-tower-area",
+    "name": "Galar Battle Tower"
+  },
+  {
+    "slug": "brawlers-cave-area",
+    "name": "Brawlers Cave"
+  },
+  {
+    "slug": "bridge-field-area",
+    "name": "Bridge Field"
+  },
+  {
+    "slug": "challenge-beach-area",
+    "name": "Challenge Beach"
+  },
+  {
+    "slug": "challenge-road-area",
+    "name": "Challenge Road"
+  },
+  {
+    "slug": "circhester-area",
+    "name": "Circhester"
+  },
+  {
+    "slug": "courageous-cavern-area",
+    "name": "Courageous Cavern"
+  },
+  {
+    "slug": "crown-shrine-area",
+    "name": "Crown Shrine"
+  },
+  {
+    "slug": "dappled-grove-area",
+    "name": "Dappled Grove"
+  },
+  {
+    "slug": "dusty-bowl-area",
+    "name": "Dusty Bowl"
+  },
+  {
+    "slug": "dyna-tree-hill-area",
+    "name": "Dyna Tree Hill"
+  },
+  {
+    "slug": "east-lake-axewell-area",
+    "name": "East Lake Axewell"
+  },
+  {
+    "slug": "fields-of-honor-area",
+    "name": "Fields Of Honor"
+  },
+  {
+    "slug": "forest-of-focus-area",
+    "name": "Forest Of Focus"
+  },
+  {
+    "slug": "freezington-area",
+    "name": "Freezington"
+  },
+  {
+    "slug": "frigid-sea-area",
+    "name": "Frigid Sea"
+  },
+  {
+    "slug": "frostpoint-field-area",
+    "name": "Frostpoint Field"
+  },
+  {
+    "slug": "galar-mine-area",
+    "name": "Galar Mine"
+  },
+  {
+    "slug": "galar-mine-no-2-area",
+    "name": "Galar Mine No 2"
+  },
+  {
+    "slug": "giants-bed-area",
+    "name": "Giants Bed"
+  },
+  {
+    "slug": "giants-cap-main",
+    "name": "Giants Cap Main"
+  },
+  {
+    "slug": "giants-cap-area-2",
+    "name": "Giants Cap Area 2"
+  },
+  {
+    "slug": "giants-cap-area-3",
+    "name": "Giants Cap Area 3"
+  },
+  {
+    "slug": "giants-foot-area",
+    "name": "Giants Foot"
+  },
+  {
+    "slug": "giants-mirror-main",
+    "name": "Giants Mirror Main"
+  },
+  {
+    "slug": "giants-seat-area",
+    "name": "Giants Seat"
+  },
+  {
+    "slug": "glimwood-tangle-area",
+    "name": "Glimwood Tangle"
+  },
+  {
+    "slug": "hammerlocke-area",
+    "name": "Hammerlocke"
+  },
+  {
+    "slug": "hammerlocke-hills-area",
+    "name": "Hammerlocke Hills"
+  },
+  {
+    "slug": "honeycalm-island-area",
+    "name": "Honeycalm Island"
+  },
+  {
+    "slug": "honeycalm-sea-area",
+    "name": "Honeycalm Sea"
+  },
+  {
+    "slug": "hulbury-area",
+    "name": "Hulbury"
+  },
+  {
+    "slug": "galar-iceberg-ruins-area",
+    "name": "Galar Iceberg Ruins"
+  },
+  {
+    "slug": "insular-sea-area",
+    "name": "Insular Sea"
+  },
+  {
+    "slug": "galar-iron-ruins-area",
+    "name": "Galar Iron Ruins"
+  },
+  {
+    "slug": "lake-of-outrage-area",
+    "name": "Lake Of Outrage"
+  },
+  {
+    "slug": "lakeside-cave-area",
+    "name": "Lakeside Cave"
+  },
+  {
+    "slug": "loop-lagoon-area",
+    "name": "Loop Lagoon"
+  },
+  {
+    "slug": "master-dojo-area",
+    "name": "Master Dojo"
+  },
+  {
+    "slug": "max-lair-area",
+    "name": "Max Lair"
+  },
+  {
+    "slug": "motostoke-main",
+    "name": "Motostoke Main"
+  },
+  {
+    "slug": "motostoke-outskirts-area",
+    "name": "Motostoke Outskirts"
+  },
+  {
+    "slug": "motostoke-riverbank-area",
+    "name": "Motostoke Riverbank"
+  },
+  {
+    "slug": "north-lake-miloch-area",
+    "name": "North Lake Miloch"
+  },
+  {
+    "slug": "old-cemetery-area",
+    "name": "Old Cemetery"
+  },
+  {
+    "slug": "path-to-the-peak-area",
+    "name": "Path To The Peak"
+  },
+  {
+    "slug": "postwick-area",
+    "name": "Postwick"
+  },
+  {
+    "slug": "potbottom-desert-area",
+    "name": "Potbottom Desert"
+  },
+  {
+    "slug": "roaring-sea-caves-area",
+    "name": "Roaring Sea Caves"
+  },
+  {
+    "slug": "galar-rock-peak-ruins-area",
+    "name": "Galar Rock Peak Ruins"
+  },
+  {
+    "slug": "rolling-fields-main",
+    "name": "Rolling Fields Main"
+  },
+  {
+    "slug": "rolling-fields-area-2",
+    "name": "Rolling Fields Area 2"
+  },
+  {
+    "slug": "slippery-slope-area",
+    "name": "Slippery Slope"
+  },
+  {
+    "slug": "slumbering-weald-main",
+    "name": "Slumbering Weald Main"
+  },
+  {
+    "slug": "snowslide-slope-area",
+    "name": "Snowslide Slope"
+  },
+  {
+    "slug": "soothing-wetlands-area",
+    "name": "Soothing Wetlands"
+  },
+  {
+    "slug": "south-lake-miloch-main",
+    "name": "South Lake Miloch Main"
+  },
+  {
+    "slug": "south-lake-miloch-area-2",
+    "name": "South Lake Miloch Area 2"
+  },
+  {
+    "slug": "spikemuth-area",
+    "name": "Spikemuth"
+  },
+  {
+    "slug": "split-decision-ruins-area",
+    "name": "Split Decision Ruins"
+  },
+  {
+    "slug": "stepping-stone-sea-main",
+    "name": "Stepping Stone Sea Main"
+  },
+  {
+    "slug": "stepping-stone-sea-area-2",
+    "name": "Stepping Stone Sea Area 2"
+  },
+  {
+    "slug": "stony-wilderness-main",
+    "name": "Stony Wilderness Main"
+  },
+  {
+    "slug": "stony-wilderness-area-2",
+    "name": "Stony Wilderness Area 2"
+  },
+  {
+    "slug": "stony-wilderness-area-3",
+    "name": "Stony Wilderness Area 3"
+  },
+  {
+    "slug": "stow-on-side-area",
+    "name": "Stow On Side"
+  },
+  {
+    "slug": "three-point-pass-area",
+    "name": "Three Point Pass"
+  },
+  {
+    "slug": "tower-of-darkness-area",
+    "name": "Tower Of Darkness"
+  },
+  {
+    "slug": "tower-of-waters-area",
+    "name": "Tower Of Waters"
+  },
+  {
+    "slug": "training-lowlands-area",
+    "name": "Training Lowlands"
+  },
+  {
+    "slug": "tunnel-to-the-top-area",
+    "name": "Tunnel To The Top"
+  },
+  {
+    "slug": "turffield-area",
+    "name": "Turffield"
+  },
+  {
+    "slug": "warm-up-tunnel-area",
+    "name": "Warm Up Tunnel"
+  },
+  {
+    "slug": "watchtower-ruins-area",
+    "name": "Watchtower Ruins"
+  },
+  {
+    "slug": "wedgehurst-area",
+    "name": "Wedgehurst"
+  },
+  {
+    "slug": "west-lake-axewell-area",
+    "name": "West Lake Axewell"
+  },
+  {
+    "slug": "workout-sea-area",
+    "name": "Workout Sea"
+  },
+  {
+    "slug": "wyndon-area",
+    "name": "Wyndon"
+  },
+  {
+    "slug": "aipom-hill-area",
+    "name": "Aipom Hill"
+  },
+  {
+    "slug": "ancient-quarry-area",
+    "name": "Ancient Quarry"
+  },
+  {
+    "slug": "arenas-approach-area",
+    "name": "Arenas Approach"
+  },
+  {
+    "slug": "aspiration-hill-area",
+    "name": "Aspiration Hill"
+  },
+  {
+    "slug": "avalanche-slopes-area",
+    "name": "Avalanche Slopes"
+  },
+  {
+    "slug": "avaluggs-legacy-area",
+    "name": "Avaluggs Legacy"
+  },
+  {
+    "slug": "bathers-lagoon-area",
+    "name": "Bathers Lagoon"
+  },
+  {
+    "slug": "bolderoll-ravine-area",
+    "name": "Bolderoll Ravine"
+  },
+  {
+    "slug": "bolderoll-slope-area",
+    "name": "Bolderoll Slope"
+  },
+  {
+    "slug": "bonechill-wastes-area",
+    "name": "Bonechill Wastes"
+  },
+  {
+    "slug": "brava-arena-area",
+    "name": "Brava Arena"
+  },
+  {
+    "slug": "castaway-shore-area",
+    "name": "Castaway Shore"
+  },
+  {
+    "slug": "celestica-ruins-area",
+    "name": "Celestica Ruins"
+  },
+  {
+    "slug": "celestica-trail-area",
+    "name": "Celestica Trail"
+  },
+  {
+    "slug": "clamberclaw-cliffs-area",
+    "name": "Clamberclaw Cliffs"
+  },
+  {
+    "slug": "cloudcap-pass-area",
+    "name": "Cloudcap Pass"
+  },
+  {
+    "slug": "cloudpool-ridge-area",
+    "name": "Cloudpool Ridge"
+  },
+  {
+    "slug": "coastlands-camp-area",
+    "name": "Coastlands Camp"
+  },
+  {
+    "slug": "cottonsedge-prairie-area",
+    "name": "Cottonsedge Prairie"
+  },
+  {
+    "slug": "crossing-slope-area",
+    "name": "Crossing Slope"
+  },
+  {
+    "slug": "deadwood-haunt-area",
+    "name": "Deadwood Haunt"
+  },
+  {
+    "slug": "deertrack-heights-area",
+    "name": "Deertrack Heights"
+  },
+  {
+    "slug": "deertrack-path-area",
+    "name": "Deertrack Path"
+  },
+  {
+    "slug": "diamond-heath-area",
+    "name": "Diamond Heath"
+  },
+  {
+    "slug": "diamond-settlement-area",
+    "name": "Diamond Settlement"
+  },
+  {
+    "slug": "droning-meadow-area",
+    "name": "Droning Meadow"
+  },
+  {
+    "slug": "fabled-spring-area",
+    "name": "Fabled Spring"
+  },
+  {
+    "slug": "firespit-island-area",
+    "name": "Firespit Island"
+  },
+  {
+    "slug": "floaro-gardens-area",
+    "name": "Floaro Gardens"
+  },
+  {
+    "slug": "gapejaw-bog-area",
+    "name": "Gapejaw Bog"
+  },
+  {
+    "slug": "ginkgo-landing-area",
+    "name": "Ginkgo Landing"
+  },
+  {
+    "slug": "glacier-terrace-area",
+    "name": "Glacier Terrace"
+  },
+  {
+    "slug": "golden-lowlands-area",
+    "name": "Golden Lowlands"
+  },
+  {
+    "slug": "grandtree-arena-area",
+    "name": "Grandtree Arena"
+  },
+  {
+    "slug": "grueling-grove-area",
+    "name": "Grueling Grove"
+  },
+  {
+    "slug": "hearts-crag-area",
+    "name": "Hearts Crag"
+  },
+  {
+    "slug": "heavenward-lookout-area",
+    "name": "Heavenward Lookout"
+  },
+  {
+    "slug": "heights-camp-area",
+    "name": "Heights Camp"
+  },
+  {
+    "slug": "hideaway-bay-area",
+    "name": "Hideaway Bay"
+  },
+  {
+    "slug": "holm-of-trials-area",
+    "name": "Holm Of Trials"
+  },
+  {
+    "slug": "horseshoe-plains-area",
+    "name": "Horseshoe Plains"
+  },
+  {
+    "slug": "ice-column-chamber-area",
+    "name": "Ice Column Chamber"
+  },
+  {
+    "slug": "icebound-falls-area",
+    "name": "Icebound Falls"
+  },
+  {
+    "slug": "icepeak-arena-area",
+    "name": "Icepeak Arena"
+  },
+  {
+    "slug": "icepeak-cavern-area",
+    "name": "Icepeak Cavern"
+  },
+  {
+    "slug": "islespy-shore-area",
+    "name": "Islespy Shore"
+  },
+  {
+    "slug": "jubilife-village-area",
+    "name": "Jubilife Village"
+  },
+  {
+    "slug": "hisui-lake-acuity-area",
+    "name": "Hisui Lake Acuity"
+  },
+  {
+    "slug": "hisui-lake-valor-area",
+    "name": "Hisui Lake Valor"
+  },
+  {
+    "slug": "hisui-lake-verity-area",
+    "name": "Hisui Lake Verity"
+  },
+  {
+    "slug": "lonely-spring-area",
+    "name": "Lonely Spring"
+  },
+  {
+    "slug": "lunkers-lair-area",
+    "name": "Lunkers Lair"
+  },
+  {
+    "slug": "molten-arena-area",
+    "name": "Molten Arena"
+  },
+  {
+    "slug": "moonview-arena-area",
+    "name": "Moonview Arena"
+  },
+  {
+    "slug": "natures-pantry-area",
+    "name": "Natures Pantry"
+  },
+  {
+    "slug": "obsidian-falls-area",
+    "name": "Obsidian Falls"
+  },
+  {
+    "slug": "oreburrow-tunnel-area",
+    "name": "Oreburrow Tunnel"
+  },
+  {
+    "slug": "pearl-settlement-area",
+    "name": "Pearl Settlement"
+  },
+  {
+    "slug": "primeval-grotto-area",
+    "name": "Primeval Grotto"
+  },
+  {
+    "slug": "ramanas-island-area",
+    "name": "Ramanas Island"
+  },
+  {
+    "slug": "sacred-plaza-area",
+    "name": "Sacred Plaza"
+  },
+  {
+    "slug": "sands-reach-area",
+    "name": "Sands Reach"
+  },
+  {
+    "slug": "sandgem-flats-area",
+    "name": "Sandgem Flats"
+  },
+  {
+    "slug": "scarlet-bog-area",
+    "name": "Scarlet Bog"
+  },
+  {
+    "slug": "seagrass-haven-area",
+    "name": "Seagrass Haven"
+  },
+  {
+    "slug": "seaside-hollow-area",
+    "name": "Seaside Hollow"
+  },
+  {
+    "slug": "shrouded-ruins-area",
+    "name": "Shrouded Ruins"
+  },
+  {
+    "slug": "sludge-mound-area",
+    "name": "Sludge Mound"
+  },
+  {
+    "slug": "snowfall-hot-spring-area",
+    "name": "Snowfall Hot Spring"
+  },
+  {
+    "slug": "hisui-snowpoint-temple-area",
+    "name": "Hisui Snowpoint Temple"
+  },
+  {
+    "slug": "hisui-solaceon-ruins-area",
+    "name": "Hisui Solaceon Ruins"
+  },
+  {
+    "slug": "sonorous-path-area",
+    "name": "Sonorous Path"
+  },
+  {
+    "slug": "space-time-distortion-area",
+    "name": "Space Time Distortion"
+  },
+  {
+    "slug": "hisui-spring-path-area",
+    "name": "Hisui Spring Path"
+  },
+  {
+    "slug": "stonetooth-rows-area",
+    "name": "Stonetooth Rows"
+  },
+  {
+    "slug": "temple-of-sinnoh-area",
+    "name": "Temple Of Sinnoh"
+  },
+  {
+    "slug": "the-heartwood-area",
+    "name": "The Heartwood"
+  },
+  {
+    "slug": "tidewater-dam-area",
+    "name": "Tidewater Dam"
+  },
+  {
+    "slug": "tombolo-walk-area",
+    "name": "Tombolo Walk"
+  },
+  {
+    "slug": "tranquility-cove-area",
+    "name": "Tranquility Cove"
+  },
+  {
+    "slug": "hisui-turnback-cave-area",
+    "name": "Hisui Turnback Cave"
+  },
+  {
+    "slug": "ursas-ring-area",
+    "name": "Ursas Ring"
+  },
+  {
+    "slug": "veilstone-cape-area",
+    "name": "Veilstone Cape"
+  },
+  {
+    "slug": "hisui-wayward-cave-area",
+    "name": "Hisui Wayward Cave"
+  },
+  {
+    "slug": "wayward-wood-area",
+    "name": "Wayward Wood"
+  },
+  {
+    "slug": "whiteout-valley-area",
+    "name": "Whiteout Valley"
+  },
+  {
+    "slug": "windbreak-stand-area",
+    "name": "Windbreak Stand"
+  },
+  {
+    "slug": "windswept-run-area",
+    "name": "Windswept Run"
+  },
+  {
+    "slug": "worn-bridge-area",
+    "name": "Worn Bridge"
+  },
+  {
+    "slug": "alola-route-1-east",
+    "name": "Alola Route 1 East"
+  },
+  {
+    "slug": "alola-route-1-hauoli-outskirts",
+    "name": "Alola Route 1 Hauoli Outskirts"
+  },
+  {
+    "slug": "alola-route-1-south",
+    "name": "Alola Route 1 South"
+  },
+  {
+    "slug": "alola-route-1-trainers-school",
+    "name": "Alola Route 1 Trainers School"
+  },
+  {
+    "slug": "alola-route-1-west",
+    "name": "Alola Route 1 West"
+  },
+  {
+    "slug": "alola-route-2-main",
+    "name": "Alola Route 2 Main"
+  },
+  {
+    "slug": "alola-route-2-north",
+    "name": "Alola Route 2 North"
+  },
+  {
+    "slug": "alola-route-2-south",
+    "name": "Alola Route 2 South"
+  },
+  {
+    "slug": "alola-route-3-main",
+    "name": "Alola Route 3 Main"
+  },
+  {
+    "slug": "alola-route-3-north",
+    "name": "Alola Route 3 North"
+  },
+  {
+    "slug": "alola-route-3-south",
+    "name": "Alola Route 3 South"
+  },
+  {
+    "slug": "alola-route-4-area",
+    "name": "Alola Route 4"
+  },
+  {
+    "slug": "alola-route-5-area",
+    "name": "Alola Route 5"
+  },
+  {
+    "slug": "alola-route-6-north",
+    "name": "Alola Route 6 North"
+  },
+  {
+    "slug": "alola-route-6-south",
+    "name": "Alola Route 6 South"
+  },
+  {
+    "slug": "alola-route-7-area",
+    "name": "Alola Route 7"
+  },
+  {
+    "slug": "alola-route-8-main",
+    "name": "Alola Route 8 Main"
+  },
+  {
+    "slug": "alola-route-8-fossil-restoration-center",
+    "name": "Alola Route 8 Fossil Restoration Center"
+  },
+  {
+    "slug": "alola-route-9-main",
+    "name": "Alola Route 9 Main"
+  },
+  {
+    "slug": "alola-route-9-police-station",
+    "name": "Alola Route 9 Police Station"
+  },
+  {
+    "slug": "alola-route-10-area",
+    "name": "Alola Route 10"
+  },
+  {
+    "slug": "alola-route-11-area",
+    "name": "Alola Route 11"
+  },
+  {
+    "slug": "alola-route-12-area",
+    "name": "Alola Route 12"
+  },
+  {
+    "slug": "alola-route-13-area",
+    "name": "Alola Route 13"
+  },
+  {
+    "slug": "alola-route-14-area",
+    "name": "Alola Route 14"
+  },
+  {
+    "slug": "alola-route-15-main",
+    "name": "Alola Route 15 Main"
+  },
+  {
+    "slug": "alola-route-15-aether-house",
+    "name": "Alola Route 15 Aether House"
+  },
+  {
+    "slug": "alola-route-16-main",
+    "name": "Alola Route 16 Main"
+  },
+  {
+    "slug": "alola-route-16-east",
+    "name": "Alola Route 16 East"
+  },
+  {
+    "slug": "alola-route-16-west",
+    "name": "Alola Route 16 West"
+  },
+  {
+    "slug": "alola-route-17-northeast",
+    "name": "Alola Route 17 Northeast"
+  },
+  {
+    "slug": "alola-route-17-west",
+    "name": "Alola Route 17 West"
+  },
+  {
+    "slug": "aether-paradise-2f",
+    "name": "Aether Paradise 2F"
+  },
+  {
+    "slug": "akala-outskirts-area",
+    "name": "Akala Outskirts"
+  },
+  {
+    "slug": "altar-of-the-moone-area",
+    "name": "Altar Of The Moone"
+  },
+  {
+    "slug": "altar-of-the-sunne-area",
+    "name": "Altar Of The Sunne"
+  },
+  {
+    "slug": "ancient-poni-path-area",
+    "name": "Ancient Poni Path"
+  },
+  {
+    "slug": "alola-berry-fields-area",
+    "name": "Alola Berry Fields"
+  },
+  {
+    "slug": "blush-mountain-area",
+    "name": "Blush Mountain"
+  },
+  {
+    "slug": "brooklet-hill-main",
+    "name": "Brooklet Hill Main"
+  },
+  {
+    "slug": "brooklet-hill-north",
+    "name": "Brooklet Hill North"
+  },
+  {
+    "slug": "brooklet-hill-south",
+    "name": "Brooklet Hill South"
+  },
+  {
+    "slug": "brooklet-hill-totems-den",
+    "name": "Brooklet Hill Totems Den"
+  },
+  {
+    "slug": "digletts-tunnel-area",
+    "name": "Digletts Tunnel"
+  },
+  {
+    "slug": "dividing-peak-tunnel-area",
+    "name": "Dividing Peak Tunnel"
+  },
+  {
+    "slug": "exeggutor-island-area",
+    "name": "Exeggutor Island"
+  },
+  {
+    "slug": "haina-desert-area",
+    "name": "Haina Desert"
+  },
+  {
+    "slug": "hano-beach-area",
+    "name": "Hano Beach"
+  },
+  {
+    "slug": "hauoli-cemetery-area",
+    "name": "Hauoli Cemetery"
+  },
+  {
+    "slug": "hauoli-city-main",
+    "name": "Hauoli City Main"
+  },
+  {
+    "slug": "hauoli-city-shopping-district",
+    "name": "Hauoli City Shopping District"
+  },
+  {
+    "slug": "hauoli-city-beachfront",
+    "name": "Hauoli City Beachfront"
+  },
+  {
+    "slug": "heahea-beach-area",
+    "name": "Heahea Beach"
+  },
+  {
+    "slug": "heahea-city-surf-association",
+    "name": "Heahea City Surf Association"
+  },
+  {
+    "slug": "iki-town-area",
+    "name": "Iki Town"
+  },
+  {
+    "slug": "kalae-bay-area",
+    "name": "Kalae Bay"
+  },
+  {
+    "slug": "konikoni-city-area",
+    "name": "Konikoni City"
+  },
+  {
+    "slug": "lake-of-the-moone-area",
+    "name": "Lake Of The Moone"
+  },
+  {
+    "slug": "lake-of-the-sunne-area",
+    "name": "Lake Of The Sunne"
+  },
+  {
+    "slug": "lush-jungle-east-cave",
+    "name": "Lush Jungle East Cave"
+  },
+  {
+    "slug": "lush-jungle-north",
+    "name": "Lush Jungle North"
+  },
+  {
+    "slug": "lush-jungle-south",
+    "name": "Lush Jungle South"
+  },
+  {
+    "slug": "lush-jungle-west",
+    "name": "Lush Jungle West"
+  },
+  {
+    "slug": "mahalo-trail-area",
+    "name": "Mahalo Trail"
+  },
+  {
+    "slug": "malie-city-main",
+    "name": "Malie City Main"
+  },
+  {
+    "slug": "malie-city-outer-cape",
+    "name": "Malie City Outer Cape"
+  },
+  {
+    "slug": "malie-garden-area",
+    "name": "Malie Garden"
+  },
+  {
+    "slug": "melemele-meadow-area",
+    "name": "Melemele Meadow"
+  },
+  {
+    "slug": "melemele-sea-area",
+    "name": "Melemele Sea"
+  },
+  {
+    "slug": "memorial-hill-area",
+    "name": "Memorial Hill"
+  },
+  {
+    "slug": "mount-hokulani-main",
+    "name": "Mount Hokulani Main"
+  },
+  {
+    "slug": "mount-hokulani-east",
+    "name": "Mount Hokulani East"
+  },
+  {
+    "slug": "mount-hokulani-west",
+    "name": "Mount Hokulani West"
+  },
+  {
+    "slug": "mount-lanakila-base",
+    "name": "Mount Lanakila Base"
+  },
+  {
+    "slug": "mount-lanakila-cave",
+    "name": "Mount Lanakila Cave"
+  },
+  {
+    "slug": "mount-lanakila-outside",
+    "name": "Mount Lanakila Outside"
+  },
+  {
+    "slug": "paniola-ranch-area",
+    "name": "Paniola Ranch"
+  },
+  {
+    "slug": "paniola-town-area",
+    "name": "Paniola Town"
+  },
+  {
+    "slug": "poni-breaker-coast-area",
+    "name": "Poni Breaker Coast"
+  },
+  {
+    "slug": "poni-coast-area",
+    "name": "Poni Coast"
+  },
+  {
+    "slug": "poni-gauntlet-area",
+    "name": "Poni Gauntlet"
+  },
+  {
+    "slug": "poni-grove-area",
+    "name": "Poni Grove"
+  },
+  {
+    "slug": "poni-meadow-area",
+    "name": "Poni Meadow"
+  },
+  {
+    "slug": "poni-plains-center",
+    "name": "Poni Plains Center"
+  },
+  {
+    "slug": "poni-plains-east",
+    "name": "Poni Plains East"
+  },
+  {
+    "slug": "poni-plains-north",
+    "name": "Poni Plains North"
+  },
+  {
+    "slug": "poni-plains-west",
+    "name": "Poni Plains West"
+  },
+  {
+    "slug": "poni-wilds-area",
+    "name": "Poni Wilds"
+  },
+  {
+    "slug": "resolution-cave-area",
+    "name": "Resolution Cave"
+  },
+  {
+    "slug": "royal-avenue-area",
+    "name": "Royal Avenue"
+  },
+  {
+    "slug": "ruins-of-abundance-area",
+    "name": "Ruins Of Abundance"
+  },
+  {
+    "slug": "ruins-of-conflict-area",
+    "name": "Ruins Of Conflict"
+  },
+  {
+    "slug": "ruins-of-hope-area",
+    "name": "Ruins Of Hope"
+  },
+  {
+    "slug": "ruins-of-life-area",
+    "name": "Ruins Of Life"
+  },
+  {
+    "slug": "sandy-cave-area",
+    "name": "Sandy Cave"
+  },
+  {
+    "slug": "seafolk-village-main",
+    "name": "Seafolk Village Main"
+  },
+  {
+    "slug": "seafolk-village-huntail-boat",
+    "name": "Seafolk Village Huntail Boat"
+  },
+  {
+    "slug": "seaward-cave-area",
+    "name": "Seaward Cave"
+  },
+  {
+    "slug": "secluded-shore-area",
+    "name": "Secluded Shore"
+  },
+  {
+    "slug": "tapu-village-area",
+    "name": "Tapu Village"
+  },
+  {
+    "slug": "ten-carat-hill-farthest-hollow",
+    "name": "Ten Carat Hill Farthest Hollow"
+  },
+  {
+    "slug": "ten-carat-hill-inside",
+    "name": "Ten Carat Hill Inside"
+  },
+  {
+    "slug": "thrifty-megamart-abandoned-site",
+    "name": "Thrifty Megamart Abandoned Site"
+  },
+  {
+    "slug": "ulaula-beach-area",
+    "name": "Ulaula Beach"
+  },
+  {
+    "slug": "ulaula-meadow-area",
+    "name": "Ulaula Meadow"
+  },
+  {
+    "slug": "ultra-space-ultra-crater",
+    "name": "Ultra Space Ultra Crater"
+  },
+  {
+    "slug": "ultra-space-ultra-deep-sea",
+    "name": "Ultra Space Ultra Deep Sea"
+  },
+  {
+    "slug": "ultra-space-ultra-desert",
+    "name": "Ultra Space Ultra Desert"
+  },
+  {
+    "slug": "ultra-space-ultra-forest",
+    "name": "Ultra Space Ultra Forest"
+  },
+  {
+    "slug": "ultra-space-ultra-jungle",
+    "name": "Ultra Space Ultra Jungle"
+  },
+  {
+    "slug": "ultra-space-ultra-plant",
+    "name": "Ultra Space Ultra Plant"
+  },
+  {
+    "slug": "ultra-space-ultra-ruin",
+    "name": "Ultra Space Ultra Ruin"
+  },
+  {
+    "slug": "ultra-space-wilds-cave",
+    "name": "Ultra Space Wilds Cave"
+  },
+  {
+    "slug": "ultra-space-wilds-cliff",
+    "name": "Ultra Space Wilds Cliff"
+  },
+  {
+    "slug": "ultra-space-wilds-crag",
+    "name": "Ultra Space Wilds Crag"
+  },
+  {
+    "slug": "ultra-space-wilds-waterfall",
+    "name": "Ultra Space Wilds Waterfall"
+  },
+  {
+    "slug": "vast-poni-canyon-inside",
+    "name": "Vast Poni Canyon Inside"
+  },
+  {
+    "slug": "vast-poni-canyon-northwest",
+    "name": "Vast Poni Canyon Northwest"
+  },
+  {
+    "slug": "vast-poni-canyon-outside",
+    "name": "Vast Poni Canyon Outside"
+  },
+  {
+    "slug": "verdant-cavern-trial-site",
+    "name": "Verdant Cavern Trial Site"
+  },
+  {
+    "slug": "verdant-cavern-totems-den",
+    "name": "Verdant Cavern Totems Den"
+  },
+  {
+    "slug": "wela-volcano-park-area",
+    "name": "Wela Volcano Park"
+  },
+  {
+    "slug": "wela-volcano-park-totems-den",
+    "name": "Wela Volcano Park Totems Den"
+  },
+  {
+    "slug": "poke-pelago-poni-island-reached",
+    "name": "Poke Pelago Poni Island Reached"
+  },
+  {
+    "slug": "poke-pelago-ulaula-island-reached",
+    "name": "Poke Pelago Ulaula Island Reached"
+  },
+  {
+    "slug": "poke-pelago-elite-four-defeated",
+    "name": "Poke Pelago Elite Four Defeated"
+  },
+  {
+    "slug": "team-rockets-castle-area",
+    "name": "Team Rockets Castle"
+  },
+  {
+    "slug": "ultra-megalopolis-area",
+    "name": "Ultra Megalopolis"
+  },
+  {
+    "slug": "lush-jungle-all-areas",
+    "name": "Lush Jungle All Areas"
+  },
+  {
+    "slug": "alola-route-17-all-areas",
+    "name": "Alola Route 17 All Areas"
+  },
+  {
+    "slug": "team-aqua-hideout-area",
+    "name": "Team Aqua Hideout"
+  },
+  {
+    "slug": "team-magma-hideout-area",
+    "name": "Team Magma Hideout"
+  },
+  {
+    "slug": "liberty-garden-lighthouse-basement",
+    "name": "Liberty Garden Lighthouse Basement"
+  },
+  {
+    "slug": "pinwheel-forest-rumination-field",
+    "name": "Pinwheel Forest Rumination Field"
+  },
+  {
+    "slug": "roaming-unova-area",
+    "name": "Roaming Unova"
+  },
+  {
+    "slug": "ns-castle-throne-room",
+    "name": "Ns Castle Throne Room"
+  },
+  {
+    "slug": "dragonspiral-tower-7f",
+    "name": "Dragonspiral Tower 7F"
+  },
+  {
+    "slug": "reversal-mountain-b1f",
+    "name": "Reversal Mountain B1F"
+  },
+  {
+    "slug": "twist-mountain-b4f",
+    "name": "Twist Mountain B4F"
+  },
+  {
+    "slug": "sea-spirits-den-area",
+    "name": "Sea Spirits Den"
+  },
+  {
+    "slug": "unknown-dungeon-area",
+    "name": "Unknown Dungeon"
+  },
+  {
+    "slug": "team-flare-secret-hq-area",
+    "name": "Team Flare Secret Hq"
+  },
+  {
+    "slug": "trackless-forest-area",
+    "name": "Trackless Forest"
+  },
+  {
+    "slug": "sea-mauville-area",
+    "name": "Sea Mauville"
+  },
+  {
+    "slug": "sea-mauville-outside",
+    "name": "Sea Mauville Outside"
+  },
+  {
+    "slug": "sea-mauville-inside",
+    "name": "Sea Mauville Inside"
+  },
+  {
+    "slug": "mossdeep-space-center-area",
+    "name": "Mossdeep Space Center"
+  },
+  {
+    "slug": "roaming-kalos-area",
+    "name": "Roaming Kalos"
+  },
+  {
+    "slug": "nameless-cavern-area",
+    "name": "Nameless Cavern"
+  },
+  {
+    "slug": "soaring-in-the-sky-area",
+    "name": "Soaring In The Sky"
+  },
+  {
+    "slug": "scorched-slab-1f",
+    "name": "Scorched Slab 1F"
+  },
+  {
+    "slug": "scorched-slab-b1f",
+    "name": "Scorched Slab B1F"
+  },
+  {
+    "slug": "scorched-slab-b2f",
+    "name": "Scorched Slab B2F"
+  },
+  {
+    "slug": "scorched-slab-b3f",
+    "name": "Scorched Slab B3F"
+  },
+  {
+    "slug": "crescent-isle-area",
+    "name": "Crescent Isle"
+  },
+  {
+    "slug": "pathless-plain-area",
+    "name": "Pathless Plain"
+  },
+  {
+    "slug": "fabled-cave-area",
+    "name": "Fabled Cave"
+  },
+  {
+    "slug": "gnarled-den-area",
+    "name": "Gnarled Den"
+  },
+  {
+    "slug": "verdant-cavern--trial-site-area",
+    "name": "Verdant Cavern  Trial Site"
+  },
+  {
+    "slug": "trainers-school-area",
+    "name": "Trainers School"
+  },
+  {
+    "slug": "ultra-space-ultra-space-wilds-cliff",
+    "name": "Ultra Space Ultra Space Wilds Cliff"
+  },
+  {
+    "slug": "ultra-space-ultra-space-wilds-water",
+    "name": "Ultra Space Ultra Space Wilds Water"
+  },
+  {
+    "slug": "ultra-space-ultra-space-wilds-rocky",
+    "name": "Ultra Space Ultra Space Wilds Rocky"
+  },
+  {
+    "slug": "ultra-space-ultra-space-wilds-cave",
+    "name": "Ultra Space Ultra Space Wilds Cave"
+  },
+  {
+    "slug": "mount-lanakila-crater",
+    "name": "Mount Lanakila Crater"
+  },
+  {
+    "slug": "pewter-city-area",
+    "name": "Pewter City"
+  },
+  {
+    "slug": "lavender-town-area",
+    "name": "Lavender Town"
+  },
+  {
+    "slug": "indigo-plateau-area",
+    "name": "Indigo Plateau"
+  },
+  {
+    "slug": "saffron-city-area",
+    "name": "Saffron City"
+  },
+  {
+    "slug": "shoal-cave-low-tide",
+    "name": "Shoal Cave Low Tide"
+  },
+  {
+    "slug": "shoal-cave-b2f",
+    "name": "Shoal Cave B2F"
+  },
+  {
+    "slug": "shoal-cave-b3f",
+    "name": "Shoal Cave B3F"
+  },
+  {
+    "slug": "hoenn-route-104-north-oras",
+    "name": "Hoenn Route 104 North Oras"
+  },
+  {
+    "slug": "hoenn-route-104-south-oras",
+    "name": "Hoenn Route 104 South Oras"
+  },
+  {
+    "slug": "hoenn-pokemart-area",
+    "name": "Hoenn Pokemart"
+  },
+  {
+    "slug": "hoenn-pokecenter-area",
+    "name": "Hoenn Pokecenter"
+  },
+  {
+    "slug": "kanto-pokemart-area",
+    "name": "Kanto Pokemart"
+  },
+  {
+    "slug": "kanto-pokecenter-area",
+    "name": "Kanto Pokecenter"
+  },
+  {
+    "slug": "sinnoh-pokemart-area",
+    "name": "Sinnoh Pokemart"
+  },
+  {
+    "slug": "johto-pokemart-area",
+    "name": "Johto Pokemart"
+  },
+  {
+    "slug": "mirage-spot-island-west-of-dewford-town",
+    "name": "Mirage Spot Island West Of Dewford Town"
+  },
+  {
+    "slug": "mirage-spot-island-west-of-route-104",
+    "name": "Mirage Spot Island West Of Route 104"
+  },
+  {
+    "slug": "mirage-spot-island-route-114",
+    "name": "Mirage Spot Island Route 114"
+  },
+  {
+    "slug": "mirage-spot-island-route-124",
+    "name": "Mirage Spot Island Route 124"
+  },
+  {
+    "slug": "mirage-spot-island-route-132",
+    "name": "Mirage Spot Island Route 132"
+  },
+  {
+    "slug": "mirage-spot-island-south-of-route-134",
+    "name": "Mirage Spot Island South Of Route 134"
+  },
+  {
+    "slug": "mirage-spot-island-south-of-pacifidlog",
+    "name": "Mirage Spot Island South Of Pacifidlog"
+  },
+  {
+    "slug": "mirage-spot-island-east-of-shoal-cave",
+    "name": "Mirage Spot Island East Of Shoal Cave"
+  },
+  {
+    "slug": "mirage-island-area",
+    "name": "Mirage Island"
+  },
+  {
+    "slug": "mirage-spot-forest-north-of-lilycove",
+    "name": "Mirage Spot Forest North Of Lilycove"
+  },
+  {
+    "slug": "mirage-spot-forest-south-of-route-132",
+    "name": "Mirage Spot Forest South Of Route 132"
+  },
+  {
+    "slug": "mirage-spot-forest-east-of-mossdeep",
+    "name": "Mirage Spot Forest East Of Mossdeep"
+  },
+  {
+    "slug": "mirage-spot-forest-south-of-route-109",
+    "name": "Mirage Spot Forest South Of Route 109"
+  },
+  {
+    "slug": "mirage-spot-forest-north-of-route-124",
+    "name": "Mirage Spot Forest North Of Route 124"
+  },
+  {
+    "slug": "mirage-spot-forest-west-of-route-114",
+    "name": "Mirage Spot Forest West Of Route 114"
+  },
+  {
+    "slug": "mirage-spot-forest-west-of-route-105",
+    "name": "Mirage Spot Forest West Of Route 105"
+  },
+  {
+    "slug": "mirage-spot-forest-south-of-route-111",
+    "name": "Mirage Spot Forest South Of Route 111"
+  },
+  {
+    "slug": "outskirt-stand-outside",
+    "name": "Outskirt Stand Outside"
+  },
+  {
+    "slug": "phenac-city-mayors-house",
+    "name": "Phenac City Mayors House"
+  },
+  {
+    "slug": "snagem-hideout-1f",
+    "name": "Snagem Hideout 1F"
+  },
+  {
+    "slug": "shadow-pokemon-lab-bf2",
+    "name": "Shadow Pokemon Lab Bf2"
+  },
+  {
+    "slug": "phenac-city-west-exit",
+    "name": "Phenac City West Exit"
+  },
+  {
+    "slug": "phenac-city-east-exit",
+    "name": "Phenac City East Exit"
+  },
+  {
+    "slug": "phenac-city-south-exit",
+    "name": "Phenac City South Exit"
+  },
+  {
+    "slug": "pyrite-town-duel-square",
+    "name": "Pyrite Town Duel Square"
+  },
+  {
+    "slug": "pyrite-town-entrance",
+    "name": "Pyrite Town Entrance"
+  },
+  {
+    "slug": "pyrite-bldg-1f",
+    "name": "Pyrite Bldg 1F"
+  },
+  {
+    "slug": "pyrite-cave-mirors-hideout",
+    "name": "Pyrite Cave Mirors Hideout"
+  },
+  {
+    "slug": "pyrite-bldg-4f",
+    "name": "Pyrite Bldg 4F"
+  },
+  {
+    "slug": "pyrite-cave-outside",
+    "name": "Pyrite Cave Outside"
+  },
+  {
+    "slug": "pyrite-cave-south-sewers",
+    "name": "Pyrite Cave South Sewers"
+  },
+  {
+    "slug": "pyrite-cave-bf1",
+    "name": "Pyrite Cave Bf1"
+  },
+  {
+    "slug": "pyrite-cave-bf1-post-sewers",
+    "name": "Pyrite Cave Bf1 Post Sewers"
+  },
+  {
+    "slug": "realgam-tower-area",
+    "name": "Realgam Tower"
+  },
+  {
+    "slug": "phenac-city-stadium",
+    "name": "Phenac City Stadium"
+  },
+  {
+    "slug": "pyrite-town-dukings-house",
+    "name": "Pyrite Town Dukings House"
+  },
+  {
+    "slug": "shadow-pokemon-lab-bf1",
+    "name": "Shadow Pokemon Lab Bf1"
+  },
+  {
+    "slug": "agate-village-relic-forest",
+    "name": "Agate Village Relic Forest"
+  },
+  {
+    "slug": "the-under-colosseum",
+    "name": "The Under Colosseum"
+  },
+  {
+    "slug": "mt-battle-10f",
+    "name": "Mt Battle 10F"
+  },
+  {
+    "slug": "the-under-area",
+    "name": "The Under"
+  },
+  {
+    "slug": "the-under-tv-studio",
+    "name": "The Under Tv Studio"
+  },
+  {
+    "slug": "the-under-subway",
+    "name": "The Under Subway"
+  },
+  {
+    "slug": "snagem-hideout-2f",
+    "name": "Snagem Hideout 2F"
+  },
+  {
+    "slug": "realgam-tower-colosseum",
+    "name": "Realgam Tower Colosseum"
+  },
+  {
+    "slug": "the-under-deep-colosseum",
+    "name": "The Under Deep Colosseum"
+  },
+  {
+    "slug": "mt-battle-100f",
+    "name": "Mt Battle 100F"
+  },
+  {
+    "slug": "phenac-city-card-e-room",
+    "name": "Phenac City Card E Room"
+  },
+  {
+    "slug": "pokemon-hq-lab-area",
+    "name": "Pokemon Hq Lab"
+  },
+  {
+    "slug": "pokemon-hq-lab-outside",
+    "name": "Pokemon Hq Lab Outside"
+  },
+  {
+    "slug": "gateon-port-across-bridge",
+    "name": "Gateon Port Across Bridge"
+  },
+  {
+    "slug": "gateon-port-lighthouse-top",
+    "name": "Gateon Port Lighthouse Top"
+  },
+  {
+    "slug": "cipher-lab-outside",
+    "name": "Cipher Lab Outside"
+  },
+  {
+    "slug": "cipher-lab-bf2",
+    "name": "Cipher Lab Bf2"
+  },
+  {
+    "slug": "cipher-lab-bf1",
+    "name": "Cipher Lab Bf1"
+  },
+  {
+    "slug": "pokespot-cave",
+    "name": "Pokespot Cave"
+  },
+  {
+    "slug": "onbs-2f",
+    "name": "Onbs 2F"
+  },
+  {
+    "slug": "onbs-3f",
+    "name": "Onbs 3F"
+  },
+  {
+    "slug": "onbs-roof",
+    "name": "Onbs Roof"
+  },
+  {
+    "slug": "onbs-4f",
+    "name": "Onbs 4F"
+  },
+  {
+    "slug": "phenac-city-prestige-precept-center",
+    "name": "Phenac City Prestige Precept Center"
+  },
+  {
+    "slug": "cipher-key-lair-outside",
+    "name": "Cipher Key Lair Outside"
+  },
+  {
+    "slug": "cipher-key-lair-1f",
+    "name": "Cipher Key Lair 1F"
+  },
+  {
+    "slug": "cipher-key-lair-2f",
+    "name": "Cipher Key Lair 2F"
+  },
+  {
+    "slug": "cipher-key-lair-3f",
+    "name": "Cipher Key Lair 3F"
+  },
+  {
+    "slug": "cipher-key-lair-4f",
+    "name": "Cipher Key Lair 4F"
+  },
+  {
+    "slug": "cipher-key-lair-roof",
+    "name": "Cipher Key Lair Roof"
+  },
+  {
+    "slug": "cipher-key-lair-5f",
+    "name": "Cipher Key Lair 5F"
+  },
+  {
+    "slug": "citadark-isle-outside",
+    "name": "Citadark Isle Outside"
+  },
+  {
+    "slug": "citadark-isle-1f",
+    "name": "Citadark Isle 1F"
+  },
+  {
+    "slug": "citadark-isle-bf1",
+    "name": "Citadark Isle Bf1"
+  },
+  {
+    "slug": "citadark-isle-2f",
+    "name": "Citadark Isle 2F"
+  },
+  {
+    "slug": "citadark-isle-3f",
+    "name": "Citadark Isle 3F"
+  },
+  {
+    "slug": "citadark-isle-6f",
+    "name": "Citadark Isle 6F"
+  },
+  {
+    "slug": "citadark-isle-dome-exterior",
+    "name": "Citadark Isle Dome Exterior"
+  },
+  {
+    "slug": "citadark-isle-dome-bf1",
+    "name": "Citadark Isle Dome Bf1"
+  },
+  {
+    "slug": "citadark-isle-dome-1f",
+    "name": "Citadark Isle Dome 1F"
+  },
+  {
+    "slug": "citadark-isle-dome-2f",
+    "name": "Citadark Isle Dome 2F"
+  },
+  {
+    "slug": "gateon-port-area",
+    "name": "Gateon Port"
+  },
+  {
+    "slug": "pokespot-rock",
+    "name": "Pokespot Rock"
+  },
+  {
+    "slug": "pokespot-oasis",
+    "name": "Pokespot Oasis"
+  },
+  {
+    "slug": "mt-battle-lobby",
+    "name": "Mt Battle Lobby"
+  },
+  {
+    "slug": "outskirt-stand-inside",
+    "name": "Outskirt Stand Inside"
+  },
+  {
+    "slug": "pyrite-town-colosseum",
+    "name": "Pyrite Town Colosseum"
+  },
+  {
+    "slug": "phenac-city-stadium-outside",
+    "name": "Phenac City Stadium Outside"
+  },
+  {
+    "slug": "celadon-city-prize-corner",
+    "name": "Celadon City Prize Corner"
+  },
+  {
+    "slug": "goldenrod-city-game-corner",
+    "name": "Goldenrod City Game Corner"
+  },
+  {
+    "slug": "kanto-underground-path-area",
+    "name": "Kanto Underground Path"
+  },
+  {
+    "slug": "violet-city-southwest-house",
+    "name": "Violet City Southwest House"
+  },
+  {
+    "slug": "goldenrod-city-department-store-5f",
+    "name": "Goldenrod City Department Store 5F"
+  },
+  {
+    "slug": "mirage-spot-cave-south-of-pacifidlog",
+    "name": "Mirage Spot Cave South Of Pacifidlog"
+  },
+  {
+    "slug": "mirage-spot-cave-north-of-route-132",
+    "name": "Mirage Spot Cave North Of Route 132"
+  },
+  {
+    "slug": "mirage-spot-cave-north-of-fallarbor",
+    "name": "Mirage Spot Cave North Of Fallarbor"
+  },
+  {
+    "slug": "mirage-spot-cave-north-of-fortree",
+    "name": "Mirage Spot Cave North Of Fortree"
+  },
+  {
+    "slug": "mirage-spot-cave-south-east-of-route-129",
+    "name": "Mirage Spot Cave South East Of Route 129"
+  },
+  {
+    "slug": "mirage-spot-cave-south-of-route-107",
+    "name": "Mirage Spot Cave South Of Route 107"
+  },
+  {
+    "slug": "mirage-spot-cave-north-of-route-124",
+    "name": "Mirage Spot Cave North Of Route 124"
+  },
+  {
+    "slug": "mirage-spot-cave-west-of-rustburo",
+    "name": "Mirage Spot Cave West Of Rustburo"
+  },
+  {
+    "slug": "mirage-spot-mountain-east-of-mossdeep",
+    "name": "Mirage Spot Mountain East Of Mossdeep"
+  },
+  {
+    "slug": "mirage-spot-mountain-north-of-mossdeep",
+    "name": "Mirage Spot Mountain North Of Mossdeep"
+  },
+  {
+    "slug": "mirage-spot-mountain-south-east-of-route-129",
+    "name": "Mirage Spot Mountain South East Of Route 129"
+  },
+  {
+    "slug": "mirage-spot-mountain-north-of-lilycove",
+    "name": "Mirage Spot Mountain North Of Lilycove"
+  },
+  {
+    "slug": "mirage-spot-mountain-west-of-route-104",
+    "name": "Mirage Spot Mountain West Of Route 104"
+  },
+  {
+    "slug": "mirage-spot-mountain-south-of-route-129",
+    "name": "Mirage Spot Mountain South Of Route 129"
+  },
+  {
+    "slug": "mirage-spot-mountain-south-of-route-131",
+    "name": "Mirage Spot Mountain South Of Route 131"
+  },
+  {
+    "slug": "mirage-spot-mountain-north-east-of-route-125",
+    "name": "Mirage Spot Mountain North East Of Route 125"
+  },
+  {
+    "slug": "fortree-city-area",
+    "name": "Fortree City"
+  },
+  {
+    "slug": "friend-safari-normal",
+    "name": "Friend Safari Normal"
+  },
+  {
+    "slug": "friend-safari-fire",
+    "name": "Friend Safari Fire"
+  },
+  {
+    "slug": "friend-safari-fighting",
+    "name": "Friend Safari Fighting"
+  },
+  {
+    "slug": "friend-safari-water",
+    "name": "Friend Safari Water"
+  },
+  {
+    "slug": "friend-safari-flying",
+    "name": "Friend Safari Flying"
+  },
+  {
+    "slug": "friend-safari-grass",
+    "name": "Friend Safari Grass"
+  },
+  {
+    "slug": "friend-safari-poison",
+    "name": "Friend Safari Poison"
+  },
+  {
+    "slug": "friend-safari-electric",
+    "name": "Friend Safari Electric"
+  },
+  {
+    "slug": "friend-safari-ground",
+    "name": "Friend Safari Ground"
+  },
+  {
+    "slug": "friend-safari-psychic",
+    "name": "Friend Safari Psychic"
+  },
+  {
+    "slug": "friend-safari-rock",
+    "name": "Friend Safari Rock"
+  },
+  {
+    "slug": "friend-safari-ice",
+    "name": "Friend Safari Ice"
+  },
+  {
+    "slug": "friend-safari-bug",
+    "name": "Friend Safari Bug"
+  },
+  {
+    "slug": "friend-safari-dragon",
+    "name": "Friend Safari Dragon"
+  },
+  {
+    "slug": "friend-safari-ghost",
+    "name": "Friend Safari Ghost"
+  },
+  {
+    "slug": "friend-safari-dark",
+    "name": "Friend Safari Dark"
+  },
+  {
+    "slug": "friend-safari-steel",
+    "name": "Friend Safari Steel"
+  },
+  {
+    "slug": "friend-safari-fairy",
+    "name": "Friend Safari Fairy"
+  },
+  {
+    "slug": "unova-route-2-hidden-grotto",
+    "name": "Unova Route 2 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-3-hidden-grotto-dark-grass",
+    "name": "Unova Route 3 Hidden Grotto Dark Grass"
+  },
+  {
+    "slug": "unova-route-3-hidden-grotto-pond",
+    "name": "Unova Route 3 Hidden Grotto Pond"
+  },
+  {
+    "slug": "unova-route-5-hidden-grotto",
+    "name": "Unova Route 5 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-6-hidden-grotto-near-pokemon-breeder",
+    "name": "Unova Route 6 Hidden Grotto Near Pokemon Breeder"
+  },
+  {
+    "slug": "unova-route-6-hidden-grotto-mistralton-cave",
+    "name": "Unova Route 6 Hidden Grotto Mistralton Cave"
+  },
+  {
+    "slug": "unova-route-7-hidden-grotto",
+    "name": "Unova Route 7 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-9-hidden-grotto",
+    "name": "Unova Route 9 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-13-hidden-grotto-giant-chasm",
+    "name": "Unova Route 13 Hidden Grotto Giant Chasm"
+  },
+  {
+    "slug": "unova-route-13-hidden-grotto-stairs",
+    "name": "Unova Route 13 Hidden Grotto Stairs"
+  },
+  {
+    "slug": "unova-route-18-hidden-grotto",
+    "name": "Unova Route 18 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-22-hidden-grotto",
+    "name": "Unova Route 22 Hidden Grotto"
+  },
+  {
+    "slug": "unova-route-23-hidden-grotto",
+    "name": "Unova Route 23 Hidden Grotto"
+  },
+  {
+    "slug": "floccesy-ranch-hidden-grotto",
+    "name": "Floccesy Ranch Hidden Grotto"
+  },
+  {
+    "slug": "lostlorn-forest-hidden-grotto",
+    "name": "Lostlorn Forest Hidden Grotto"
+  },
+  {
+    "slug": "giant-chasm-hidden-grotto",
+    "name": "Giant Chasm Hidden Grotto"
+  },
+  {
+    "slug": "abundant-shrine-hidden-grotto-near-youngster",
+    "name": "Abundant Shrine Hidden Grotto Near Youngster"
+  },
+  {
+    "slug": "abundant-shrine-hidden-grotto-shrine",
+    "name": "Abundant Shrine Hidden Grotto Shrine"
+  },
+  {
+    "slug": "pinwheel-forest-hidden-grotto-outer-area",
+    "name": "Pinwheel Forest Hidden Grotto Outer"
+  },
+  {
+    "slug": "pinwheel-forest-hidden-grotto-inner-area",
+    "name": "Pinwheel Forest Hidden Grotto Inner"
+  },
+  {
+    "slug": "oreburgh-city-oreburgh-mining-museum",
+    "name": "Oreburgh City Oreburgh Mining Museum"
+  },
+  {
+    "slug": "pewter-city-pewter-museum-of-science",
+    "name": "Pewter City Pewter Museum Of Science"
+  },
+  {
+    "slug": "floaroma-meadow-area",
+    "name": "Floaroma Meadow"
+  },
+  {
+    "slug": "safari-zone-gate-area",
+    "name": "Safari Zone Gate"
+  },
+  {
+    "slug": "accumula-town-area",
+    "name": "Accumula Town"
+  },
+  {
+    "slug": "galar-route-2-lake",
+    "name": "Galar Route 2 Lake"
+  },
+  {
+    "slug": "galar-route-2-lakeside",
+    "name": "Galar Route 2 Lakeside"
+  },
+  {
+    "slug": "motostoke-gym",
+    "name": "Motostoke Gym"
+  },
+  {
+    "slug": "galar-route-3-west",
+    "name": "Galar Route 3 West"
+  },
+  {
+    "slug": "slumbering-weald-deep",
+    "name": "Slumbering Weald Deep"
+  },
+  {
+    "slug": "energy-plant-tower-summit",
+    "name": "Energy Plant Tower Summit"
+  },
+  {
+    "slug": "meetup-spot-area",
+    "name": "Meetup Spot"
+  },
+  {
+    "slug": "postwick-leons-room",
+    "name": "Postwick Leons Room"
+  },
+  {
+    "slug": "motostoke-pokemon-center",
+    "name": "Motostoke Pokemon Center"
+  },
+  {
+    "slug": "turffield-gym",
+    "name": "Turffield Gym"
+  },
+  {
+    "slug": "ballonlea-gym",
+    "name": "Ballonlea Gym"
+  },
+  {
+    "slug": "isle-of-armor-caves-area",
+    "name": "Isle Of Armor Caves"
+  },
+  {
+    "slug": "nacrene-city-nacrene-museum",
+    "name": "Nacrene City Nacrene Museum"
+  },
+  {
+    "slug": "giants-mirror-area-2",
+    "name": "Giants Mirror Area 2"
+  },
+  {
+    "slug": "distortion-world-area",
+    "name": "Distortion World"
+  },
+  {
+    "slug": "roaming-galar-wild-area-area",
+    "name": "Roaming Galar Wild Area"
+  },
+  {
+    "slug": "roaming-isle-of-armor-area",
+    "name": "Roaming Isle Of Armor"
+  },
+  {
+    "slug": "roaming-crown-tundra-area",
+    "name": "Roaming Crown Tundra"
+  },
+  {
+    "slug": "galar-wild-area-max-dens-area",
+    "name": "Galar Wild Area Max Dens"
+  },
+  {
+    "slug": "rolling-fields-max-den-a",
+    "name": "Rolling Fields Max Den A"
+  },
+  {
+    "slug": "rolling-fields-max-den-b",
+    "name": "Rolling Fields Max Den B"
+  },
+  {
+    "slug": "rolling-fields-max-den-c",
+    "name": "Rolling Fields Max Den C"
+  },
+  {
+    "slug": "rolling-fields-max-den-d",
+    "name": "Rolling Fields Max Den D"
+  },
+  {
+    "slug": "rolling-fields-max-den-e",
+    "name": "Rolling Fields Max Den E"
+  },
+  {
+    "slug": "rolling-fields-max-den-f",
+    "name": "Rolling Fields Max Den F"
+  },
+  {
+    "slug": "rolling-fields-max-den-g",
+    "name": "Rolling Fields Max Den G"
+  },
+  {
+    "slug": "rolling-fields-max-den-h",
+    "name": "Rolling Fields Max Den H"
+  },
+  {
+    "slug": "rolling-fields-max-den-i",
+    "name": "Rolling Fields Max Den I"
+  },
+  {
+    "slug": "dappled-grove-max-den-a",
+    "name": "Dappled Grove Max Den A"
+  },
+  {
+    "slug": "dappled-grove-max-den-b",
+    "name": "Dappled Grove Max Den B"
+  },
+  {
+    "slug": "dappled-grove-max-den-c",
+    "name": "Dappled Grove Max Den C"
+  },
+  {
+    "slug": "dappled-grove-max-den-d",
+    "name": "Dappled Grove Max Den D"
+  },
+  {
+    "slug": "dappled-grove-max-den-e",
+    "name": "Dappled Grove Max Den E"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-a",
+    "name": "West Lake Axewell Max Den A"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-b",
+    "name": "West Lake Axewell Max Den B"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-c",
+    "name": "West Lake Axewell Max Den C"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-d",
+    "name": "West Lake Axewell Max Den D"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-e",
+    "name": "West Lake Axewell Max Den E"
+  },
+  {
+    "slug": "west-lake-axewell-max-den-f",
+    "name": "West Lake Axewell Max Den F"
+  },
+  {
+    "slug": "watchtower-ruins-max-den-a",
+    "name": "Watchtower Ruins Max Den A"
+  },
+  {
+    "slug": "watchtower-ruins-max-den-c",
+    "name": "Watchtower Ruins Max Den C"
+  },
+  {
+    "slug": "east-lake-axewell-max-den-a",
+    "name": "East Lake Axewell Max Den A"
+  },
+  {
+    "slug": "east-lake-axewell-max-den-b",
+    "name": "East Lake Axewell Max Den B"
+  },
+  {
+    "slug": "east-lake-axewell-max-den-c",
+    "name": "East Lake Axewell Max Den C"
+  },
+  {
+    "slug": "east-lake-axewell-max-den-d",
+    "name": "East Lake Axewell Max Den D"
+  },
+  {
+    "slug": "east-lake-axewell-max-den-e",
+    "name": "East Lake Axewell Max Den E"
+  },
+  {
+    "slug": "axews-eye-max-den-a",
+    "name": "Axews Eye Max Den A"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-a",
+    "name": "North Lake Miloch Max Den A"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-b",
+    "name": "North Lake Miloch Max Den B"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-c",
+    "name": "North Lake Miloch Max Den C"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-d",
+    "name": "North Lake Miloch Max Den D"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-e",
+    "name": "North Lake Miloch Max Den E"
+  },
+  {
+    "slug": "north-lake-miloch-max-den-f",
+    "name": "North Lake Miloch Max Den F"
+  },
+  {
+    "slug": "giants-seat-max-den-a",
+    "name": "Giants Seat Max Den A"
+  },
+  {
+    "slug": "giants-seat-max-den-b",
+    "name": "Giants Seat Max Den B"
+  },
+  {
+    "slug": "giants-seat-max-den-c",
+    "name": "Giants Seat Max Den C"
+  },
+  {
+    "slug": "giants-seat-max-den-d",
+    "name": "Giants Seat Max Den D"
+  },
+  {
+    "slug": "giants-seat-max-den-e",
+    "name": "Giants Seat Max Den E"
+  },
+  {
+    "slug": "south-lake-miloch-max-den-a",
+    "name": "South Lake Miloch Max Den A"
+  },
+  {
+    "slug": "south-lake-miloch-max-den-b",
+    "name": "South Lake Miloch Max Den B"
+  },
+  {
+    "slug": "south-lake-miloch-max-den-c",
+    "name": "South Lake Miloch Max Den C"
+  },
+  {
+    "slug": "south-lake-miloch-max-den-d",
+    "name": "South Lake Miloch Max Den D"
+  },
+  {
+    "slug": "south-lake-miloch-max-den-e",
+    "name": "South Lake Miloch Max Den E"
+  },
+  {
+    "slug": "motostoke-riverbank-max-den-a",
+    "name": "Motostoke Riverbank Max Den A"
+  },
+  {
+    "slug": "motostoke-riverbank-max-den-b",
+    "name": "Motostoke Riverbank Max Den B"
+  },
+  {
+    "slug": "motostoke-riverbank-max-den-c",
+    "name": "Motostoke Riverbank Max Den C"
+  },
+  {
+    "slug": "motostoke-riverbank-max-den-d",
+    "name": "Motostoke Riverbank Max Den D"
+  },
+  {
+    "slug": "bridge-field-max-den-a",
+    "name": "Bridge Field Max Den A"
+  },
+  {
+    "slug": "bridge-field-max-den-b",
+    "name": "Bridge Field Max Den B"
+  },
+  {
+    "slug": "bridge-field-max-den-c",
+    "name": "Bridge Field Max Den C"
+  },
+  {
+    "slug": "bridge-field-max-den-d",
+    "name": "Bridge Field Max Den D"
+  },
+  {
+    "slug": "bridge-field-max-den-e",
+    "name": "Bridge Field Max Den E"
+  },
+  {
+    "slug": "bridge-field-max-den-f",
+    "name": "Bridge Field Max Den F"
+  },
+  {
+    "slug": "bridge-field-max-den-g",
+    "name": "Bridge Field Max Den G"
+  },
+  {
+    "slug": "bridge-field-max-den-h",
+    "name": "Bridge Field Max Den H"
+  },
+  {
+    "slug": "bridge-field-max-den-i",
+    "name": "Bridge Field Max Den I"
+  },
+  {
+    "slug": "stony-wilderness-max-den-a",
+    "name": "Stony Wilderness Max Den A"
+  },
+  {
+    "slug": "stony-wilderness-max-den-b",
+    "name": "Stony Wilderness Max Den B"
+  },
+  {
+    "slug": "stony-wilderness-max-den-c",
+    "name": "Stony Wilderness Max Den C"
+  },
+  {
+    "slug": "stony-wilderness-max-den-d",
+    "name": "Stony Wilderness Max Den D"
+  },
+  {
+    "slug": "stony-wilderness-max-den-e",
+    "name": "Stony Wilderness Max Den E"
+  },
+  {
+    "slug": "stony-wilderness-max-den-f",
+    "name": "Stony Wilderness Max Den F"
+  },
+  {
+    "slug": "stony-wilderness-max-den-g",
+    "name": "Stony Wilderness Max Den G"
+  },
+  {
+    "slug": "stony-wilderness-max-den-h",
+    "name": "Stony Wilderness Max Den H"
+  },
+  {
+    "slug": "stony-wilderness-max-den-i",
+    "name": "Stony Wilderness Max Den I"
+  },
+  {
+    "slug": "stony-wilderness-max-den-j",
+    "name": "Stony Wilderness Max Den J"
+  },
+  {
+    "slug": "stony-wilderness-max-den-k",
+    "name": "Stony Wilderness Max Den K"
+  },
+  {
+    "slug": "stony-wilderness-max-den-l",
+    "name": "Stony Wilderness Max Den L"
+  },
+  {
+    "slug": "giants-cap-max-den-a",
+    "name": "Giants Cap Max Den A"
+  },
+  {
+    "slug": "giants-cap-max-den-b",
+    "name": "Giants Cap Max Den B"
+  },
+  {
+    "slug": "giants-cap-max-den-c",
+    "name": "Giants Cap Max Den C"
+  },
+  {
+    "slug": "giants-cap-max-den-d",
+    "name": "Giants Cap Max Den D"
+  },
+  {
+    "slug": "giants-cap-max-den-e",
+    "name": "Giants Cap Max Den E"
+  },
+  {
+    "slug": "dusty-bowl-max-den-a",
+    "name": "Dusty Bowl Max Den A"
+  },
+  {
+    "slug": "dusty-bowl-max-den-b",
+    "name": "Dusty Bowl Max Den B"
+  },
+  {
+    "slug": "dusty-bowl-max-den-c",
+    "name": "Dusty Bowl Max Den C"
+  },
+  {
+    "slug": "dusty-bowl-max-den-d",
+    "name": "Dusty Bowl Max Den D"
+  },
+  {
+    "slug": "dusty-bowl-max-den-e",
+    "name": "Dusty Bowl Max Den E"
+  },
+  {
+    "slug": "dusty-bowl-max-den-f",
+    "name": "Dusty Bowl Max Den F"
+  },
+  {
+    "slug": "dusty-bowl-max-den-g",
+    "name": "Dusty Bowl Max Den G"
+  },
+  {
+    "slug": "dusty-bowl-max-den-h",
+    "name": "Dusty Bowl Max Den H"
+  },
+  {
+    "slug": "dusty-bowl-max-den-i",
+    "name": "Dusty Bowl Max Den I"
+  },
+  {
+    "slug": "giants-mirror-max-den-a",
+    "name": "Giants Mirror Max Den A"
+  },
+  {
+    "slug": "giants-mirror-max-den-b",
+    "name": "Giants Mirror Max Den B"
+  },
+  {
+    "slug": "giants-mirror-max-den-c",
+    "name": "Giants Mirror Max Den C"
+  },
+  {
+    "slug": "giants-mirror-max-den-d",
+    "name": "Giants Mirror Max Den D"
+  },
+  {
+    "slug": "giants-mirror-max-den-e",
+    "name": "Giants Mirror Max Den E"
+  },
+  {
+    "slug": "lake-of-outrage-max-den-a",
+    "name": "Lake Of Outrage Max Den A"
+  },
+  {
+    "slug": "lake-of-outrage-max-den-b",
+    "name": "Lake Of Outrage Max Den B"
+  },
+  {
+    "slug": "lake-of-outrage-max-den-c",
+    "name": "Lake Of Outrage Max Den C"
+  },
+  {
+    "slug": "lake-of-outrage-max-den-d",
+    "name": "Lake Of Outrage Max Den D"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-a",
+    "name": "Hammerlocke Hills Max Den A"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-b",
+    "name": "Hammerlocke Hills Max Den B"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-c",
+    "name": "Hammerlocke Hills Max Den C"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-d",
+    "name": "Hammerlocke Hills Max Den D"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-e",
+    "name": "Hammerlocke Hills Max Den E"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-f",
+    "name": "Hammerlocke Hills Max Den F"
+  },
+  {
+    "slug": "hammerlocke-hills-max-den-g",
+    "name": "Hammerlocke Hills Max Den G"
+  },
+  {
+    "slug": "kalos-berry-fields-area",
+    "name": "Kalos Berry Fields"
+  },
+  {
+    "slug": "fields-of-honor-max-den-a",
+    "name": "Fields Of Honor Max Den A"
+  },
+  {
+    "slug": "fields-of-honor-max-den-b",
+    "name": "Fields Of Honor Max Den B"
+  },
+  {
+    "slug": "fields-of-honor-max-den-c",
+    "name": "Fields Of Honor Max Den C"
+  },
+  {
+    "slug": "fields-of-honor-max-den-d",
+    "name": "Fields Of Honor Max Den D"
+  },
+  {
+    "slug": "fields-of-honor-max-den-e",
+    "name": "Fields Of Honor Max Den E"
+  },
+  {
+    "slug": "fields-of-honor-max-den-f",
+    "name": "Fields Of Honor Max Den F"
+  },
+  {
+    "slug": "fields-of-honor-max-den-g",
+    "name": "Fields Of Honor Max Den G"
+  },
+  {
+    "slug": "fields-of-honor-max-den-h",
+    "name": "Fields Of Honor Max Den H"
+  },
+  {
+    "slug": "fields-of-honor-max-den-i",
+    "name": "Fields Of Honor Max Den I"
+  },
+  {
+    "slug": "fields-of-honor-max-den-j",
+    "name": "Fields Of Honor Max Den J"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-a",
+    "name": "Soothing Wetlands Max Den A"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-b",
+    "name": "Soothing Wetlands Max Den B"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-c",
+    "name": "Soothing Wetlands Max Den C"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-d",
+    "name": "Soothing Wetlands Max Den D"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-e",
+    "name": "Soothing Wetlands Max Den E"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-f",
+    "name": "Soothing Wetlands Max Den F"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-g",
+    "name": "Soothing Wetlands Max Den G"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-h",
+    "name": "Soothing Wetlands Max Den H"
+  },
+  {
+    "slug": "soothing-wetlands-max-den-i",
+    "name": "Soothing Wetlands Max Den I"
+  },
+  {
+    "slug": "forest-of-focus-max-den-a",
+    "name": "Forest Of Focus Max Den A"
+  },
+  {
+    "slug": "forest-of-focus-max-den-b",
+    "name": "Forest Of Focus Max Den B"
+  },
+  {
+    "slug": "forest-of-focus-max-den-c",
+    "name": "Forest Of Focus Max Den C"
+  },
+  {
+    "slug": "forest-of-focus-max-den-d",
+    "name": "Forest Of Focus Max Den D"
+  },
+  {
+    "slug": "forest-of-focus-max-den-e",
+    "name": "Forest Of Focus Max Den E"
+  },
+  {
+    "slug": "forest-of-focus-max-den-f",
+    "name": "Forest Of Focus Max Den F"
+  },
+  {
+    "slug": "challenge-beach-max-den-a",
+    "name": "Challenge Beach Max Den A"
+  },
+  {
+    "slug": "challenge-beach-max-den-b",
+    "name": "Challenge Beach Max Den B"
+  },
+  {
+    "slug": "challenge-beach-max-den-c",
+    "name": "Challenge Beach Max Den C"
+  },
+  {
+    "slug": "challenge-beach-max-den-d",
+    "name": "Challenge Beach Max Den D"
+  },
+  {
+    "slug": "challenge-beach-max-den-e",
+    "name": "Challenge Beach Max Den E"
+  },
+  {
+    "slug": "challenge-beach-max-den-f",
+    "name": "Challenge Beach Max Den F"
+  },
+  {
+    "slug": "challenge-beach-max-den-g",
+    "name": "Challenge Beach Max Den G"
+  },
+  {
+    "slug": "challenge-beach-max-den-h",
+    "name": "Challenge Beach Max Den H"
+  },
+  {
+    "slug": "brawlers-cave-max-den-a",
+    "name": "Brawlers Cave Max Den A"
+  },
+  {
+    "slug": "challenge-road-max-den-a",
+    "name": "Challenge Road Max Den A"
+  },
+  {
+    "slug": "challenge-road-max-den-b",
+    "name": "Challenge Road Max Den B"
+  },
+  {
+    "slug": "challenge-road-max-den-c",
+    "name": "Challenge Road Max Den C"
+  },
+  {
+    "slug": "challenge-road-max-den-d",
+    "name": "Challenge Road Max Den D"
+  },
+  {
+    "slug": "courageous-cavern-max-den-a",
+    "name": "Courageous Cavern Max Den A"
+  },
+  {
+    "slug": "courageous-cavern-max-den-b",
+    "name": "Courageous Cavern Max Den B"
+  },
+  {
+    "slug": "courageous-cavern-max-den-c",
+    "name": "Courageous Cavern Max Den C"
+  },
+  {
+    "slug": "courageous-cavern-max-den-d",
+    "name": "Courageous Cavern Max Den D"
+  },
+  {
+    "slug": "courageous-cavern-max-den-e",
+    "name": "Courageous Cavern Max Den E"
+  },
+  {
+    "slug": "courageous-cavern-max-den-f",
+    "name": "Courageous Cavern Max Den F"
+  },
+  {
+    "slug": "loop-lagoon-max-den-a",
+    "name": "Loop Lagoon Max Den A"
+  },
+  {
+    "slug": "loop-lagoon-max-den-b",
+    "name": "Loop Lagoon Max Den B"
+  },
+  {
+    "slug": "loop-lagoon-max-den-c",
+    "name": "Loop Lagoon Max Den C"
+  },
+  {
+    "slug": "loop-lagoon-max-den-d",
+    "name": "Loop Lagoon Max Den D"
+  },
+  {
+    "slug": "training-lowlands-max-den-a",
+    "name": "Training Lowlands Max Den A"
+  },
+  {
+    "slug": "training-lowlands-max-den-b",
+    "name": "Training Lowlands Max Den B"
+  },
+  {
+    "slug": "training-lowlands-max-den-c",
+    "name": "Training Lowlands Max Den C"
+  },
+  {
+    "slug": "training-lowlands-max-den-d",
+    "name": "Training Lowlands Max Den D"
+  },
+  {
+    "slug": "training-lowlands-max-den-e",
+    "name": "Training Lowlands Max Den E"
+  },
+  {
+    "slug": "training-lowlands-max-den-f",
+    "name": "Training Lowlands Max Den F"
+  },
+  {
+    "slug": "training-lowlands-max-den-g",
+    "name": "Training Lowlands Max Den G"
+  },
+  {
+    "slug": "potbottom-desert-max-den-a",
+    "name": "Potbottom Desert Max Den A"
+  },
+  {
+    "slug": "potbottom-desert-max-den-b",
+    "name": "Potbottom Desert Max Den B"
+  },
+  {
+    "slug": "potbottom-desert-max-den-c",
+    "name": "Potbottom Desert Max Den C"
+  },
+  {
+    "slug": "workout-sea-max-den-a",
+    "name": "Workout Sea Max Den A"
+  },
+  {
+    "slug": "workout-sea-max-den-b",
+    "name": "Workout Sea Max Den B"
+  },
+  {
+    "slug": "workout-sea-max-den-c",
+    "name": "Workout Sea Max Den C"
+  },
+  {
+    "slug": "workout-sea-max-den-d",
+    "name": "Workout Sea Max Den D"
+  },
+  {
+    "slug": "workout-sea-max-den-e",
+    "name": "Workout Sea Max Den E"
+  },
+  {
+    "slug": "workout-sea-max-den-f",
+    "name": "Workout Sea Max Den F"
+  },
+  {
+    "slug": "workout-sea-max-den-g",
+    "name": "Workout Sea Max Den G"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-a",
+    "name": "Stepping Stone Sea Max Den A"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-b",
+    "name": "Stepping Stone Sea Max Den B"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-c",
+    "name": "Stepping Stone Sea Max Den C"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-d",
+    "name": "Stepping Stone Sea Max Den D"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-e",
+    "name": "Stepping Stone Sea Max Den E"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-f",
+    "name": "Stepping Stone Sea Max Den F"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-g",
+    "name": "Stepping Stone Sea Max Den G"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-h",
+    "name": "Stepping Stone Sea Max Den H"
+  },
+  {
+    "slug": "stepping-stone-sea-max-den-i",
+    "name": "Stepping Stone Sea Max Den I"
+  },
+  {
+    "slug": "insular-sea-max-den-a",
+    "name": "Insular Sea Max Den A"
+  },
+  {
+    "slug": "insular-sea-max-den-b",
+    "name": "Insular Sea Max Den B"
+  },
+  {
+    "slug": "insular-sea-max-den-c",
+    "name": "Insular Sea Max Den C"
+  },
+  {
+    "slug": "insular-sea-max-den-d",
+    "name": "Insular Sea Max Den D"
+  },
+  {
+    "slug": "insular-sea-max-den-e",
+    "name": "Insular Sea Max Den E"
+  },
+  {
+    "slug": "honeycalm-sea-max-den-a",
+    "name": "Honeycalm Sea Max Den A"
+  },
+  {
+    "slug": "honeycalm-sea-max-den-b",
+    "name": "Honeycalm Sea Max Den B"
+  },
+  {
+    "slug": "honeycalm-sea-max-den-c",
+    "name": "Honeycalm Sea Max Den C"
+  },
+  {
+    "slug": "honeycalm-sea-max-den-d",
+    "name": "Honeycalm Sea Max Den D"
+  },
+  {
+    "slug": "honeycalm-sea-max-den-e",
+    "name": "Honeycalm Sea Max Den E"
+  },
+  {
+    "slug": "honeycalm-island-max-den-a",
+    "name": "Honeycalm Island Max Den A"
+  },
+  {
+    "slug": "honeycalm-island-max-den-b",
+    "name": "Honeycalm Island Max Den B"
+  },
+  {
+    "slug": "honeycalm-island-max-den-c",
+    "name": "Honeycalm Island Max Den C"
+  },
+  {
+    "slug": "honeycalm-island-max-den-d",
+    "name": "Honeycalm Island Max Den D"
+  },
+  {
+    "slug": "honeycalm-island-max-den-e",
+    "name": "Honeycalm Island Max Den E"
+  },
+  {
+    "slug": "honeycalm-island-max-den-f",
+    "name": "Honeycalm Island Max Den F"
+  },
+  {
+    "slug": "slippery-slope-max-den-a",
+    "name": "Slippery Slope Max Den A"
+  },
+  {
+    "slug": "slippery-slope-max-den-b",
+    "name": "Slippery Slope Max Den B"
+  },
+  {
+    "slug": "slippery-slope-max-den-c",
+    "name": "Slippery Slope Max Den C"
+  },
+  {
+    "slug": "slippery-slope-max-den-d",
+    "name": "Slippery Slope Max Den D"
+  },
+  {
+    "slug": "slippery-slope-max-den-e",
+    "name": "Slippery Slope Max Den E"
+  },
+  {
+    "slug": "slippery-slope-max-den-f",
+    "name": "Slippery Slope Max Den F"
+  },
+  {
+    "slug": "frostpoint-field-max-den-a",
+    "name": "Frostpoint Field Max Den A"
+  },
+  {
+    "slug": "frostpoint-field-max-den-b",
+    "name": "Frostpoint Field Max Den B"
+  },
+  {
+    "slug": "frostpoint-field-max-den-c",
+    "name": "Frostpoint Field Max Den C"
+  },
+  {
+    "slug": "frostpoint-field-max-den-d",
+    "name": "Frostpoint Field Max Den D"
+  },
+  {
+    "slug": "frostpoint-field-max-den-e",
+    "name": "Frostpoint Field Max Den E"
+  },
+  {
+    "slug": "old-cemetery-max-den-a",
+    "name": "Old Cemetery Max Den A"
+  },
+  {
+    "slug": "old-cemetery-max-den-b",
+    "name": "Old Cemetery Max Den B"
+  },
+  {
+    "slug": "snowslide-slope-max-den-a",
+    "name": "Snowslide Slope Max Den A"
+  },
+  {
+    "slug": "snowslide-slope-max-den-b",
+    "name": "Snowslide Slope Max Den B"
+  },
+  {
+    "slug": "snowslide-slope-max-den-c",
+    "name": "Snowslide Slope Max Den C"
+  },
+  {
+    "slug": "snowslide-slope-max-den-d",
+    "name": "Snowslide Slope Max Den D"
+  },
+  {
+    "slug": "snowslide-slope-max-den-e",
+    "name": "Snowslide Slope Max Den E"
+  },
+  {
+    "slug": "snowslide-slope-max-den-f",
+    "name": "Snowslide Slope Max Den F"
+  },
+  {
+    "slug": "snowslide-slope-max-den-g",
+    "name": "Snowslide Slope Max Den G"
+  },
+  {
+    "slug": "snowslide-slope-max-den-h",
+    "name": "Snowslide Slope Max Den H"
+  },
+  {
+    "slug": "snowslide-slope-max-den-i",
+    "name": "Snowslide Slope Max Den I"
+  },
+  {
+    "slug": "path-to-the-peak-max-den-a",
+    "name": "Path To The Peak Max Den A"
+  },
+  {
+    "slug": "path-to-the-peak-max-den-b",
+    "name": "Path To The Peak Max Den B"
+  },
+  {
+    "slug": "path-to-the-peak-max-den-c",
+    "name": "Path To The Peak Max Den C"
+  },
+  {
+    "slug": "crown-shrine-max-den-a",
+    "name": "Crown Shrine Max Den A"
+  },
+  {
+    "slug": "three-point-pass-max-den-a",
+    "name": "Three Point Pass Max Den A"
+  },
+  {
+    "slug": "three-point-pass-max-den-b",
+    "name": "Three Point Pass Max Den B"
+  },
+  {
+    "slug": "dyna-tree-hill-max-den-a",
+    "name": "Dyna Tree Hill Max Den A"
+  },
+  {
+    "slug": "giants-bed-max-den-a",
+    "name": "Giants Bed Max Den A"
+  },
+  {
+    "slug": "giants-bed-max-den-b",
+    "name": "Giants Bed Max Den B"
+  },
+  {
+    "slug": "giants-bed-max-den-c",
+    "name": "Giants Bed Max Den C"
+  },
+  {
+    "slug": "giants-bed-max-den-d",
+    "name": "Giants Bed Max Den D"
+  },
+  {
+    "slug": "giants-bed-max-den-e",
+    "name": "Giants Bed Max Den E"
+  },
+  {
+    "slug": "giants-bed-max-den-f",
+    "name": "Giants Bed Max Den F"
+  },
+  {
+    "slug": "giants-bed-max-den-g",
+    "name": "Giants Bed Max Den G"
+  },
+  {
+    "slug": "giants-bed-max-den-h",
+    "name": "Giants Bed Max Den H"
+  },
+  {
+    "slug": "giants-bed-max-den-i",
+    "name": "Giants Bed Max Den I"
+  },
+  {
+    "slug": "giants-bed-max-den-j",
+    "name": "Giants Bed Max Den J"
+  },
+  {
+    "slug": "giants-bed-max-den-k",
+    "name": "Giants Bed Max Den K"
+  },
+  {
+    "slug": "giants-bed-max-den-l",
+    "name": "Giants Bed Max Den L"
+  },
+  {
+    "slug": "giants-bed-max-den-m",
+    "name": "Giants Bed Max Den M"
+  },
+  {
+    "slug": "giants-bed-max-den-n",
+    "name": "Giants Bed Max Den N"
+  },
+  {
+    "slug": "giants-bed-max-den-o",
+    "name": "Giants Bed Max Den O"
+  },
+  {
+    "slug": "giants-bed-max-den-p",
+    "name": "Giants Bed Max Den P"
+  },
+  {
+    "slug": "giants-bed-max-den-q",
+    "name": "Giants Bed Max Den Q"
+  },
+  {
+    "slug": "giants-bed-max-den-r",
+    "name": "Giants Bed Max Den R"
+  },
+  {
+    "slug": "giants-bed-max-den-s",
+    "name": "Giants Bed Max Den S"
+  },
+  {
+    "slug": "giants-bed-max-den-t",
+    "name": "Giants Bed Max Den T"
+  },
+  {
+    "slug": "giants-bed-max-den-u",
+    "name": "Giants Bed Max Den U"
+  },
+  {
+    "slug": "giants-foot-max-den-a",
+    "name": "Giants Foot Max Den A"
+  },
+  {
+    "slug": "giants-foot-max-den-b",
+    "name": "Giants Foot Max Den B"
+  },
+  {
+    "slug": "giants-foot-max-den-c",
+    "name": "Giants Foot Max Den C"
+  },
+  {
+    "slug": "giants-foot-max-den-d",
+    "name": "Giants Foot Max Den D"
+  },
+  {
+    "slug": "giants-foot-max-den-e",
+    "name": "Giants Foot Max Den E"
+  },
+  {
+    "slug": "frigid-sea-max-den-a",
+    "name": "Frigid Sea Max Den A"
+  },
+  {
+    "slug": "frigid-sea-max-den-b",
+    "name": "Frigid Sea Max Den B"
+  },
+  {
+    "slug": "frigid-sea-max-den-c",
+    "name": "Frigid Sea Max Den C"
+  },
+  {
+    "slug": "frigid-sea-max-den-d",
+    "name": "Frigid Sea Max Den D"
+  },
+  {
+    "slug": "frigid-sea-max-den-e",
+    "name": "Frigid Sea Max Den E"
+  },
+  {
+    "slug": "frigid-sea-max-den-f",
+    "name": "Frigid Sea Max Den F"
+  },
+  {
+    "slug": "frigid-sea-max-den-g",
+    "name": "Frigid Sea Max Den G"
+  },
+  {
+    "slug": "frigid-sea-max-den-h",
+    "name": "Frigid Sea Max Den H"
+  },
+  {
+    "slug": "frigid-sea-max-den-i",
+    "name": "Frigid Sea Max Den I"
+  },
+  {
+    "slug": "frigid-sea-max-den-j",
+    "name": "Frigid Sea Max Den J"
+  },
+  {
+    "slug": "frigid-sea-max-den-k",
+    "name": "Frigid Sea Max Den K"
+  },
+  {
+    "slug": "frigid-sea-max-den-l",
+    "name": "Frigid Sea Max Den L"
+  },
+  {
+    "slug": "frigid-sea-max-den-m",
+    "name": "Frigid Sea Max Den M"
+  },
+  {
+    "slug": "frigid-sea-max-den-n",
+    "name": "Frigid Sea Max Den N"
+  },
+  {
+    "slug": "ballimere-lake-max-den-a",
+    "name": "Ballimere Lake Max Den A"
+  },
+  {
+    "slug": "ballimere-lake-max-den-b",
+    "name": "Ballimere Lake Max Den B"
+  },
+  {
+    "slug": "ballimere-lake-max-den-c",
+    "name": "Ballimere Lake Max Den C"
+  },
+  {
+    "slug": "ballimere-lake-max-den-d",
+    "name": "Ballimere Lake Max Den D"
+  },
+  {
+    "slug": "ballimere-lake-max-den-e",
+    "name": "Ballimere Lake Max Den E"
+  },
+  {
+    "slug": "ballimere-lake-max-den-f",
+    "name": "Ballimere Lake Max Den F"
+  },
+  {
+    "slug": "ballimere-lake-max-den-g",
+    "name": "Ballimere Lake Max Den G"
+  },
+  {
+    "slug": "ballimere-lake-max-den-h",
+    "name": "Ballimere Lake Max Den H"
+  },
+  {
+    "slug": "ballimere-lake-max-den-i",
+    "name": "Ballimere Lake Max Den I"
+  },
+  {
+    "slug": "ballimere-lake-max-den-j",
+    "name": "Ballimere Lake Max Den J"
+  },
+  {
+    "slug": "ballimere-lake-max-den-k",
+    "name": "Ballimere Lake Max Den K"
+  },
+  {
+    "slug": "ballimere-lake-max-den-l",
+    "name": "Ballimere Lake Max Den L"
+  },
+  {
+    "slug": "ballimere-lake-max-den-m",
+    "name": "Ballimere Lake Max Den M"
+  },
+  {
+    "slug": "ballimere-lake-max-den-n",
+    "name": "Ballimere Lake Max Den N"
+  },
+  {
+    "slug": "ballimere-lake-max-den-o",
+    "name": "Ballimere Lake Max Den O"
+  },
+  {
+    "slug": "ballimere-lake-max-den-p",
+    "name": "Ballimere Lake Max Den P"
+  },
+  {
+    "slug": "ballimere-lake-max-den-q",
+    "name": "Ballimere Lake Max Den Q"
+  },
+  {
+    "slug": "oreburgh-city-north-west-house",
+    "name": "Oreburgh City North West House"
+  },
+  {
+    "slug": "eterna-city-eterna-condominiums",
+    "name": "Eterna City Eterna Condominiums"
+  },
+  {
+    "slug": "snowpoint-city-north-west-house",
+    "name": "Snowpoint City North West House"
+  },
+  {
+    "slug": "sinnoh-sea-route-226-island-house",
+    "name": "Sinnoh Sea Route 226 Island House"
+  },
+  {
+    "slug": "saffron-city-magnet-train-station",
+    "name": "Saffron City Magnet Train Station"
+  },
+  {
+    "slug": "olivine-city-gym",
+    "name": "Olivine City Gym"
+  }
+]
