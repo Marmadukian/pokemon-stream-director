@@ -41,6 +41,94 @@ DEFAULT_CATCH_STATE = {
 }
 
 
+
+VERSION_TO_GEN = {
+    "red": "generation-i", "blue": "generation-i", "yellow": "generation-i",
+    "gold": "generation-ii", "silver": "generation-ii", "crystal": "generation-ii",
+    "ruby": "generation-iii", "sapphire": "generation-iii", "emerald": "generation-iii",
+    "firered": "generation-iii", "leafgreen": "generation-iii", "colosseum": "generation-iii", "xd": "generation-iii",
+    "diamond": "generation-iv", "pearl": "generation-iv", "platinum": "generation-iv",
+    "heartgold": "generation-iv", "soulsilver": "generation-iv",
+    "black": "generation-v", "white": "generation-v", "black-2": "generation-v", "white-2": "generation-v",
+    "x": "generation-vi", "y": "generation-vi", "omega-ruby": "generation-vi", "alpha-sapphire": "generation-vi",
+    "sun": "generation-vii", "moon": "generation-vii", "ultra-sun": "generation-vii", "ultra-moon": "generation-vii",
+    "lets-go-pikachu": "generation-vii", "lets-go-eevee": "generation-vii",
+    "sword": "generation-viii", "shield": "generation-viii", "brilliant-diamond": "generation-viii", "shining-pearl": "generation-viii", "legends-arceus": "generation-viii",
+    "scarlet": "generation-ix", "violet": "generation-ix"
+}
+
+GEN_ORDER = [
+    "generation-i", "generation-ii", "generation-iii", "generation-iv",
+    "generation-v", "generation-vi", "generation-vii", "generation-viii", "generation-ix"
+]
+
+# Format: { species_slug: { max_gen_slug_where_old_ev_applied: { stat: amt } } }
+HISTORICAL_EV_OVERRIDES = {
+    # Roselia gave 1 Sp. Atk in Gen 3 (Ruby/Sapphire/Emerald/FireRed/LeafGreen).
+    # Changed to 2 Sp. Atk in Gen 4 when Budew/Roserade were added.
+    "roselia": {
+        "generation-iii": {"special-attack": 1}
+    },
+    # Feebas gave 1 Speed in Gen 3; changed to 1 Sp. Def in Gen 4
+    "feebas": {
+        "generation-iii": {"speed": 1}
+    },
+    # Chimecho gave 1 Sp. Atk in Gen 3; changed to 1 Sp. Atk + 1 Sp. Def in Gen 4 (Chingling)
+    "chimecho": {
+        "generation-iii": {"special-attack": 1}
+    },
+    # Porygon gave 1 Attack in Gen 3; changed to 1 Sp. Atk in Gen 4
+    "porygon": {
+        "generation-iii": {"attack": 1}
+    },
+    # Magnemite gave 1 Sp. Atk in Gen 3; changed to 1 Sp. Atk in Gen 4 (Magnezone)
+    # Volbeat gave 1 Attack in Gen 3; changed to 1 Speed in Gen 4
+    "volbeat": {
+        "generation-iii": {"attack": 1}
+    },
+    # Illumise gave 1 Sp. Atk in Gen 3; changed to 1 Speed in Gen 4
+    "illumise": {
+        "generation-iii": {"special-attack": 1}
+    },
+    # Ralts / Kirlia adjustments
+    "ralts": {
+        "generation-iii": {"special-attack": 1}
+    }
+}
+
+def resolve_ev_yield_for_version(species_slug, ev_yield_modern, past_ev_yields, version_name):
+    v_clean = str(version_name).lower().replace(" ", "-")
+    target_gen = VERSION_TO_GEN.get(v_clean)
+
+    if not target_gen:
+        return ev_yield_modern
+
+    try:
+        target_idx = GEN_ORDER.index(target_gen)
+    except ValueError:
+        return ev_yield_modern
+
+    # 1. Check Hardcoded Gen Overrides First
+    s_clean = str(species_slug).lower().strip()
+    if s_clean in HISTORICAL_EV_OVERRIDES:
+        for past_gen_slug, override_yield in HISTORICAL_EV_OVERRIDES[s_clean].items():
+            if past_gen_slug in GEN_ORDER:
+                past_idx = GEN_ORDER.index(past_gen_slug)
+                if target_idx <= past_idx:
+                    return override_yield
+
+    # 2. Check PokéAPI past_stats (if present with effort > 0)
+    if past_ev_yields:
+        for past_gen_slug, past_yield in past_ev_yields.items():
+            if past_gen_slug in GEN_ORDER and past_yield:
+                past_idx = GEN_ORDER.index(past_gen_slug)
+                if target_idx <= past_idx:
+                    return past_yield
+
+    # 3. Modern PokéAPI stats default
+    return ev_yield_modern
+
+
 def load_ev_state():
     state = DEFAULT_EV_STATE.copy()
     if os.path.exists(STATE_FILE):
@@ -242,6 +330,96 @@ const BASE_TYPE_CHART = {
     fairy:    { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 }
 };
 
+const VERSION_TO_GEN_JS = {
+            "red": "generation-i", "blue": "generation-i", "yellow": "generation-i",
+            "gold": "generation-ii", "silver": "generation-ii", "crystal": "generation-ii",
+            "ruby": "generation-iii", "sapphire": "generation-iii", "emerald": "generation-iii",
+            "firered": "generation-iii", "leafgreen": "generation-iii", "colosseum": "generation-iii", "xd": "generation-iii",
+            "diamond": "generation-iv", "pearl": "generation-iv", "platinum": "generation-iv",
+            "heartgold": "generation-iv", "soulsilver": "generation-iv",
+            "black": "generation-v", "white": "generation-v", "black-2": "generation-v", "white-2": "generation-v",
+            "x": "generation-vi", "y": "generation-vi", "omega-ruby": "generation-vi", "alpha-sapphire": "generation-vi",
+            "sun": "generation-vii", "moon": "generation-vii", "ultra-sun": "generation-vii", "ultra-moon": "generation-vii",
+            "lets-go-pikachu": "generation-vii", "lets-go-eevee": "generation-vii",
+            "sword": "generation-viii", "shield": "generation-viii", "brilliant-diamond": "generation-viii", "shining-pearl": "generation-viii", "legends-arceus": "generation-viii",
+            "scarlet": "generation-ix", "violet": "generation-ix"
+        };
+
+        const HISTORICAL_EV_OVERRIDES = {
+            "roselia": { "generation-iii": "1 Sp. Atk" },
+            "feebas": { "generation-iii": "1 Speed" },
+            "chimecho": { "generation-iii": "1 Sp. Atk" },
+            "porygon": { "generation-iii": "1 Atk" },
+            "volbeat": { "generation-iii": "1 Atk" },
+            "illumise": { "generation-iii": "1 Sp. Atk" },
+            "ralts": { "generation-iii": "1 Sp. Atk" }
+        };
+
+        const GEN_ORDER_LIST = [
+            "generation-i", "generation-ii", "generation-iii", "generation-iv",
+            "generation-v", "generation-vi", "generation-vii", "generation-viii", "generation-ix"
+        ];
+
+       function updateTargetEVDisplay(selectedVer) {
+            const evDisplay = document.getElementById('target-ev-yield-display');
+            if (!evDisplay) return;
+
+            // Target slug
+            let targetSlug = "";
+            if (window.activeTargetData && activeTargetData.slug) {
+                targetSlug = activeTargetData.slug.toLowerCase().trim();
+            } else if (window.activeTargetData && activeTargetData.name) {
+                targetSlug = activeTargetData.name.toLowerCase().trim();
+            } else {
+                const nameEl = document.querySelector('h3');
+                if (nameEl) targetSlug = nameEl.innerText.toLowerCase().trim();
+            }
+
+            // Normalize version string to simple alphanumeric/hyphen
+            const verSlug = (selectedVer || "").toLowerCase().trim();
+
+            // Match any Gen 3 keyword (covers "ruby", "sapphire", "ruby-sapphire", "ruby / sapphire", etc.)
+            const isGen3 = /ruby|sapphire|emerald|firered|leafgreen|colosseum|xd|generation-iii/i.test(verSlug);
+
+            // 1. Roselia Check
+            if (targetSlug === "roselia") {
+                evDisplay.innerText = isGen3 ? "1 Sp. Atk" : "2 Sp. Atk";
+                return;
+            }
+
+            // 2. Other Historical EV Slugs
+            const HISTORICAL_SLUGS = {
+                "feebas": { gen3: "1 Speed", modern: "1 Sp. Def" },
+                "chimecho": { gen3: "1 Sp. Atk", modern: "1 Sp. Atk, 1 Sp. Def" },
+                "porygon": { gen3: "1 Atk", modern: "1 Sp. Atk" },
+                "volbeat": { gen3: "1 Atk", modern: "1 Speed" },
+                "illumise": { gen3: "1 Sp. Atk", modern: "1 Speed" },
+                "ralts": { gen3: "1 Sp. Atk", modern: "1 Sp. Atk" }
+            };
+
+            if (HISTORICAL_SLUGS[targetSlug]) {
+                evDisplay.innerText = isGen3 ? HISTORICAL_SLUGS[targetSlug].gen3 : HISTORICAL_SLUGS[targetSlug].modern;
+                return;
+            }
+
+            // 3. Fallback to Modern Yield
+            if (window.activeTargetData && activeTargetData.ev_yield) {
+                const parts = [];
+                for (const [stat, amt] of Object.entries(activeTargetData.ev_yield)) {
+                    if (amt > 0) {
+                        const cleanStat = stat.replace('special-attack', 'Sp. Atk')
+                                              .replace('special-defense', 'Sp. Def')
+                                              .replace('attack', 'Atk')
+                                              .replace('defense', 'Def')
+                                              .replace('speed', 'Speed')
+                                              .replace('hp', 'HP');
+                        parts.push(`${amt} ${cleanStat}`);
+                    }
+                }
+                evDisplay.innerText = parts.length > 0 ? parts.join(', ') : 'None';
+            }
+        }
+
 // 1. Search Autocomplete (Pokemon)
 function filterPokemon() {
     const input = document.getElementById('search-input');
@@ -342,6 +520,9 @@ function filterGameVersion() {
             card.style.display = 'none';
         }
     });
+    if (selected !== "ALL") {
+        updateTargetEVDisplay(selected);
+    }
 }
 
 // 4. Historical Matchup Calculations
@@ -722,6 +903,10 @@ function updateTargetGenView() {
     if (typeof calculateCatchOdds === 'function') {
         calculateCatchOdds();
     }
+
+    // Inside your dropdown change handler:
+    const currentGen = document.getElementById('target-gen-select')?.value || "generation-iii";
+    updateTargetEVDisplay(currentGen);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1105,9 +1290,80 @@ def save_pokemon_counters(data):
 def save_active_route(data):
     with open(ACTIVE_ROUTE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+# Fast local fallback for common / historical EV yields to avoid network overhead
+LOCAL_EV_YIELDS = {
+    "caterpie": {"hp": 1},
+    "metapod": {"defense": 2},
+    "butterfree": {"special-attack": 2, "special-defense": 1},
+    "weedle": {"speed": 1},
+    "kakuna": {"defense": 2},
+    "beedrill": {"attack": 2, "special-defense": 1},
+    "pidgey": {"speed": 1},
+    "pidgeotto": {"speed": 2},
+    "rattata": {"speed": 1},
+    "raticate": {"speed": 2},
+    "spearow": {"speed": 1},
+    "ekans": {"attack": 1},
+    "pikachu": {"speed": 2},
+    "zubat": {"speed": 1},
+    "golbat": {"speed": 2},
+    "oddish": {"special-attack": 1},
+    "gloom": {"special-attack": 2},
+    "meowth": {"speed": 1},
+    "psyduck": {"special-attack": 1},
+    "poliwag": {"speed": 1},
+    "machop": {"attack": 1},
+    "bellsprout": {"attack": 1},
+    "geodude": {"defense": 1},
+    "graveler": {"defense": 2},
+    "magnemite": {"special-attack": 1},
+    "gastly": {"special-attack": 1},
+    "haunter": {"special-attack": 2},
+    "magikarp": {"speed": 1},
+    "gyarados": {"attack": 2},
+    "ditto": {"hp": 1},
+    "roselia": {"special-attack": 2}, # Gen 3 override handles dropping to 1
+    "feebas": {"special-defense": 1},
+    "chimecho": {"special-attack": 1, "special-defense": 1},
+    "poochyena": {"attack": 1},
+    "zigzagoon": {"speed": 1},
+    "wurmple": {"hp": 1},
+    "silcoon": {"defense": 2},
+    "cascoon": {"defense": 2},
+    "taillow": {"speed": 1},
+    "wingull": {"speed": 1},
+    "ralts": {"special-attack": 1},
+    "shroomish": {"hp": 1},
+    "slakoth": {"hp": 1},
+    "whismur": {"hp": 1},
+    "makuhita": {"hp": 1},
+    "aron": {"defense": 1},
+    "electrike": {"speed": 1},
+    "numel": {"special-attack": 1},
+    "spoink": {"special-defense": 1},
+    "spinda": {"special-attack": 1},
+    "swablu": {"special-defense": 1},
+    "zangoose": {"attack": 2},
+    "seviper": {"attack": 1, "special-attack": 1},
+    "corphish": {"attack": 1},
+    "duskull": {"defense": 1, "special-defense": 1},
+    "snorunt": {"hp": 1},
+    "spheal": {"hp": 1},
+    "bagon": {"attack": 1}
+}
+
+STAT_SHORT_NAMES = {
+    "hp": "HP",
+    "attack": "Atk",
+    "defense": "Def",
+    "special-attack": "SpA",
+    "special-defense": "SpD",
+    "speed": "Spe"
+}
 
 def fetch_route_encounter_info(slug):
     try:
+        # Single network call for the area only
         area = pb.location_area(slug)
     except Exception as e:
         print(f"[ROUTE ERROR] Failed to fetch area '{slug}': {e}")
@@ -1117,27 +1373,44 @@ def fetch_route_encounter_info(slug):
 
     for p_enc in getattr(area, "pokemon_encounters", []):
         p_name = p_enc.pokemon.name
+        clean_slug = p_name.lower().strip()
         details_list = []
+
+        # Read EV instantly from local map (0 network latency)
+        modern_evs = LOCAL_EV_YIELDS.get(clean_slug, {})
 
         for v_det in getattr(p_enc, "version_details", []):
             version_name = v_det.version.name.replace("-", " ").title()
-            for enc_det in getattr(v_det, "encounter_details", []):
-                method_name = enc_det.method.name.replace("-", " ").title()
-                min_lvl = enc_det.min_level
-                max_lvl = enc_det.max_level
-                lvl_str = f"Lv. {min_lvl}" if min_lvl == max_lvl else f"Lv. {min_lvl}-{max_lvl}"
-                chance = enc_det.chance
+            enc_details = getattr(v_det, "encounter_details", [])
 
+            # If encounter details list is populated
+            if enc_details:
+                for enc_det in enc_details:
+                    method_name = enc_det.method.name.replace("-", " ").title()
+                    min_lvl = enc_det.min_level
+                    max_lvl = enc_det.max_level
+                    lvl_str = f"Lv. {min_lvl}" if min_lvl == max_lvl else f"Lv. {min_lvl}-{max_lvl}"
+                    chance = enc_det.chance
+
+                    details_list.append({
+                        "version": version_name,
+                        "method": method_name,
+                        "level": lvl_str,
+                        "chance": chance
+                    })
+            else:
+                # Catch-all so Pokémon with empty sub-details are not discarded
                 details_list.append({
                     "version": version_name,
-                    "method": method_name,
-                    "level": lvl_str,
-                    "chance": chance
+                    "method": "Wild",
+                    "level": "Any",
+                    "chance": getattr(v_det, "max_chance", 0)
                 })
 
         encounters_by_pokemon.append({
             "name": p_name.title(),
-            "slug": p_name,
+            "slug": clean_slug,
+            "ev_yield": modern_evs,
             "details": details_list
         })
 
@@ -1147,7 +1420,6 @@ def fetch_route_encounter_info(slug):
         "total_species": len(encounters_by_pokemon),
         "pokemon": encounters_by_pokemon
     }
-
 
 # --- PokéAPI Comprehensive Lookup ---
 
@@ -1213,31 +1485,42 @@ def fetch_complete_pokemon_info(name):
   resistances = {k: v for k, v in damage_multipliers.items() if 0.0 < v < 1.0}
   immunities = [k for k, v in damage_multipliers.items() if v == 0.0]
 
-  # Base Stats & EV Yields
+  # Base Stats & EV Yields (Modern + Historical)
   ev_yield = {}
+  stats = {}
+  bst = 0
 
   for stat in getattr(p, "stats", []):
-    # Extract stat name
-    s_name = ""
-    if hasattr(stat, "stat"):
-      s_name = getattr(stat.stat, "name", str(stat.stat))
-    elif isinstance(stat, dict):
-      s_name = stat.get("stat", {}).get("name", "")
+        s_name = ""
+        if hasattr(stat, "stat"):
+            s_name = getattr(stat.stat, "name", str(stat.stat))
+        elif isinstance(stat, dict):
+            s_name = stat.get("stat", {}).get("name", "")
 
-    # Extract base stat value
-    val = getattr(stat, "base_stat", 0)
-    if isinstance(stat, dict):
-      val = stat.get("base_stat", 0)
+        val = getattr(stat, "base_stat", 0)
+        if isinstance(stat, dict):
+            val = stat.get("base_stat", 0)
 
-    # Extract EV effort yield
-    effort = getattr(stat, "effort", 0)
-    if isinstance(stat, dict):
-      effort = stat.get("effort", 0)
-    if s_name:
-      stats[s_name] = int(val)
-      bst += int(val)
-      if int(effort) > 0:
-        ev_yield[s_name] = int(effort)
+        effort = getattr(stat, "effort", 0)
+        if isinstance(stat, dict):
+            effort = stat.get("effort", 0)
+
+        if s_name:
+            stats[s_name] = int(val)
+            bst += int(val)
+            if int(effort) > 0:
+                ev_yield[s_name] = int(effort)
+
+    # Historical EV Yields from PokéAPI past_stats (if present)
+  past_ev_yields = {}
+  for past_s in getattr(p, "past_stats", []):
+        gen_slug = getattr(past_s.generation, "name", str(past_s.generation)).lower()
+        past_ev_yields[gen_slug] = {}
+        for st in getattr(past_s, "stats", []):
+            st_name = getattr(st.stat, "name", str(st.stat))
+            st_effort = getattr(st, "effort", 0)
+            if int(st_effort) > 0:
+                past_ev_yields[gen_slug][st_name] = int(st_effort)
 
   # Historical Pokémon Typings (e.g. Clefairy Normal -> Fairy, Magnemite Electric -> Electric/Steel)
   past_types = {}
@@ -1586,17 +1869,35 @@ def handle_dashboard(params):
             hunt["method"] = method if method else "Random Encounters"
             save_shiny_hunt(hunt)
 
+
     elif action == "sync_catch":
-        query_params = urllib.parse.parse_qs(parsed_path.query)
-        save_catch_state({
-            "hp": params.get("hp", ["100"])[0],
-            "lvl": params.get("lvl", ["50"])[0],
-            "status": params.get("status", ["1"])[0],
-            "ball": params.get("ball", ["poke"])[0],
-            "odds": params.get("odds", ["--%"])[0],
-            "target": params.get("target", ["None"])[0]
-        })
-        return "", ("Content-Type", "text/plain")
+        # Extract strictly catch-calculator parameters
+        hp = params.get("hp", ["100"])[0]
+        lvl = params.get("lvl", ["50"])[0]
+        status = params.get("status", ["1"])[0]
+        ball = params.get("ball", ["poke"])[0]
+        odds = params.get("odds", ["--%"])[0]
+        target_name = params.get("target", ["None"])[0]
+
+        # Save ONLY catch data — EV state is completely omitted/untouched
+        catch_state = {
+            "hp": hp,
+            "lvl": lvl,
+            "status": status,
+            "ball": ball,
+            "odds": odds,
+            "target": target_name
+        }
+
+        save_catch_state(catch_state)
+
+        # Return clean 200 OK
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(b'{"status": "ok"}')
+        return
 
     # -------------------------------------------------------------
     # EV Tracker Actions
@@ -1670,15 +1971,33 @@ def handle_dashboard(params):
         save_ev_state(ev_state)
 
     elif action == "sync_catch":
-        save_catch_state({
-            "hp": params.get("hp", ["100"])[0],
-            "lvl": params.get("lvl", ["50"])[0],
-            "status": params.get("status", ["1"])[0],
-            "ball": params.get("ball", ["poke"])[0],
-            "odds": params.get("odds", ["--%"])[0],
-            "target": params.get("target", ["None"])[0]
-        })
-        return "", ("Content-Type", "text/plain")
+        # Extract strictly catch-calculator parameters
+        hp = params.get("hp", ["100"])[0]
+        lvl = params.get("lvl", ["50"])[0]
+        status = params.get("status", ["1"])[0]
+        ball = params.get("ball", ["poke"])[0]
+        odds = params.get("odds", ["--%"])[0]
+        target_name = params.get("target", ["None"])[0]
+
+        # Save ONLY catch data — EV state is completely omitted/untouched
+        catch_state = {
+            "hp": hp,
+            "lvl": lvl,
+            "status": status,
+            "ball": ball,
+            "odds": odds,
+            "target": target_name
+        }
+
+        save_catch_state(catch_state)
+
+        # Return clean 200 OK
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(b'{"status": "ok"}')
+        return
 
     # --- Load Data Collections AFTER Actions Execute ---
     pkmn_list = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
@@ -1765,6 +2084,36 @@ def handle_dashboard(params):
         ])
         or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
     )
+
+    active_gen_slug = target.get("selected_gen", "generation-ix")
+    modern_target_evs = target.get("ev_yield", {})
+    past_target_evs = target.get("past_ev_yields", {})
+    target_slug = target.get("name", "").lower().strip()
+
+    resolved_target_evs = resolve_ev_yield_for_version(
+        target_slug, 
+        modern_target_evs, 
+        past_target_evs, 
+        active_gen_slug
+    )
+
+    # 2. Format short clean labels (e.g., "1 Sp. Atk", "2 Speed")
+    STAT_DISPLAY_MAP = {
+        "hp": "HP",
+        "attack": "Atk",
+        "defense": "Def",
+        "special-attack": "Sp. Atk",
+        "special-defense": "Sp. Def",
+        "speed": "Speed"
+    }
+
+    if resolved_target_evs:
+        ev_yield_str = ", ".join([
+            f"{v} {STAT_DISPLAY_MAP.get(k.lower(), k.replace('special-', 'Sp. ').title())}"
+            for k, v in resolved_target_evs.items() if v > 0
+        ])
+    else:
+        ev_yield_str = "None"
 
     # --- Col 1: Target Scanner View ---
     target_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and inspect a Pokémon to load stats.</div>'
@@ -1856,12 +2205,13 @@ def handle_dashboard(params):
                     <div class="text-[10px] text-slate-400 uppercase font-semibold">Base EXP</div>
                     <div class="text-sm font-mono font-bold text-sky-400">{target.get('base_experience', 0)}</div>
                 </div>
-                <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
-                    <div class="text-[10px] text-slate-400 uppercase font-semibold">EV Yield</div>
-                    <div class="text-xs font-mono font-bold text-amber-400 truncate">
-                        {" +".join([f"{v} {k.replace('special-', 'Sp.').title()}" for k, v in target.get('ev_yield', {}).items()]) or 'None'}
-                    </div>
-                </div>
+		<div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+		    <div class="text-[10px] text-slate-400 uppercase font-semibold">EV Yield</div>
+		    <div id="target-ev-yield-display" class="text-xs font-mono font-bold text-amber-400 truncate">
+		        {ev_yield_str}
+		    </div>
+		</div>
+	    </div>
             </div>
 
             <!-- EXP Grind Calculator Row -->
@@ -1974,13 +2324,15 @@ def handle_dashboard(params):
         </div>
         """
 
-    # --- Col 2: Route Encounters View ---
+	# --- Col 2: Route Encounters View ---
     route_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and select a Route to load wild encounter tables.</div>'
     if active_route:
         games = {}
         for p in active_route.get("pokemon", []):
             p_name = p.get("name", "Unknown")
-            p_slug = p.get("slug", p_name.lower())
+            p_slug = p.get("slug", p_name.lower().replace(" ", "-"))
+            modern_evs = p.get("ev_yield", {})
+            past_evs = p.get("past_ev_yields", {})
 
             for d in p.get("details", []):
                 ver = d.get("version", "Other").title()
@@ -1988,15 +2340,21 @@ def handle_dashboard(params):
                     games[ver] = {}
 
                 if p_name not in games[ver]:
+                    if "resolve_ev_yield_for_version" in globals():
+                        version_evs = resolve_ev_yield_for_version(p_slug, modern_evs, past_evs, ver)
+                    else:
+                        version_evs = modern_evs
+
                     games[ver][p_name] = {
                         "slug": p_slug,
+                        "ev_yield": version_evs,
                         "methods": set(),
                         "levels": [],
                         "total_chance": 0,
                     }
 
                 if d.get("method"):
-                    games[ver][p_name]["methods"].add(d["method"].title())
+                    games[ver][p_name]["methods"].add(str(d["method"]).title())
                 if d.get("level"):
                     games[ver][p_name]["levels"].append(str(d["level"]))
                 games[ver][p_name]["total_chance"] += d.get("chance", 0)
@@ -2004,22 +2362,47 @@ def handle_dashboard(params):
         game_options = ['<option value="ALL">All Versions</option>']
         game_sections = []
 
+        STAT_SHORT_MAP = {
+            "hp": "HP",
+            "attack": "Atk",
+            "defense": "Def",
+            "special-attack": "SpA",
+            "special-defense": "SpD",
+            "speed": "Spe"
+        }
+
         for ver_name, species_dict in sorted(games.items()):
             ver_slug = ver_name.lower().replace(" ", "-")
             game_options.append(
-                f'<option value="{ver_slug}">{ver_name}'
-                f" ({len(species_dict)})</option>"
+                f'<option value="{ver_slug}">{ver_name} ({len(species_dict)})</option>'
             )
 
             poke_rows = []
             for p_name, data in sorted(species_dict.items()):
-                methods_str = ", ".join(sorted(data["methods"])) or "Wild"
-                levels_str = ", ".join(data["levels"][:2]) if data["levels"] else "Any"
-                chance_str = (
-                    f"{min(100, data['total_chance'])}%"
-                    if data["total_chance"] > 0
-                    else ""
-                )
+                methods_str = ", ".join(sorted(data.get("methods", []))) or "Wild"
+                levels_list = data.get("levels", [])
+                levels_str = ", ".join(levels_list[:2]) if levels_list else "Any"
+                total_chance = data.get("total_chance", 0)
+                chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
+                p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
+
+                # Safely evaluate EV button
+                ev_btn_html = ""
+                try:
+                    evs = data.get("ev_yield")
+                    if isinstance(evs, dict) and evs:
+                        valid_evs = {k: v for k, v in evs.items() if isinstance(v, int) and v > 0}
+                        if valid_evs:
+                            top_stat, top_amt = max(valid_evs.items(), key=lambda item: item[1])
+                            stat_clean = str(top_stat).lower()
+                            stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
+                            btn_text = f"+{top_amt} {stat_label}"
+                            ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
+                            ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
+                except Exception:
+                    ev_btn_html = ""
+
+                chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
 
                 poke_rows.append(f"""
                 <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
@@ -2030,12 +2413,13 @@ def handle_dashboard(params):
                     <div class="flex items-center gap-2">
                         <div class="text-right">
                             <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
-                            {f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''}
+                            {chance_badge}
                         </div>
                         <div class="flex gap-1 ml-1">
-                            <a href="/?action=set_target&name={data['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">Target</a>
-                            <a href="/?action=team_add&name={data['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded">+ Party</a>
-                            <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded">+ Track</a>
+                            <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                            {ev_btn_html}
+                            <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
                         </div>
                     </div>
                 </div>
@@ -2620,15 +3004,22 @@ def handle_pokemon_remote(params):
         for p in active_route.get("pokemon", []):
             p_name = p.get("name", "Unknown")
             p_slug = p.get("slug", p_name.lower())
+            modern_evs = p.get("ev_yield", {})
+            past_evs = p.get("past_ev_yields", {})
 
             for d in p.get("details", []):
                 ver = d.get("version", "Other").title()
                 if ver not in games:
                     games[ver] = {}
 
+
                 if p_name not in games[ver]:
+                    # Pass species slug first
+                    version_evs = resolve_ev_yield_for_version(p_slug, modern_evs, past_evs, ver)
+
                     games[ver][p_name] = {
                         "slug": p_slug,
+                        "ev_yield": version_evs,
                         "methods": set(),
                         "levels": [],
                         "total_chance": 0,
@@ -2650,35 +3041,65 @@ def handle_pokemon_remote(params):
                 f" ({len(species_dict)})</option>"
             )
 
-            poke_rows = []
-            for p_name, data in sorted(species_dict.items()):
-                methods_str = ", ".join(sorted(data["methods"])) or "Wild"
-                levels_str = ", ".join(data["levels"][:2]) if data["levels"] else "Any"
-                chance_str = (
-                    f"{min(100, data['total_chance'])}%"
-                    if data["total_chance"] > 0
-                    else ""
-                )
+        STAT_SHORT_MAP = {
+            "hp": "HP",
+            "attack": "Atk",
+            "defense": "Def",
+            "special-attack": "SpA",
+            "special-defense": "SpD",
+            "speed": "Spe"
+        }
 
-                poke_rows.append(f"""
-                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
-                    <div>
-                        <div class="font-bold text-white text-xs">{p_name}</div>
-                        <div class="text-[10px] text-slate-400">{methods_str}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-right">
-                            <div class="text-[11px] font-mono text-amber-400 font-semibold">Lv {levels_str}</div>
-                            {f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''}
-                        </div>
-                        <div class="flex gap-1 ml-1">
-                            <a href="/remote?action=set_target&name={data['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
-                            <a href="/remote?action=team_add&name={data['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
-                        </div>
-                    </div>
+        poke_rows = []
+        for p_name, data in sorted(species_dict.items()):
+            methods_str = ", ".join(sorted(data.get("methods", []))) or "Wild"
+            levels_list = data.get("levels", [])
+            levels_str = ", ".join(levels_list[:2]) if levels_list else "Any"
+            total_chance = data.get("total_chance", 0)
+            chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
+            p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
+
+            # Safely evaluate EV button
+            ev_btn_html = ""
+            try:
+                evs = data.get("ev_yield")
+                if isinstance(evs, dict) and evs:
+                    # Filter only positive entries
+                    valid_evs = {k: v for k, v in evs.items() if isinstance(v, int) and v > 0}
+                    if valid_evs:
+                        top_stat, top_amt = max(valid_evs.items(), key=lambda item: item[1])
+                        stat_clean = str(top_stat).lower()
+                        stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
+                        btn_text = f"+{top_amt} {stat_label}"
+                        ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
+                        ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
+            except Exception:
+                ev_btn_html = ""
+
+            chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
+
+            poke_rows.append(f"""
+            <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                <div>
+                    <div class="font-bold text-white text-xs">{p_name}</div>
+                    <div class="text-[10px] text-slate-400">{methods_str}</div>
                 </div>
-                """)
+                <div class="flex items-center gap-2">
+                    <div class="text-right">
+                        <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
+                        {chance_badge}
+                    </div>
+                    <div class="flex gap-1 ml-1">
+                        <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                        {ev_btn_html}
+                        <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                        <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                            </div>
+                </div>
+            </div>
+            """)
+
+
 
             game_sections.append(f"""
             <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
