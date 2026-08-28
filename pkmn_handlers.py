@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from urllib.parse import unquote_plus
+from urllib.parse import quote_plus, unquote_plus
 import pokebase as pb
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +12,7 @@ TEAM_FILE = os.path.join(BASE_DIR, "team_list.json")
 ACTIVE_TARGET_FILE = os.path.join(BASE_DIR, "active_target.json")
 TASKS_DATA_FILE = os.path.join(BASE_DIR, "tasks_list.json")
 CURRENT_TASK_FILE = os.path.join(BASE_DIR, "current_task.txt")
-POKEMON_ROUTE_DATA = os.path.join(BASE_DIR, "pokemon_list.txt")
+CATCH_TARGETS_DATA = os.path.join(BASE_DIR, "pokemon_list.txt")
 NOTE_FILE = os.path.join(BASE_DIR, "video_message.txt")
 PKMN_NAMES_CACHE = os.path.join(BASE_DIR, "all_pokemon_names.json")
 ROUTES_CACHE_FILE = os.path.join(BASE_DIR, "all_location_areas.json")
@@ -276,6 +276,23 @@ function filterPokemon() {
     });
     box.style.display = 'block';
 }
+
+function filterRouteVersion() {
+            const select = document.getElementById('route-version-filter');
+            if (!select || !select.value) return;
+            const selected = select.value.toLowerCase().trim();
+            
+            const cards = document.querySelectorAll('.game-version-card');
+            cards.forEach(card => {
+                const cardVer = (card.getAttribute('data-version') || '').toLowerCase().trim();
+                if (cardVer === selected) {
+                    card.style.setProperty('display', 'block', 'important');
+                } else {
+                    card.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+
 
 // 2. Search Autocomplete (Locations)
 function filterLocations() {
@@ -1068,8 +1085,8 @@ def save_tasks_state(state):
 
 def load_pokemon_counters():
     data = {}
-    if os.path.exists(POKEMON_ROUTE_DATA):
-        with open(POKEMON_ROUTE_DATA, "r", encoding="utf-8") as f:
+    if os.path.exists(CATCH_TARGETS_DATA):
+        with open(CATCH_TARGETS_DATA, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if "," in line:
@@ -1081,7 +1098,7 @@ def load_pokemon_counters():
     return data
 
 def save_pokemon_counters(data):
-    with open(POKEMON_ROUTE_DATA, "w", encoding="utf-8") as f:
+    with open(CATCH_TARGETS_DATA, "w", encoding="utf-8") as f:
         for name, count in data.items():
             f.write(f"{name.strip()},{count}\n")
 
@@ -1499,6 +1516,7 @@ def handle_dashboard(params):
             if route_data:
                 save_active_route(route_data)
 
+
     elif action == "set_tasks":
         raw = params.get("tasks", [""])[0]
         parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
@@ -1522,6 +1540,12 @@ def handle_dashboard(params):
             c[p_name] = c.get(p_name, 0) - 1
             if c[p_name] <= 0:
                 del c[p_name]
+            save_pokemon_counters(c)
+    elif action == "inc_counter":
+        p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
+        if p_name:
+            c = load_pokemon_counters()
+            c[p_name] = c.get(p_name, 0) + 1
             save_pokemon_counters(c)
 
     elif action == "set_counters":
@@ -2011,6 +2035,7 @@ def handle_dashboard(params):
                         <div class="flex gap-1 ml-1">
                             <a href="/?action=set_target&name={data['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">Target</a>
                             <a href="/?action=team_add&name={data['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded">+ Party</a>
+                            <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded">+ Track</a>
                         </div>
                     </div>
                 </div>
@@ -2245,8 +2270,8 @@ def handle_obs_team_overlay(params=None):
 
 def load_pokemon():
     data = {}
-    if os.path.exists(POKEMON_ROUTE_DATA):
-        with open(POKEMON_ROUTE_DATA, "r", encoding="utf-8") as f:
+    if os.path.exists(CATCH_TARGETS_DATA):
+        with open(CATCH_TARGETS_DATA, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if "," in line:
@@ -2322,15 +2347,42 @@ def handle_pokemon_remote(params):
                 save_active_target(data)
                 
     elif action == "set_location":
-        slug = params.get("slug", [""])[0].strip()
+        slug = params.get("slug", [""])[0].strip().lower().replace(" ", "-")
         if slug:
             route_data = fetch_route_encounter_info(slug)
             if route_data:
                 save_active_route(route_data)
 
-    # -------------------------------------------------------------
-    # EV Tracker Actions (Properly nested in the action chain)
-    # -------------------------------------------------------------
+    elif action == "inc_counter":
+        p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
+        if p_name:
+            c = load_pokemon_counters()
+            c[p_name] = c.get(p_name, 0) + 1
+            save_pokemon_counters(c)
+
+    elif action == "dec_counter":
+        p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
+        if p_name:
+            c = load_pokemon_counters()
+            c[p_name] = c.get(p_name, 0) - 1
+            if c[p_name] <= 0:
+                del c[p_name]
+            save_pokemon_counters(c)
+
+    elif action == "set_counters":
+        raw = unquote_plus(params.get("counter_list", [""])[0])
+        new_c = {}
+        for item in raw.split(","):
+            item = item.strip()
+            if not item:
+                continue
+            parts = item.rsplit(" ", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                new_c[parts[0].strip().title()] = int(parts[1])
+            else:
+                new_c[item.title()] = 0
+        save_pokemon_counters(new_c)
+
     elif action == "ev_add_target":
         ev_state = load_ev_state()
         target = load_active_target()
@@ -2397,30 +2449,27 @@ def handle_pokemon_remote(params):
         }
         save_ev_state(ev_state)
     
-    
     elif action == "sync_catch":
-        # Silently update state from the frontend slider
         save_catch_state({
             "hp": params.get("hp", ["100"])[0],
+            "lvl": params.get("lvl", ["50"])[0],
             "status": params.get("status", ["1"])[0],
             "ball": params.get("ball", ["poke"])[0],
             "odds": params.get("odds", ["--%"])[0],
             "target": params.get("target", ["None"])[0]
         })
-        # Return a tiny blank response so the dashboard doesn't refresh
         return "", ("Content-Type", "text/plain")
 
-
-    # 2. Remote-Specific Shortcuts (These use bespoke URL params instead of `action`)
+    # 2. Remote-Specific Shortcuts
     task_action = params.get("task_action", [""])[0] if isinstance(params, dict) else ""
     if task_action:
-        state = load_tasks_state()
-        if state.get("tasks"):
+        t_state = load_tasks_state()
+        if t_state.get("tasks"):
             if task_action == "next":
-                state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
+                t_state["index"] = min(t_state["index"] + 1, len(t_state["tasks"]) - 1)
             elif task_action == "prev":
-                state["index"] = max(state["index"] - 1, 0)
-            save_tasks_state(state)
+                t_state["index"] = max(t_state["index"] - 1, 0)
+            save_tasks_state(t_state)
 
     set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
     if set_tasks_raw:
@@ -2430,7 +2479,14 @@ def handle_pokemon_remote(params):
 
     inc_counter_name = params.get("inc_counter", [""])[0] if isinstance(params, dict) else ""
     if inc_counter_name:
-        p_name = unquote_plus(inc_counter_name)
+        p_name = unquote_plus(inc_counter_name).strip().title()
+        c = load_pokemon_counters()
+        c[p_name] = c.get(p_name, 0) + 1
+        save_pokemon_counters(c)
+
+    dec_counter_name = params.get("dec_counter", [""])[0] if isinstance(params, dict) else ""
+    if dec_counter_name:
+        p_name = unquote_plus(dec_counter_name).strip().title()
         c = load_pokemon_counters()
         if p_name in c:
             c[p_name] -= 1
@@ -2472,6 +2528,8 @@ def handle_pokemon_remote(params):
     target = load_active_target()
     ev_state = load_ev_state()
     state = load_catch_state()
+    route_data = load_active_route()
+    active_route = load_active_route()
 
     task_progress = f"Task {tasks_state['index'] + 1} of {len(tasks_state['tasks'])}" if tasks_state.get("tasks") else "No Tasks Set"
     active_task_name = (
@@ -2481,14 +2539,20 @@ def handle_pokemon_remote(params):
     )
 
     buttons_html = "".join([
-        f"""<a href="/remote?inc_counter={name}" style="display: flex; justify-content: space-between; align-items: center; background: #1f2937; color: #fff; text-decoration: none; padding: 16px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; font-size: 1.1rem; border: 1px solid #374151;">
-            <span>{name}</span>
-            <span style="background: #ef4444; padding: 4px 12px; border-radius: 9999px; font-size: 0.9rem;">{count}</span>
-        </a>"""
+        f"""<div style="display: flex; justify-content: space-between; align-items: center; background: #1f2937; color: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; border: 1px solid #374151;">
+            <div>
+                <div style="font-size: 1.05rem;">{name}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; font-family: monospace;">{count} remaining</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <a href="/remote?action=dec_counter&name={quote_plus(name)}" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #374151; color: #fff; text-decoration: none; border-radius: 6px; font-size: 1.1rem; border: 1px solid #4b5563;">-</a>
+                <span style="font-family: monospace; font-size: 1.1rem; min-width: 24px; text-align: center; color: #34d399;">{count}</span>
+                <a href="/remote?action=inc_counter&name={quote_plus(name)}" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #059669; color: #fff; text-decoration: none; border-radius: 6px; font-size: 1.1rem;">+</a>
+            </div>
+        </div>"""
         for name, count in counters.items()
     ]) or '<div style="color: #6b7280; font-style: italic; margin-bottom: 16px;">No catch targets left!</div>'
 
-    # Note: is_remote=True applies the "/remote" prefix automatically to the EV button URLs!
     ev_card_html = generate_ev_widget(ev_state, target, is_remote=True)
 
     mobile_target_card = ""
@@ -2550,6 +2614,123 @@ def handle_pokemon_remote(params):
         </div>
         """
 
+    route_section_html = '<div class="text-slate-500 text-xs italic py-4 text-center">Search and select a Route to load wild encounter tables.</div>'
+    if active_route:
+        games = {}
+        for p in active_route.get("pokemon", []):
+            p_name = p.get("name", "Unknown")
+            p_slug = p.get("slug", p_name.lower())
+
+            for d in p.get("details", []):
+                ver = d.get("version", "Other").title()
+                if ver not in games:
+                    games[ver] = {}
+
+                if p_name not in games[ver]:
+                    games[ver][p_name] = {
+                        "slug": p_slug,
+                        "methods": set(),
+                        "levels": [],
+                        "total_chance": 0,
+                    }
+
+                if d.get("method"):
+                    games[ver][p_name]["methods"].add(d["method"].title())
+                if d.get("level"):
+                    games[ver][p_name]["levels"].append(str(d["level"]))
+                games[ver][p_name]["total_chance"] += d.get("chance", 0)
+
+        game_options = ['<option value="ALL">All Versions</option>']
+        game_sections = []
+
+        for ver_name, species_dict in sorted(games.items()):
+            ver_slug = ver_name.lower().replace(" ", "-")
+            game_options.append(
+                f'<option value="{ver_slug}">{ver_name}'
+                f" ({len(species_dict)})</option>"
+            )
+
+            poke_rows = []
+            for p_name, data in sorted(species_dict.items()):
+                methods_str = ", ".join(sorted(data["methods"])) or "Wild"
+                levels_str = ", ".join(data["levels"][:2]) if data["levels"] else "Any"
+                chance_str = (
+                    f"{min(100, data['total_chance'])}%"
+                    if data["total_chance"] > 0
+                    else ""
+                )
+
+                poke_rows.append(f"""
+                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                    <div>
+                        <div class="font-bold text-white text-xs">{p_name}</div>
+                        <div class="text-[10px] text-slate-400">{methods_str}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-right">
+                            <div class="text-[11px] font-mono text-amber-400 font-semibold">Lv {levels_str}</div>
+                            {f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''}
+                        </div>
+                        <div class="flex gap-1 ml-1">
+                            <a href="/remote?action=set_target&name={data['slug']}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                            <a href="/remote?action=team_add&name={data['slug']}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                        </div>
+                    </div>
+                </div>
+                """)
+
+            game_sections.append(f"""
+            <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-950/50 px-2 py-1 rounded border border-indigo-900/50 flex justify-between">
+                    <span>{ver_name}</span>
+                    <span class="text-indigo-400 text-[10px]">{len(species_dict)} species</span>
+                </div>
+                <div class="space-y-1">
+                    {''.join(poke_rows)}
+                </div>
+            </div>
+            """)
+
+        route_section_html = f"""
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-md mt-4">
+            <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
+                <div class="text-[10px] uppercase font-bold text-emerald-400">Current Location</div>
+                <div class="text-base font-black text-white">{active_route.get('name', 'Unknown Route')}</div>
+                <div class="text-xs text-slate-400 mt-0.5">{active_route.get('total_species', len(active_route.get('pokemon', [])))} total species</div>
+            </div>
+
+            <!-- Game Version Selector Row -->
+            <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
+                <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
+                <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-bold rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-400">
+                    {''.join(game_options)}
+                </select>
+            </div>
+
+            <div class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                {"".join(game_sections) or '<div class="text-slate-500 text-xs italic">No encounter tables for this sub-area.</div>'}
+            </div>
+        </div>
+        """
+
+    # Format JSON arrays for instant client-side dropdown filtering
+    locations_json = json.dumps([
+        {
+            "name": (loc.get("name") or loc.get("slug", "")).replace("-", " ").title() if isinstance(loc, dict) else str(loc).replace("-", " ").title(),
+            "slug": (loc.get("slug") or loc.get("name", "")) if isinstance(loc, dict) else str(loc)
+        }
+        for loc in all_location_areas
+    ])
+
+    pkmn_json = json.dumps([
+        {
+            "name": (p.get("name") or p.get("slug", "")).replace("-", " ").title() if isinstance(p, dict) else str(p).replace("-", " ").title(),
+            "slug": (p.get("slug") or p.get("name", "")) if isinstance(p, dict) else str(p).lower().replace(" ", "-")
+        }
+        for p in all_pkmn_collection
+    ])
+
     active_target_json = json.dumps(target if target else {})
 
     return (
@@ -2575,115 +2756,301 @@ def handle_pokemon_remote(params):
     </style>
     <script>
         const activeTargetData = {active_target_json};
+        const allLocations = {locations_json};
+        const allPokemon = {pkmn_json};
+
         {SHARED_POKEMON_JS}
+
+        function calculateCatchOdds() {{
+            const hp = document.getElementById('catch-hp-slider')?.value || 100;
+            const lvl = document.getElementById('catch-lvl-input')?.value || 50;
+            const status = document.getElementById('catch-status-select')?.value || 1;
+            const ball = document.getElementById('catch-ball-select')?.value || 'poke';
+
+            const hpDisp = document.getElementById('catch-hp-display');
+            if (hpDisp) hpDisp.innerText = hp + '%';
+
+            const oddsDisplay = document.getElementById('catch-odds-display');
+            let odds = oddsDisplay ? oddsDisplay.innerText : '--%';
+
+            syncCatchState(hp, lvl, status, ball, odds);
+        }}
+
+        function syncCatchState(hp, lvl, status, ball, odds) {{
+            const targetName = (window.activeTargetData && activeTargetData.name) ? activeTargetData.name : "None";
+            fetch(`/sync_catch?hp=${{hp}}&lvl=${{lvl}}&status=${{status}}&ball=${{ball}}&odds=${{encodeURIComponent(odds)}}&target=${{encodeURIComponent(targetName)}}`)
+                .catch(err => console.log("Background sync failed", err));
+        }}
+
+        function filterRouteVersion() {{
+            const select = document.getElementById('route-version-filter');
+            if (!select) return;
+            const selected = select.value;
+            document.querySelectorAll('.game-version-card').forEach(card => {{
+                if (card.getAttribute('data-version') === selected) {{
+                    card.style.display = 'block';
+                }} else {{
+                    card.style.display = 'none';
+                }}
+            }});
+        }}
+
+        // Dynamic Instant Dropdown Filter for Routes
+        function liveFilterRoutes() {{
+            const query = document.getElementById('route-search-input').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('route-live-results');
+            const listContainer = document.getElementById('route-results-list');
+            const countLabel = document.getElementById('route-results-count');
+
+            if (!query || query.length < 1) {{
+                resultsContainer.style.display = 'none';
+                listContainer.innerHTML = '';
+                return;
+            }}
+
+            const tokens = query.split(/\s+/);
+            const matches = allLocations.filter(loc => {{
+                const name = loc.name.toLowerCase();
+                const slug = loc.slug.toLowerCase();
+                return tokens.every(token => name.includes(token) || slug.includes(token));
+            }}).slice(0, 15);
+
+            if (matches.length === 0) {{
+                countLabel.innerText = "0 matches found";
+                listContainer.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No matching routes</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }}
+
+            countLabel.innerText = `${{matches.length}} matching locations`;
+            listContainer.innerHTML = matches.map(m => `
+                <a href="/remote?action=set_location&slug=${{encodeURIComponent(m.slug)}}" class="flex justify-between items-center bg-slate-950/80 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-500 rounded-lg p-2.5 text-xs text-slate-200 transition active:scale-98">
+                    <span class="font-bold text-white">${{m.name}}</span>
+                    <span class="font-mono text-[10px] text-indigo-400 font-semibold">${{m.slug}}</span>
+                </a>
+            `).join('');
+
+            resultsContainer.style.display = 'block';
+        }}
+
+        // Dynamic Instant Dropdown Filter for Pokémon Targets
+        function liveFilterPokemon() {{
+            const query = document.getElementById('pkmn-search-input').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('pkmn-live-results');
+            const listContainer = document.getElementById('pkmn-results-list');
+            const countLabel = document.getElementById('pkmn-results-count');
+
+            if (!query || query.length < 1) {{
+                resultsContainer.style.display = 'none';
+                listContainer.innerHTML = '';
+                return;
+            }}
+
+            const tokens = query.split(/\s+/);
+            const matches = allPokemon.filter(p => {{
+                const name = p.name.toLowerCase();
+                const slug = p.slug.toLowerCase();
+                return tokens.every(token => name.includes(token) || slug.includes(token));
+            }}).slice(0, 15);
+
+            if (matches.length === 0) {{
+                countLabel.innerText = "0 matches found";
+                listContainer.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No matching Pokémon</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }}
+
+            countLabel.innerText = `${{matches.length}} matching Pokémon`;
+            listContainer.innerHTML = matches.map(p => `
+                <div class="flex justify-between items-center bg-slate-950/80 hover:bg-amber-950/30 border border-slate-800 hover:border-amber-500 rounded-lg p-2 text-xs text-slate-200 transition">
+                    <span class="font-bold text-white">${{p.name}}</span>
+                    <div class="flex gap-1.5">
+                        <a href="/remote?action=set_target&name=${{encodeURIComponent(p.slug)}}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded active:scale-95 transition">Target</a>
+                        <a href="/remote?action=team_add&name=${{encodeURIComponent(p.slug)}}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2 py-1 rounded active:scale-95 transition">+Party</a>
+                        <a href="/remote?action=inc_counter&name=${{encodeURIComponent(p.name)}}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 rounded active:scale-95 transition">+Track</a>
+                    </div>
+                </div>
+            `).join('');
+
+            resultsContainer.style.display = 'block';
+        }}
 
         window.addEventListener('DOMContentLoaded', () => {{
             updateTargetGenView();
+            filterRouteVersion();
+        }});
+        window.addEventListener('DOMContentLoaded', () => {{
+            if (typeof updateTargetGenView === "function") updateTargetGenView();
+            setTimeout(filterRouteVersion, 50);
         }});
     </script>
 </head>
-<body>
-    {mobile_target_card}
+<body class="p-3 md:p-6 pb-36 bg-[#121212] text-[#e0e0e0] font-sans antialiased min-h-screen selection:bg-indigo-500 selection:text-white" style="padding-bottom: calc(9rem + env(safe-area-inset-bottom));">
 
-    <!-- Catch Calculator Widget -->
+    <!-- Responsive Grid Wrapper (1 col portrait, 2 cols landscape/desktop) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start [media(orientation:landscape)]:grid-cols-2">
+        
+        <!-- COLUMN 1: Target Search -> Target Card -> Counters -> Shiny -> EV -> Catch Odds -->
+        <div class="space-y-4 flex flex-col">
+
+            <!-- Search 1: Target Pokémon Search -->
+            <div class="card" style="border: 1px solid #f59e0b; margin-top: 0;">
+                <h3 style="color: #fbbf24; margin-bottom: 8px;">Search Pokémon Target</h3>
+                <input 
+                    type="text" 
+                    id="pkmn-search-input" 
+                    oninput="liveFilterPokemon()" 
+                    placeholder="Search Pokémon (e.g. gengar, pikachu)..." 
+                    autocomplete="off" 
+                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400"
+                />
+                <div id="pkmn-live-results" class="bg-slate-900/95 border border-amber-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;">
+                    <div class="flex justify-between items-center text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                        <span id="pkmn-results-count">0 matching Pokémon</span>
+                        <button type="button" onclick="document.getElementById('pkmn-live-results').style.display='none';" class="text-slate-500 hover:text-white text-xs">✕</button>
+                    </div>
+                    <div id="pkmn-results-list" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
+                </div>
+            </div>
+       
+            {mobile_target_card}
+
+            <!-- Active Counters -->
+            <div class="card" style="margin-top: 0;">
+                <h3 style="margin-bottom: 8px;">Active Tracking Counters</h3>
+                <div>
+                    {buttons_html}
+                </div>
+            </div>
+
+            <!-- Shiny Hunt Section -->
+            <div class="card" style="border: 2px solid #f59e0b; background: #18150f; margin-top: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                    <div style="font-size: 0.85rem; color: #fbbf24; text-transform: uppercase; font-weight: bold;">✨ {hunt.get('target', 'None')}</div>
+                    <div style="font-size: 0.75rem; color: #92400e;">{hunt.get('method', 'Encounters')}</div>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 900; font-family: monospace; color: #fef3c7; text-align: center; margin: 4px 0 14px 0;">{hunt.get('count', 0)}</div>
+                <a href="/remote?shiny_action=inc" class="shiny-btn">+1 SEEN / RESET</a>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <a href="/remote?shiny_action=dec" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #292524;">-1 Undo</a>
+                    <a href="/remote?shiny_action=reset" onclick="return confirm('Reset shiny hunt counter?');" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #450a0a; color: #fca5a5;">Reset 0</a>
+                </div>
+            </div>
+
+            {ev_card_html}
+
+            <!-- Catch Calculator Widget -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
                 <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                     <span>Live Catch Odds</span>
-                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">--%</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">{state.get('odds', '--%')}</span>
                 </div>
                 
                 <div class="space-y-1">
                     <div class="flex justify-between text-[10px] text-slate-500 font-bold">
                         <span>Target HP</span>
-                        <span id="catch-hp-display" class="text-amber-400 font-mono">100%</span>
+                        <span id="catch-hp-display" class="text-amber-400 font-mono">{state.get('hp', '100')}%</span>
                     </div>
-                    <!-- Range Slider -->
-                    <input type="range" id="catch-hp-slider" min="1" max="100" value="100" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                    <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-950/60 border border-slate-800/80 rounded-lg p-2">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Target Lvl</span>
+                    <input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-16 bg-slate-900 border border-slate-700 text-white rounded px-2 py-0.5 text-center font-mono font-bold text-xs focus:outline-none focus:border-indigo-400" />
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
                         <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
-                            <option value="1">None</option>
-                            <option value="2.5">Sleep / Freeze</option>
-                            <option value="1.5">Paralyze / Poison / Burn</option>
+                            <option value="1" {"selected" if state.get('status') == '1' else ""}>None</option>
+                            <option value="2.5" {"selected" if state.get('status') == '2.5' else ""}>Sleep / Freeze</option>
+                            <option value="1.5" {"selected" if state.get('status') == '1.5' else ""}>Paralyze / Poison / Burn</option>
                         </select>
                     </div>
                     <div>
                         <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
                         <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
-                            <option value="poke">Poké Ball</option>
-                            <option value="great">Great Ball</option>
-                            <option value="ultra">Ultra Ball</option>
-                            <option value="master">Master Ball</option>
+                            <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
+                            <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
+                            <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
+                            <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
                         </select>
                     </div>
                 </div>
             </div>
-
-    <div class="card" style="border: 2px solid #f59e0b; background: #18150f;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-            <div style="font-size: 0.85rem; color: #fbbf24; text-transform: uppercase; font-weight: bold;">✨ {hunt.get('target', 'None')}</div>
-            <div style="font-size: 0.75rem; color: #92400e;">{hunt.get('method', 'Encounters')}</div>
         </div>
-        <div style="font-size: 2.5rem; font-weight: 900; font-family: monospace; color: #fef3c7; text-align: center; margin: 4px 0 14px 0;">{hunt.get('count', 0)}</div>
-        <a href="/remote?shiny_action=inc" class="shiny-btn">+1 SEEN / RESET</a>
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-            <a href="/remote?shiny_action=dec" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #292524;">-1 Undo</a>
-            <a href="/remote?shiny_action=reset" onclick="return confirm('Reset shiny hunt counter?');" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #450a0a; color: #fca5a5;">Reset 0</a>
+
+        <!-- COLUMN 2: Route Search -> Route Info -> Tasks -> Forms -->
+        <div class="space-y-4 flex flex-col">
+
+            <!-- Search 2: Route Location Search -->
+            <div class="card" style="border: 1px solid #6366f1; margin-top: 0;">
+                <h3 style="color: #a5b4fc; margin-bottom: 8px;">Search Route / Location</h3>
+                <input 
+                    type="text" 
+                    id="route-search-input" 
+                    oninput="liveFilterRoutes()" 
+                    placeholder="Search route (e.g. kanto-route-1, viridian)..." 
+                    autocomplete="off" 
+                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                />
+                <div id="route-live-results" class="bg-slate-900/95 border border-indigo-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;">
+                    <div class="flex justify-between items-center text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
+                        <span id="route-results-count">0 matching locations</span>
+                        <button type="button" onclick="document.getElementById('route-live-results').style.display='none';" class="text-slate-500 hover:text-white text-xs">✕</button>
+                    </div>
+                    <div id="route-results-list" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
+                </div>
+            </div>
+            
+            <!-- Route Encounters Table -->
+            <div style="margin-top: 0;">
+                {route_section_html}
+            </div>
+
+            <!-- Stream Tasks -->
+            <div class="card" style="border: 2px solid #3b82f6; margin-top: 0;">
+                <div style="font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">{task_progress}</div>
+                <div style="font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 14px;">{active_task_name}</div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="/remote?task_action=prev" class="nav-btn">◀ Back</a>
+                    <a href="/remote?task_action=next" class="nav-btn" style="background: #2563eb;">Forward ▶</a>
+                </div>
+            </div>
+
+            <!-- Task Management -->
+            <div class="card" style="margin-top: 0;">
+                <h3>Set Task Queue</h3>
+                <form action="/remote" method="GET">
+                    <textarea name="set_tasks" placeholder="Task one, Task two, Task three"></textarea>
+                    <button type="submit" style="background: #0ea5e9;">Load Tasks</button>
+                </form>
+            </div>
+
+            <!-- Bulk Counters -->
+            <div class="card" style="margin-top: 0;">
+                <h3>Set / Reset Catch Targets</h3>
+                <form action="/remote" method="GET">
+                    <input type="hidden" name="action" value="set_counters" />
+                    <textarea name="counter_list" placeholder="caterpie 3, rattata 2, pikachu 1"></textarea>
+                    <button type="submit">Save Targets</button>
+                </form>
+            </div>
+
+            <!-- Video Message -->
+            <div class="card" style="margin-top: 0;">
+                <h3>Video Message</h3>
+                <form action="/videomessage" method="GET">
+                    <textarea name="notes" placeholder="Enter stream note..."></textarea>
+                    <button type="submit" style="background: #6366f1;">Update Video Message</button>
+                </form>
+            </div>
         </div>
+
     </div>
 
-    {ev_card_html}
-
-    <div class="card" style="border: 2px solid #3b82f6;">
-        <div style="font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">{task_progress}</div>
-        <div style="font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 14px;">{active_task_name}</div>
-        <div style="display: flex; gap: 10px;">
-            <a href="/remote?task_action=prev" class="nav-btn">◀ Back</a>
-            <a href="/remote?task_action=next" class="nav-btn" style="background: #2563eb;">Forward ▶</a>
-        </div>
-    </div>
-
-    <h3 style="margin-top: 24px; margin-bottom: 8px;">Tap to Complete (-1)</h3>
-    <div>
-        {buttons_html}
-    </div>
-
-    <div class="card" style="border: 1px solid #f59e0b;">
-        <h3 style="color: #fbbf24;">Inspect New Target</h3>
-        <form action="/remote" method="GET">
-            <input type="hidden" name="action" value="set_target" />
-            <input type="text" name="name" placeholder="Target Pokémon (e.g. gengar, lapras)..." autocomplete="off" />
-            <button type="submit" style="background: #f59e0b; color: #0f172a;">Set Active Target</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h3>Set Task Queue</h3>
-        <form action="/remote" method="GET">
-            <textarea name="set_tasks" placeholder="Task one, Task two, Task three"></textarea>
-            <button type="submit" style="background: #0ea5e9;">Load Tasks</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h3>Set / Reset Catch Targets</h3>
-        <form action="/remote" method="GET">
-            <textarea name="set_list" placeholder="caterpie 3, rattata 2, pikachu 1"></textarea>
-            <button type="submit">Save Targets</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h3>Video Message</h3>
-        <form action="/videomessage" method="GET">
-            <textarea name="notes" placeholder="Enter stream note..."></textarea>
-            <button type="submit" style="background: #6366f1;">Update Video Message</button>
-        </form>
-    </div>
-
+    <!-- Floating Quick Reload Button -->
     <button onclick="window.location.href=window.location.pathname;" class="fixed bottom-6 right-6 z-[99] bg-slate-800 hover:bg-slate-700 text-slate-200 p-3.5 rounded-full shadow-2xl border border-slate-600 transition-all active:scale-90 flex items-center justify-center cursor-pointer" aria-label="Refresh Page">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
