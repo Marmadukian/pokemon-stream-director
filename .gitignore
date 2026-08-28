@@ -1,5 +1,5 @@
-team_list.json
 __pycache__
+team_list.json
 active_route.json
 active_target.json
 all_location_areas.json
@@ -9,3 +9,4 @@ shiny_hunt.json
 team_list.json
 tasks_list.json
 current_task.txt
+stream_state.json
