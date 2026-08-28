@@ -31,6 +31,14 @@ DEFAULT_EV_STATE = {
     "special-defense": 0,
     "speed": 0,
 }
+DEFAULT_CATCH_STATE = {
+    "hp": "100", 
+    "status": "1", 
+    "ball": "poke", 
+    "odds": "--%", 
+    "target": "None"
+}
+
 
 def load_ev_state():
     state = DEFAULT_EV_STATE.copy()
@@ -70,6 +78,28 @@ def save_ev_state(state):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
+
+def load_catch_state():
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("catch_state", DEFAULT_CATCH_STATE.copy())
+        except Exception:
+            return DEFAULT_CATCH_STATE.copy()
+    return DEFAULT_CATCH_STATE.copy()
+
+def save_catch_state(state):
+    data = {}
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            pass
+    data["catch_state"] = state
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 def generate_ev_widget(ev_state, target, is_remote=False):
     total_evs = sum(
@@ -414,6 +444,88 @@ function calcExpGap() {
     if (timeElem) timeElem.innerText = (hours > 0) ? `~${hours}h ${mins}m` : `~${mins}m`;
 }
 
+function calculateCatchOdds() {
+            if (!activeTargetData || !activeTargetData.catch_rate) return;
+            
+            const catchRate = activeTargetData.catch_rate;
+            const hpPct = parseInt(document.getElementById('catch-hp-slider').value) || 100;
+            const statusVal = parseFloat(document.getElementById('catch-status-select').value) || 1;
+            const ball = document.getElementById('catch-ball-select').value;
+            
+            // Master Ball shortcut
+            if (ball === 'master') {
+                document.getElementById('catch-odds-display').innerText = "100%";
+                document.getElementById('catch-hp-display').innerText = hpPct + "%";
+                return;
+            }
+
+            // Detect if inspecting a Gen 1 game
+            const genSelect = document.getElementById('target-gen-select');
+            const selectedGen = genSelect ? genSelect.value : 'modern';
+            const isGen1 = ['red-blue', 'yellow'].includes(selectedGen);
+
+            let chance = 0;
+
+            if (isGen1) {
+                // --- Gen 1 Formula ---
+                let B = 255;
+                let ballDivisor = 12;
+                if (ball === 'great') { B = 200; ballDivisor = 8; }
+                else if (ball === 'ultra') { B = 150; ballDivisor = 12; }
+
+                // Translate modern multipliers to Gen 1 flat bonuses
+                let statusMod = 0;
+                if (statusVal >= 2.5) statusMod = 25; // Sleep / Freeze
+                else if (statusVal >= 1.5) statusMod = 12; // Paralyze / Poison / Burn
+                
+                const pStatus = statusMod / 256;
+                const pCatchRate = Math.min(catchRate, B) / (B + 1);
+
+                let f = Math.floor((100 * 255) / ballDivisor);
+                let hpQuarter = Math.max(1, Math.floor(hpPct / 4));
+                f = Math.min(255, Math.floor(f / hpQuarter));
+                const pHp = (f + 1) / 256;
+
+                chance = (pStatus + ((1 - pStatus) * pCatchRate * pHp)) * 100;
+            } else {
+                // --- Modern Gen 3+ Formula ---
+                let ballMod = 1.0;
+                if (ball === 'great') ballMod = 1.5;
+                else if (ball === 'ultra') ballMod = 2.0;
+
+                let a = ((300 - (2 * hpPct)) * catchRate * ballMod) / 300;
+                a = a * statusVal;
+
+                if (a >= 255) {
+                    chance = 100;
+                } else {
+                    // Shake check probability calculation
+                    chance = Math.pow(a / 255, 0.75) * 100;
+                }
+            }
+
+            chance = Math.min(100, Math.max(0.1, chance));
+
+            document.getElementById('catch-odds-display').innerText = chance.toFixed(1) + "%";
+            document.getElementById('catch-hp-display').innerText = hpPct + "%";
+
+            const targetName = activeTargetData.name || "None";
+            const oddsStr = chance.toFixed(1) + "%";
+            
+            fetch(`/?action=sync_catch&hp=${hpPct}&status=${statusVal}&ball=${ball}&odds=${encodeURIComponent(oddsStr)}&target=${encodeURIComponent(targetName)}`)
+                .catch(err => console.log("Background sync failed", err));
+        }
+
+        // Auto-attach listener so we don't have to edit SHARED_POKEMON_JS
+        window.addEventListener('DOMContentLoaded', () => {
+            const genSelect = document.getElementById('target-gen-select');
+            if (genSelect) {
+                genSelect.addEventListener('change', calculateCatchOdds);
+            }
+            // Trigger calculation immediately on page load
+            setTimeout(calculateCatchOdds, 100); 
+        });
+
 // 7. Target View Renderer & Game/Gen Switcher
 function updateTargetGenView() {
     if (typeof activeTargetData === 'undefined' || !activeTargetData || !activeTargetData.id) return;
@@ -574,6 +686,10 @@ function updateTargetGenView() {
     } else if (emptyMsg) {
         emptyMsg.style.display = 'none';
     }
+
+    if (typeof calculateCatchOdds === 'function') {
+        calculateCatchOdds();
+    }
 }
 """
 
@@ -628,6 +744,7 @@ def load_all_pokemon_names():
 
 def load_ev_state():
     global ev_state
+    ev_state = {}
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -1421,6 +1538,18 @@ def handle_dashboard(params):
             hunt["method"] = method if method else "Random Encounters"
             save_shiny_hunt(hunt)
 
+    elif action == "sync_catch":
+        # Silently update state from the frontend slider
+        save_catch_state({
+            "hp": params.get("hp", ["100"])[0],
+            "status": params.get("status", ["1"])[0],
+            "ball": params.get("ball", ["poke"])[0],
+            "odds": params.get("odds", ["--%"])[0],
+            "target": params.get("target", ["None"])[0]
+        })
+        # Return a tiny blank response so the dashboard doesn't refresh
+        return "", ("Content-Type", "text/plain")
+
     # -------------------------------------------------------------
     # EV Tracker Actions
     # -------------------------------------------------------------
@@ -1700,6 +1829,43 @@ def handle_dashboard(params):
                         <span id="grind-battles" class="text-slate-300 font-semibold">389 kills</span>
                         <span class="text-slate-600 mx-1">•</span>
                         <span id="grind-time" class="text-emerald-400 font-bold">~1h 37m</span>
+                    </div>
+                </div>
+            </div>
+
+	    <!-- Catch Calculator Widget (Dynamic Gen Auto-Switching) -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
+                <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                    <span>Live Catch Odds</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">--%</span>
+                </div>
+                
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                        <span>Target HP</span>
+                        <span id="catch-hp-display" class="text-amber-400 font-mono">100%</span>
+                    </div>
+                    <!-- Range Slider -->
+                    <input type="range" id="catch-hp-slider" min="1" max="100" value="100" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
+                        <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
+                            <option value="1">None</option>
+                            <option value="2.5">Sleep / Freeze</option>
+                            <option value="1.5">Paralyze / Poison / Burn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
+                        <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
+                            <option value="poke">Poké Ball</option>
+                            <option value="great">Great Ball</option>
+                            <option value="ultra">Ultra Ball</option>
+                            <option value="master">Master Ball</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -2185,6 +2351,20 @@ def handle_pokemon_remote(params):
             "special-attack": 0, "special-defense": 0, "speed": 0
         }
         save_ev_state(ev_state)
+    
+    
+    elif action == "sync_catch":
+        # Silently update state from the frontend slider
+        save_catch_state({
+            "hp": params.get("hp", ["100"])[0],
+            "status": params.get("status", ["1"])[0],
+            "ball": params.get("ball", ["poke"])[0],
+            "odds": params.get("odds", ["--%"])[0],
+            "target": params.get("target", ["None"])[0]
+        })
+        # Return a tiny blank response so the dashboard doesn't refresh
+        return "", ("Content-Type", "text/plain")
+
 
     # 2. Remote-Specific Shortcuts (These use bespoke URL params instead of `action`)
     task_action = params.get("task_action", [""])[0] if isinstance(params, dict) else ""
@@ -2359,6 +2539,43 @@ def handle_pokemon_remote(params):
 <body>
     {mobile_target_card}
 
+    <!-- Catch Calculator Widget -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
+                <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                    <span>Live Catch Odds</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">--%</span>
+                </div>
+                
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                        <span>Target HP</span>
+                        <span id="catch-hp-display" class="text-amber-400 font-mono">100%</span>
+                    </div>
+                    <!-- Range Slider -->
+                    <input type="range" id="catch-hp-slider" min="1" max="100" value="100" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
+                        <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
+                            <option value="1">None</option>
+                            <option value="2.5">Sleep / Freeze</option>
+                            <option value="1.5">Paralyze / Poison / Burn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
+                        <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
+                            <option value="poke">Poké Ball</option>
+                            <option value="great">Great Ball</option>
+                            <option value="ultra">Ultra Ball</option>
+                            <option value="master">Master Ball</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
     <div class="card" style="border: 2px solid #f59e0b; background: #18150f;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
             <div style="font-size: 0.85rem; color: #fbbf24; text-transform: uppercase; font-weight: bold;">✨ {hunt.get('target', 'None')}</div>
@@ -2531,12 +2748,125 @@ def handle_obs_evs(params):
 </html>"""
   return html, ("Content-Type", "text/html")
 
+def handle_obs_catch_rate(params):
+    state = load_catch_state()
+    
+    # Format labels
+    ball_map = {"poke": "Poké Ball", "great": "Great Ball", "ultra": "Ultra Ball", "master": "Master Ball"}
+    status_map = {"1": "None", "1.5": "PAR/PSN/BRN", "2.5": "SLP/FRZ"}
+    
+    ball_name = ball_map.get(state.get("ball", "poke"), "Poké Ball")
+    status_name = status_map.get(str(state.get("status", "1")), "None")
+    
+    html = f"""<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="refresh" content="2">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-transparent font-sans overflow-hidden p-4">
+        <div class="bg-slate-900/90 border-2 border-slate-700/80 rounded-xl p-3 inline-block shadow-2xl backdrop-blur-sm min-w-[240px]">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-1.5 mb-2">
+                <span class="text-[10px] uppercase font-black tracking-wider text-amber-400">Catch Odds</span>
+                <span class="text-[10px] font-bold text-white uppercase">{state.get('target', 'None')}</span>
+            </div>
+            
+            <div class="flex items-center justify-between gap-4 mb-2">
+                <div class="text-3xl font-black font-mono text-emerald-400 tracking-tighter">
+                    {state.get('odds', '--%')}
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-bold text-rose-400 uppercase leading-tight">HP {state.get('hp', '100')}%</div>
+                    <div class="text-[10px] font-bold text-indigo-300 uppercase leading-tight">{status_name}</div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-center">
+                <span class="text-[11px] font-bold text-slate-300 tracking-wide">{ball_name}</span>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    
+    return html, ("Content-Type", "text/html")
+
+def handle_obs_hub(params):
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Overlays Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-6">
+    
+    <div class="max-w-2xl w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black uppercase tracking-wider text-emerald-400 mb-2">OBS Overlays Hub</h1>
+            <p class="text-slate-400 text-sm">Select an overlay to view it in this window.</p>
+        </div>
+        
+        <!-- Overlay Buttons Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="/obs/target" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">🎯</span>
+                <span>Active Target</span>
+            </a>
+            
+            <a href="/obs/team" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">🛡️</span>
+                <span>Party Team</span>
+            </a>
+            
+            <a href="/obs/tocatch" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-sky-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">📋</span>
+                <span>To Catch List</span>
+            </a>
+            
+            <a href="/obs/shiny" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">✨</span>
+                <span>Shiny Hunt</span>
+            </a>
+            
+            <a href="/obs/evs" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-rose-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">💪</span>
+                <span>EV Tracker</span>
+            </a>
+            
+            <a href="/obs/catchrate" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-purple-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
+                <span class="text-2xl mb-1">🧮</span>
+                <span>Catch Odds</span>
+            </a>
+        </div>
+        
+        <!-- Navigation Footer -->
+        <div class="mt-8 text-center pt-6 border-t border-slate-800/80">
+            <a href="/" class="text-slate-500 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors px-4 py-2">
+                ← Back to Dashboard
+            </a>
+            <span class="text-slate-700 mx-2">|</span>
+            <a href="/remote" class="text-slate-500 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors px-4 py-2">
+                Mobile Remote →
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>"""
+    
+    return html, ("Content-Type", "text/html")
+
+
 ROUTES = {
     "/": handle_dashboard,
+    "/remote": handle_pokemon_remote,
+    "/obs": handle_obs_hub,
     "/obs/target": handle_obs_target_overlay,
     "/obs/team": handle_obs_team_overlay,
     "/obs/tocatch": handle_pokemon_stream,
     "/obs/shiny": handle_obs_shiny,
     "/obs/evs": handle_obs_evs,
-    "/remote": handle_pokemon_remote,
+    "/obs/catchrate": handle_obs_catch_rate,
 }
