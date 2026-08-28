@@ -32,7 +32,8 @@ DEFAULT_EV_STATE = {
     "speed": 0,
 }
 DEFAULT_CATCH_STATE = {
-    "hp": "100", 
+    "hp": "100",
+    "lvl": "50",
     "status": "1", 
     "ball": "poke", 
     "odds": "--%", 
@@ -84,7 +85,8 @@ def load_catch_state():
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("catch_state", DEFAULT_CATCH_STATE.copy())
+                state = data.get("catch_state", DEFAULT_CATCH_STATE.copy())
+                return state
         except Exception:
             return DEFAULT_CATCH_STATE.copy()
     return DEFAULT_CATCH_STATE.copy()
@@ -444,22 +446,49 @@ function calcExpGap() {
     if (timeElem) timeElem.innerText = (hours > 0) ? `~${hours}h ${mins}m` : `~${mins}m`;
 }
 
+function syncCatchState(hp, lvl, status, ball, odds) {
+            const targetName = (window.activeTargetData && activeTargetData.name) ? activeTargetData.name : "None";
+            
+            fetch(`/sync_catch?hp=${hp}&lvl=${lvl}&status=${status}&ball=${ball}&odds=${encodeURIComponent(odds)}&target=${encodeURIComponent(targetName)}`)
+                .catch(err => console.log("Background sync failed", err));
+        }
+
 function calculateCatchOdds() {
             if (!activeTargetData || !activeTargetData.catch_rate) return;
             
             const catchRate = activeTargetData.catch_rate;
             const hpPct = parseInt(document.getElementById('catch-hp-slider').value) || 100;
+            const lvl = parseInt(document.getElementById('catch-lvl-input').value) || 50;
             const statusVal = parseFloat(document.getElementById('catch-status-select').value) || 1;
             const ball = document.getElementById('catch-ball-select').value;
             
+            // Extract Base HP from active target data (fallback to 70 if missing)
+            // activeTargetData.stats usually contains objects or a map like {hp: 90, attack: 90, ...}
+            let baseHp = 70;
+            if (activeTargetData.stats) {
+                if (typeof activeTargetData.stats === 'object' && !Array.isArray(activeTargetData.stats)) {
+                    baseHp = activeTargetData.stats.hp || activeTargetData.stats.HP || 70;
+                } else if (Array.isArray(activeTargetData.stats)) {
+                    const hpStatObj = activeTargetData.stats.find(s => s.stat === 'hp' || s.name === 'hp');
+                    if (hpStatObj) baseHp = hpStatObj.base || hpStatObj.value || 70;
+                }
+            }
+
+            // Calculate exact Max HP (0 EVs, neutral nature)
+            const maxHp = Math.floor(((2 * baseHp) * lvl) / 100) + lvl + 10;
+            const currentHp = Math.max(1, Math.floor((maxHp * hpPct) / 100));
+
+            // Update UI text trackers
+            document.getElementById('catch-hp-display').innerText = `${currentHp}/${maxHp} HP (${hpPct}%)`;
+            document.getElementById('catch-lvl-display').innerText = lvl;
+
             // Master Ball shortcut
             if (ball === 'master') {
                 document.getElementById('catch-odds-display').innerText = "100%";
-                document.getElementById('catch-hp-display').innerText = hpPct + "%";
+                syncCatchState(hpPct, lvl, statusVal, ball, "100%");
                 return;
             }
 
-            // Detect if inspecting a Gen 1 game
             const genSelect = document.getElementById('target-gen-select');
             const selectedGen = genSelect ? genSelect.value : 'modern';
             const isGen1 = ['red-blue', 'yellow'].includes(selectedGen);
@@ -473,59 +502,45 @@ function calculateCatchOdds() {
                 if (ball === 'great') { B = 200; ballDivisor = 8; }
                 else if (ball === 'ultra') { B = 150; ballDivisor = 12; }
 
-                // Translate modern multipliers to Gen 1 flat bonuses
                 let statusMod = 0;
-                if (statusVal >= 2.5) statusMod = 25; // Sleep / Freeze
-                else if (statusVal >= 1.5) statusMod = 12; // Paralyze / Poison / Burn
+                if (statusVal >= 2.5) statusMod = 25;
+                else if (statusVal >= 1.5) statusMod = 12;
                 
                 const pStatus = statusMod / 256;
                 const pCatchRate = Math.min(catchRate, B) / (B + 1);
 
-                let f = Math.floor((100 * 255) / ballDivisor);
-                let hpQuarter = Math.max(1, Math.floor(hpPct / 4));
-                f = Math.min(255, Math.floor(f / hpQuarter));
+                // Gen 1 HP check uses MaxHP vs CurrentHP ratio check under the hood
+                let f = Math.floor((maxHp * 255) / ballDivisor);
+                let hpFactor = Math.floor(currentHp / 4);
+                if (hpFactor < 1) hpFactor = 1;
+                
+                f = Math.min(255, Math.floor(f / hpFactor));
                 const pHp = (f + 1) / 256;
 
                 chance = (pStatus + ((1 - pStatus) * pCatchRate * pHp)) * 100;
             } else {
-                // --- Modern Gen 3+ Formula ---
+                // --- Modern Formula ---
                 let ballMod = 1.0;
                 if (ball === 'great') ballMod = 1.5;
                 else if (ball === 'ultra') ballMod = 2.0;
 
-                let a = ((300 - (2 * hpPct)) * catchRate * ballMod) / 300;
+                // Modern formula uses actual MaxHP and CurrentHP ratios: ((3 * MaxHP - 2 * CurrentHP) * CatchRate * Ball) / (3 * MaxHP)
+                let a = (((3 * maxHp) - (2 * currentHp)) * catchRate * ballMod) / (3 * maxHp);
                 a = a * statusVal;
 
                 if (a >= 255) {
                     chance = 100;
                 } else {
-                    // Shake check probability calculation
                     chance = Math.pow(a / 255, 0.75) * 100;
                 }
             }
 
             chance = Math.min(100, Math.max(0.1, chance));
-
-            document.getElementById('catch-odds-display').innerText = chance.toFixed(1) + "%";
-            document.getElementById('catch-hp-display').innerText = hpPct + "%";
-
-            const targetName = activeTargetData.name || "None";
             const oddsStr = chance.toFixed(1) + "%";
-            
-            fetch(`/?action=sync_catch&hp=${hpPct}&status=${statusVal}&ball=${ball}&odds=${encodeURIComponent(oddsStr)}&target=${encodeURIComponent(targetName)}`)
-                .catch(err => console.log("Background sync failed", err));
+            document.getElementById('catch-odds-display').innerText = oddsStr;
+
+            syncCatchState(hpPct, lvl, statusVal, ball, oddsStr);
         }
-
-        // Auto-attach listener so we don't have to edit SHARED_POKEMON_JS
-        window.addEventListener('DOMContentLoaded', () => {
-            const genSelect = document.getElementById('target-gen-select');
-            if (genSelect) {
-                genSelect.addEventListener('change', calculateCatchOdds);
-            }
-            // Trigger calculation immediately on page load
-            setTimeout(calculateCatchOdds, 100); 
-        });
-
 // 7. Target View Renderer & Game/Gen Switcher
 function updateTargetGenView() {
     if (typeof activeTargetData === 'undefined' || !activeTargetData || !activeTargetData.id) return;
@@ -691,6 +706,15 @@ function updateTargetGenView() {
         calculateCatchOdds();
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+            const genSelect = document.getElementById('target-gen-select');
+            if (genSelect) {
+                genSelect.addEventListener('change', calculateCatchOdds);
+            }
+            // Fire immediately on load
+            setTimeout(calculateCatchOdds, 200);
+        });
 """
 
 
@@ -1539,15 +1563,15 @@ def handle_dashboard(params):
             save_shiny_hunt(hunt)
 
     elif action == "sync_catch":
-        # Silently update state from the frontend slider
+        query_params = urllib.parse.parse_qs(parsed_path.query)
         save_catch_state({
             "hp": params.get("hp", ["100"])[0],
+            "lvl": params.get("lvl", ["50"])[0],
             "status": params.get("status", ["1"])[0],
             "ball": params.get("ball", ["poke"])[0],
             "odds": params.get("odds", ["--%"])[0],
             "target": params.get("target", ["None"])[0]
         })
-        # Return a tiny blank response so the dashboard doesn't refresh
         return "", ("Content-Type", "text/plain")
 
     # -------------------------------------------------------------
@@ -1621,6 +1645,17 @@ def handle_dashboard(params):
         }
         save_ev_state(ev_state)
 
+    elif action == "sync_catch":
+        save_catch_state({
+            "hp": params.get("hp", ["100"])[0],
+            "lvl": params.get("lvl", ["50"])[0],
+            "status": params.get("status", ["1"])[0],
+            "ball": params.get("ball", ["poke"])[0],
+            "odds": params.get("odds", ["--%"])[0],
+            "target": params.get("target", ["None"])[0]
+        })
+        return "", ("Content-Type", "text/plain")
+
     # --- Load Data Collections AFTER Actions Execute ---
     pkmn_list = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
     area_list = load_all_location_areas()
@@ -1630,7 +1665,9 @@ def handle_dashboard(params):
     tasks_state = load_tasks_state()
     counters = load_pokemon_counters()
     hunt = load_shiny_hunt()
-    ev_state = load_ev_state()  # <--- Pulls the fresh data you just saved
+    ev_state = load_ev_state()
+    state = load_catch_state()
+
 
     js_pokemon_array = json.dumps(pkmn_list)
     js_location_array = json.dumps(area_list)
@@ -1833,38 +1870,46 @@ def handle_dashboard(params):
                 </div>
             </div>
 
-	    <!-- Catch Calculator Widget (Dynamic Gen Auto-Switching) -->
+	    <!-- Catch Calculator Widget -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
                 <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                     <span>Live Catch Odds</span>
-                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">--%</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">{state.get('odds', '--%')}</span>
                 </div>
                 
-                <div class="space-y-1">
-                    <div class="flex justify-between text-[10px] text-slate-500 font-bold">
-                        <span>Target HP</span>
-                        <span id="catch-hp-display" class="text-amber-400 font-mono">100%</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                            <span>Target HP</span>
+                            <span id="catch-hp-display" class="text-amber-400 font-mono">{state.get('hp', '100')}%</span>
+                        </div>
+                        <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
                     </div>
-                    <!-- Range Slider -->
-                    <input type="range" id="catch-hp-slider" min="1" max="100" value="100" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                            <span>Target Level</span>
+                            <span id="catch-lvl-display" class="text-indigo-400 font-mono">{state.get('lvl', '50')}</span>
+                        </div>
+				<input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 text-center font-mono font-bold focus:outline-none focus:border-indigo-400 h-6" />
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
                         <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
-                            <option value="1">None</option>
-                            <option value="2.5">Sleep / Freeze</option>
-                            <option value="1.5">Paralyze / Poison / Burn</option>
+                            <option value="1" {"selected" if state.get('status') == '1' else ""}>None</option>
+                            <option value="2.5" {"selected" if state.get('status') == '2.5' else ""}>Sleep / Freeze</option>
+                            <option value="1.5" {"selected" if state.get('status') == '1.5' else ""}>Paralyze / Poison / Burn</option>
                         </select>
                     </div>
                     <div>
                         <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
                         <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
-                            <option value="poke">Poké Ball</option>
-                            <option value="great">Great Ball</option>
-                            <option value="ultra">Ultra Ball</option>
-                            <option value="master">Master Ball</option>
+                            <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
+                            <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
+                            <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
+                            <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
                         </select>
                     </div>
                 </div>
@@ -2426,6 +2471,7 @@ def handle_pokemon_remote(params):
     hunt = load_shiny_hunt()
     target = load_active_target()
     ev_state = load_ev_state()
+    state = load_catch_state()
 
     task_progress = f"Task {tasks_state['index'] + 1} of {len(tasks_state['tasks'])}" if tasks_state.get("tasks") else "No Tasks Set"
     active_task_name = (
@@ -2767,9 +2813,14 @@ def handle_obs_catch_rate(params):
     </head>
     <body class="bg-transparent font-sans overflow-hidden p-4">
         <div class="bg-slate-900/90 border-2 border-slate-700/80 rounded-xl p-3 inline-block shadow-2xl backdrop-blur-sm min-w-[240px]">
-            <div class="flex items-center justify-between border-b border-slate-700/60 pb-1.5 mb-2">
-                <span class="text-[10px] uppercase font-black tracking-wider text-amber-400">Catch Odds</span>
-                <span class="text-[10px] font-bold text-white uppercase">{state.get('target', 'None')}</span>
+            <div class="flex items-center justify-between gap-4 mb-2">
+                <div class="text-3xl font-black font-mono text-emerald-400 tracking-tighter">
+                    {state.get('odds', '--%')}
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-bold text-indigo-400 uppercase leading-tight">Lvl {state.get('lvl', '50')} • HP {state.get('hp', '100')}%</div>
+                    <div class="text-[10px] font-bold text-slate-300 uppercase leading-tight">{status_name}</div>
+                </div>
             </div>
             
             <div class="flex items-center justify-between gap-4 mb-2">
