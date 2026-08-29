@@ -40,6 +40,18 @@ DEFAULT_CATCH_STATE = {
     "odds": "--%", 
     "target": "None"
 }
+
+
+DEFAULT_EXP_STATE = {
+    "growth_rate": "medium-fast",
+    "lvl_from": "1",
+    "lvl_to": "36",
+    "exp_needed": "46,656 EXP",
+    "exp_per_kill": "120",
+    "kills": "389 kills",
+    "est_time": "~1h 37m"
+}
+
 # Region prefix -> Default Game Versions mapping
 # Game lists
 GEN1_VERSIONS = ["red", "blue", "yellow", "firered", "leafgreen", "lets-go-pikachu", "lets-go-eevee"]
@@ -267,6 +279,30 @@ def resolve_ev_yield_for_version(species_slug, ev_yield_modern, past_ev_yields, 
         save_local_ev_yields(LOCAL_EV_YIELDS)
 
     return final_yield
+
+def load_exp_state():
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("exp_state", DEFAULT_EXP_STATE.copy())
+        except Exception:
+            return DEFAULT_EXP_STATE.copy()
+    return DEFAULT_EXP_STATE.copy()
+
+def save_exp_state(state):
+    data = {}
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    data["exp_state"] = state
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
 
 
 # --- State Loading & Saving ---
@@ -658,6 +694,20 @@ function updateTaskCardUI(progress, name) {
     const nameEl = document.getElementById('task-name-display');
     if (progEl) progEl.innerText = progress;
     if (nameEl) nameEl.innerText = name;
+}
+
+function syncExpState() {
+    const growthRate = document.getElementById('target-growth-rate')?.value || 'medium-fast';
+    const lvlFrom = document.getElementById('exp-from')?.value || '1';
+    const lvlTo = document.getElementById('exp-to')?.value || '36';
+    const expOutput = document.getElementById('exp-output')?.innerText || '0 EXP';
+    const expPerKill = document.getElementById('exp-per-kill')?.value || '120';
+    const kills = document.getElementById('grind-battles')?.innerText || '0 kills';
+    const estTime = document.getElementById('grind-time')?.innerText || '~0m';
+
+    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+    fetch(`${endpoint}?action=sync_exp&growth_rate=${encodeURIComponent(growthRate)}&from=${encodeURIComponent(lvlFrom)}&to=${encodeURIComponent(lvlTo)}&exp=${encodeURIComponent(expOutput)}&per_kill=${encodeURIComponent(expPerKill)}&kills=${encodeURIComponent(kills)}&time=${encodeURIComponent(estTime)}`)
+        .catch(err => console.error("EXP sync failed", err));
 }
 
 // 2. Bulbapedia Game Selection -> Populate Part Dropdown
@@ -2481,6 +2531,18 @@ def handle_dashboard(params):
         self.wfile.write(b'{"status": "ok"}')
         return
 
+    elif action == "sync_exp":
+        exp_state = {
+            "growth_rate": unquote_plus(params.get("growth_rate", ["medium-fast"])[0]),
+            "lvl_from": params.get("from", ["1"])[0],
+            "lvl_to": params.get("to", ["36"])[0],
+            "exp_needed": unquote_plus(params.get("exp", ["0 EXP"])[0]),
+            "exp_per_kill": params.get("per_kill", ["120"])[0],
+            "kills": unquote_plus(params.get("kills", ["0 kills"])[0]),
+            "est_time": unquote_plus(params.get("time", ["~0m"])[0])
+        }
+        save_exp_state(exp_state)
+
     # 2. Extract values for HTML template placeholders:
     t_state = load_tasks_state()
     tasks = t_state.get("tasks", [])
@@ -3397,6 +3459,18 @@ def handle_pokemon_remote(params):
 
         save_catch_state(state)
 
+    elif action == "sync_exp":
+        exp_state = {
+            "growth_rate": unquote_plus(params.get("growth_rate", ["medium-fast"])[0]),
+            "lvl_from": params.get("from", ["1"])[0],
+            "lvl_to": params.get("to", ["36"])[0],
+            "exp_needed": unquote_plus(params.get("exp", ["0 EXP"])[0]),
+            "exp_per_kill": params.get("per_kill", ["120"])[0],
+            "kills": unquote_plus(params.get("kills", ["0 kills"])[0]),
+            "est_time": unquote_plus(params.get("time", ["~0m"])[0])
+        }
+        save_exp_state(exp_state)
+
     # 2. Remote-Specific Shortcuts
     # 1. Handle Navigation (next / prev)
     task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
@@ -4220,6 +4294,71 @@ def handle_obs_hub(params):
     
     return html, ("Content-Type", "text/html")
 
+def handle_obs_exp(params):
+    state = load_exp_state()
+
+    growth = state.get("growth_rate", "Medium Fast").replace("-", " ").title()
+    lvl_from = state.get("lvl_from", "1")
+    lvl_to = state.get("lvl_to", "36")
+    exp_needed = state.get("exp_needed", "0 EXP")
+    exp_per_kill = state.get("exp_per_kill", "120")
+    kills = state.get("kills", "0 kills")
+    est_time = state.get("est_time", "~0m")
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        setInterval(() => {{
+            fetch(window.location.pathname + '?t=' + Date.now())
+                .then(res => res.text())
+                .then(html => {{
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newRoot = doc.getElementById('exp-overlay-root');
+                    const curRoot = document.getElementById('exp-overlay-root');
+                    if (newRoot && curRoot && newRoot.innerHTML !== curRoot.innerHTML) {{
+                        curRoot.innerHTML = newRoot.innerHTML;
+                    }}
+                }})
+                .catch(() => {{}});
+        }}, 1000);
+    </script>
+</head>
+<body class="bg-transparent font-sans overflow-hidden p-4">
+    <div id="exp-overlay-root" class="bg-slate-900/90 border-2 border-slate-700/80 rounded-xl p-3 inline-block shadow-2xl backdrop-blur-sm min-w-[260px]">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-1 mb-2">
+            <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">EXP GRIND</span>
+            <span class="text-[10px] font-mono text-amber-400 font-bold">{growth}</span>
+        </div>
+
+        <!-- Level Range & Total EXP -->
+        <div class="flex items-center justify-between gap-4 mb-2">
+            <div>
+                <span class="text-[11px] font-bold text-slate-400">LVL</span>
+                <span class="text-sm font-black font-mono text-indigo-400">{lvl_from}</span>
+                <span class="text-[10px] text-slate-500 font-bold">➔</span>
+                <span class="text-sm font-black font-mono text-indigo-400">{lvl_to}</span>
+            </div>
+            <div class="text-right">
+                <div class="text-base font-black font-mono text-amber-300 tracking-tight leading-none">{exp_needed}</div>
+            </div>
+        </div>
+
+        <!-- Grind Stats Footer -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded px-2 py-1.5 flex items-center justify-between font-mono text-[11px]">
+            <span class="text-slate-400">{kills} <span class="text-[9px] text-slate-600">(@{exp_per_kill})</span></span>
+            <span class="text-emerald-400 font-bold">{est_time}</span>
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html, ("Content-Type", "text/html")
+
 
 ROUTES = {
     "/": handle_dashboard,
@@ -4231,4 +4370,5 @@ ROUTES = {
     "/obs/shiny": handle_obs_shiny,
     "/obs/evs": handle_obs_evs,
     "/obs/catchrate": handle_obs_catch_rate,
+    "/obs/exptracker" : handle_obs_exp,
 }
