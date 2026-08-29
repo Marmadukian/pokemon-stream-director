@@ -40,6 +40,49 @@ DEFAULT_CATCH_STATE = {
     "odds": "--%", 
     "target": "None"
 }
+# Region prefix -> Default Game Versions mapping
+# Game lists
+GEN1_VERSIONS = ["red", "blue", "yellow", "firered", "leafgreen", "lets-go-pikachu", "lets-go-eevee"]
+GEN2_VERSIONS = ["gold", "silver", "crystal", "heartgold", "soulsilver"]
+GEN3_VERSIONS = ["ruby", "sapphire", "emerald", "omega-ruby", "alpha-sapphire"]
+GEN4_VERSIONS = ["diamond", "pearl", "platinum", "brilliant-diamond", "shining-pearl", "legends-arceus"]
+GEN5_VERSIONS = ["black", "white", "black-2", "white-2"]
+GEN6_VERSIONS = ["x", "y"]
+GEN7_VERSIONS = ["sun", "moon", "ultra-sun", "ultra-moon"]
+GEN8_VERSIONS = ["sword", "shield"]
+GEN9_VERSIONS = ["scarlet", "violet"]
+
+LANDMARK_REGION_MAP = {
+    # Kanto landmarks / cities
+    "kanto": GEN1_VERSIONS, "pallet": GEN1_VERSIONS, "viridian": GEN1_VERSIONS, "pewter": GEN1_VERSIONS,
+    "cerulean": GEN1_VERSIONS, "vermilion": GEN1_VERSIONS, "lavender": GEN1_VERSIONS, "celadon": GEN1_VERSIONS,
+    "fuchsia": GEN1_VERSIONS, "saffron": GEN1_VERSIONS, "cinnabar": GEN1_VERSIONS, "indigo": GEN1_VERSIONS,
+    "mt-moon": GEN1_VERSIONS, "rock-tunnel": GEN1_VERSIONS, "seafoam": GEN1_VERSIONS, "power-plant": GEN1_VERSIONS,
+    "victory-road-kanto": GEN1_VERSIONS, "pokemon-tower": GEN1_VERSIONS, "digletts-cave": GEN1_VERSIONS, "ss-anne": GEN1_VERSIONS, "s-s-anne": GEN1_VERSIONS,
+    
+    # Johto landmarks / cities
+    "johto": GEN2_VERSIONS, "new-bark": GEN2_VERSIONS, "cherrygrove": GEN2_VERSIONS, "violet-city": GEN2_VERSIONS,
+    "azalea": GEN2_VERSIONS, "goldenrod": GEN2_VERSIONS, "ecruteak": GEN2_VERSIONS, "olivine": GEN2_VERSIONS,
+    "cianwood": GEN2_VERSIONS, "mahogany": GEN2_VERSIONS, "blackthorn": GEN2_VERSIONS, "sprout-tower": GEN2_VERSIONS,
+    "slowpoke-well": GEN2_VERSIONS, "burned-tower": GEN2_VERSIONS, "tin-tower": GEN2_VERSIONS, "bell-tower": GEN2_VERSIONS,
+    "whirl-islands": GEN2_VERSIONS, "mt-silver": GEN2_VERSIONS, "dark-cave": GEN2_VERSIONS, "ice-path": GEN2_VERSIONS,
+
+    # Hoenn landmarks / cities
+    "hoenn": GEN3_VERSIONS, "littleroot": GEN3_VERSIONS, "oldale": GEN3_VERSIONS, "petalburg": GEN3_VERSIONS,
+    "rustboro": GEN3_VERSIONS, "dewford": GEN3_VERSIONS, "slateport": GEN3_VERSIONS, "mauville": GEN3_VERSIONS,
+    "verdanturf": GEN3_VERSIONS, "fallarbor": GEN3_VERSIONS, "lavaridge": GEN3_VERSIONS, "fortree": GEN3_VERSIONS,
+    "lilycove": GEN3_VERSIONS, "mossdeep": GEN3_VERSIONS, "sootopolis": GEN3_VERSIONS, "pacifidlog": GEN3_VERSIONS,
+    "ever-grande": GEN3_VERSIONS, "granite-cave": GEN3_VERSIONS, "fiery-path": GEN3_VERSIONS, "meteor-falls": GEN3_VERSIONS,
+    "mt-pyre": GEN3_VERSIONS, "shoal-cave": GEN3_VERSIONS, "seafloor-cavern": GEN3_VERSIONS, "cave-of-origin": GEN3_VERSIONS,
+    "sky-pillar": GEN3_VERSIONS, "jagged-pass": GEN3_VERSIONS, "mirage-tower": GEN3_VERSIONS, "desert-underpass": GEN3_VERSIONS,
+
+    # Sinnoh landmarks / cities
+    "sinnoh": GEN4_VERSIONS, "twinleaf": GEN4_VERSIONS, "sandgem": GEN4_VERSIONS, "jubilife": GEN4_VERSIONS,
+    "oreburgh": GEN4_VERSIONS, "floaroma": GEN4_VERSIONS, "eterna": GEN4_VERSIONS, "hearthome": GEN4_VERSIONS,
+    "solaceon": GEN4_VERSIONS, "veilstone": GEN4_VERSIONS, "pastoria": GEN4_VERSIONS, "celestic": GEN4_VERSIONS,
+    "canalave": GEN4_VERSIONS, "snowpoint": GEN4_VERSIONS, "sunyshore": GEN4_VERSIONS, "mt-coronet": GEN4_VERSIONS,
+    "great-marsh": GEN4_VERSIONS, "trophy-garden": GEN4_VERSIONS, "turnback-cave": GEN4_VERSIONS, "iron-island": GEN4_VERSIONS,
+}
 
 
 # Initial seed data for the EV yield file
@@ -454,7 +497,254 @@ const VERSION_TO_GEN_JS = {
             "generation-v", "generation-vi", "generation-vii", "generation-viii", "generation-ix"
         ];
 
-       function updateTargetEVDisplay(selectedVer) {
+// Global walkthrough task data (can also be loaded via fetch('/walkthrough_tasks.json'))
+const walkthroughData = {
+  "red-blue": {
+    "Part 1: Pallet Town to Pewter City": "Pallet Town, Route 1, Viridian City, Route 22, Route 2, Viridian Forest, Pewter City, Pewter Gym",
+    "Part 2: Pewter City to Cerulean City": "Route 3, Mt. Moon, Route 4, Cerulean City, Cerulean Gym",
+    "Part 3: Cerulean City to Vermilion City": "Route 24, Route 25, Sea Cottage, Route 5, Underground Path, Route 6, Vermilion City, S.S. Anne, Vermilion Gym",
+    "Part 4: Vermilion City to Celadon City": "Route 11, Diglett's Cave, Route 2, Route 9, Route 10, Rock Tunnel, Lavender Town, Route 8, Route 7, Celadon City, Celadon Gym, Rocket Hideout, Pokémon Tower",
+    "Part 5: Celadon City to Fuchsia City": "Route 16, Route 17, Route 18, Fuchsia City, Fuchsia Gym, Safari Zone, Route 12, Route 13, Route 14, Route 15",
+    "Part 6: Saffron City & Silph Co": "Saffron City, Silph Co., Saffron Gym, Fighting Dojo",
+    "Part 7: Cinnabar Island & Viridian Gym": "Route 19, Seafoam Islands, Route 20, Cinnabar Island, Pokémon Mansion, Cinnabar Gym, Power Plant, Route 21, Viridian Gym",
+    "Part 8: Indigo Plateau": "Route 23, Victory Road, Indigo Plateau, Lorelei, Bruno, Agatha, Lance, Champion Rival, Cerulean Cave"
+  },
+  "yellow": {
+    "Part 1: Pallet Town to Pewter City": "Pallet Town, Starter Pikachu, Route 1, Viridian City, Route 22, Route 2, Viridian Forest, Pewter City, Pewter Gym",
+    "Part 2: Pewter City to Cerulean City": "Route 3, Mt. Moon, Route 4, Cerulean City, Cerulean Gym, Bulbasaur Gift",
+    "Part 3: Cerulean City to Vermilion City": "Route 24, Charmander Gift, Route 25, Sea Cottage, Route 5, Route 6, Vermilion City, Squirtle Gift, S.S. Anne, Vermilion Gym",
+    "Part 4: Vermilion City to Celadon City": "Route 11, Diglett's Cave, Route 9, Route 10, Rock Tunnel, Lavender Town, Route 8, Celadon City, Celadon Gym, Rocket Hideout, Pokémon Tower",
+    "Part 5: Celadon City to Fuchsia City": "Route 16, Route 17, Route 18, Fuchsia City, Fuchsia Gym, Safari Zone, Route 12, Route 13, Route 14, Route 15",
+    "Part 6: Saffron City & Silph Co": "Silph Co., Saffron Gym, Fighting Dojo, Lapras Gift",
+    "Part 7: Cinnabar Island & Viridian Gym": "Route 19, Seafoam Islands, Route 20, Cinnabar Island, Pokémon Mansion, Cinnabar Gym, Power Plant, Route 21, Viridian Gym",
+    "Part 8: Indigo Plateau": "Route 23, Victory Road, Indigo Plateau, Elite Four, Champion Rival, Cerulean Cave"
+  },
+  "gold-silver-crystal": {
+    "Part 1: New Bark Town to Violet City": "New Bark Town, Route 29, Cherrygrove City, Route 30, Route 31, Violet City, Sprout Tower, Violet Gym",
+    "Part 2: Violet City to Goldenrod City": "Route 32, Ruins of Alph, Union Cave, Route 33, Azalea Town, Slowpoke Well, Azalea Gym, Ilex Forest, Route 34, Goldenrod City, Goldenrod Gym",
+    "Part 3: Goldenrod City to Ecruteak City": "National Park, Route 35, Route 36, Route 37, Ecruteak City, Burned Tower, Ecruteak Gym, Tin Tower",
+    "Part 4: Ecruteak City to Cianwood City": "Route 38, Route 39, Olivine City, Route 40, Route 41, Whirl Islands, Cianwood City, Cianwood Gym",
+    "Part 5: Olivine Gym to Mahogany Town": "Glitter Lighthouse, Olivine Gym, Route 42, Mt. Mortar, Mahogany Town, Route 43, Lake of Rage, Team Rocket HQ, Mahogany Gym",
+    "Part 6: Goldenrod Underground & Blackthorn": "Goldenrod Radio Tower, Underground Warehouse, Route 44, Ice Path, Blackthorn City, Blackthorn Gym, Dragon's Den",
+    "Part 7: Johto Pokémon League": "Route 45, Route 46, Route 27, Tohjo Falls, Route 26, Victory Road, Indigo Plateau, Will, Koga, Bruno, Karen, Lance",
+    "Part 8: Kanto Badges 1-4": "Vermilion City, Vermilion Gym, Saffron City, Saffron Gym, Cerulean City, Power Plant, Route 24, Route 25, Cerulean Gym, Route 9, Route 10, Rock Tunnel, Lavender Town, Celadon City, Celadon Gym",
+    "Part 9: Kanto Badges 5-8 & Mt. Silver": "Route 16, Route 17, Route 18, Fuchsia City, Fuchsia Gym, Route 19, Route 20, Seafoam Islands, Blaine, Route 21, Cinnabar Island, Route 1, Pallet Town, Viridian City, Pewter City, Pewter Gym, Route 28, Mt. Silver, Red"
+  },
+  "ruby-sapphire": {
+    "Part 1: Littleroot Town to Rustboro City": "Littleroot Town, Route 101, Oldale Town, Route 103, Route 102, Petalburg City, Route 104, Petalburg Woods, Rustboro City, Rustboro Gym",
+    "Part 2: Rustboro City to Dewford Town": "Route 116, Rusturf Tunnel, Route 104, Route 105, Route 106, Dewford Town, Dewford Gym, Granite Cave",
+    "Part 3: Dewford Town to Mauville City": "Route 107, Route 108, Route 109, Slateport City, Oceanic Museum, Route 110, Mauville City, Mauville Gym, Cycling Road",
+    "Part 4: Mauville City to Fallarbor Town": "Route 117, Verdanturf Town, Rusturf Tunnel shortcut, Route 111, Route 112, Fiery Path, Route 113, Fallarbor Town",
+    "Part 5: Fallarbor Town to Lavaridge Town": "Route 114, Meteor Falls, Route 115, Mt. Chimney, Jagged Pass, Lavaridge Town, Lavaridge Gym",
+    "Part 6: Lavaridge Town to Fortree City": "Petalburg Gym, Route 118, Route 119, Weather Institute, Fortree City, Route 120, Fortree Gym",
+    "Part 7: Fortree City to Mossdeep City": "Route 121, Safari Zone, Lilycove City, Mt. Pyre, Team Hideout, Route 124, Mossdeep City, Mossdeep Gym, Space Center",
+    "Part 8: Mossdeep City to Sootopolis City": "Route 125, Shoal Cave, Route 126, Route 127, Route 128, Seafloor Cavern, Route 126 Underwater, Sootopolis City, Cave of Origin, Sootopolis Gym",
+    "Part 9: Ever Grande City & League": "Route 129, Route 130, Route 131, Pacifidlog Town, Route 132, Route 133, Route 134, Ever Grande City, Victory Road, Sidney, Phoebe, Glacia, Drake, Steven"
+  },
+  "emerald": {
+    "Part 1: Littleroot Town to Rustboro City": "Littleroot Town, Route 101, Oldale Town, Route 103, Route 102, Petalburg City, Route 104, Petalburg Woods, Rustboro City, Rustboro Gym",
+    "Part 2: Rustboro City to Dewford Town": "Route 116, Rusturf Tunnel, Devon Corp, Dewford Town, Dewford Gym, Granite Cave",
+    "Part 3: Dewford Town to Mauville City": "Route 109, Slateport City, Museum, Route 110, Mauville City, Mauville Gym",
+    "Part 4: Mauville City to Lavaridge Town": "Route 117, Verdanturf Town, Route 111, Route 112, Fiery Path, Route 113, Fallarbor Town, Route 114, Meteor Falls, Mt. Chimney, Jagged Pass, Lavaridge City, Lavaridge Gym",
+    "Part 5: Lavaridge Town to Fortree City": "Desert Ruins, Petalburg Gym, Route 118, Route 119, Weather Institute, Fortree City, Route 120, Devon Scope, Fortree Gym",
+    "Part 6: Fortree City to Mossdeep City": "Route 121, Safari Zone, Lilycove City, Mt. Pyre, Magma Hideout, Aqua Hideout, Route 124, Mossdeep City, Mossdeep Gym, Space Center",
+    "Part 7: Awakening the Legends": "Route 127, Route 128, Seafloor Cavern, Sootopolis City, Route 129, Route 130, Route 131, Sky Pillar, Rayquaza Awakening, Sootopolis Gym",
+    "Part 8: Ever Grande City & Frontier": "Ever Grande City, Victory Road, Sidney, Phoebe, Glacia, Drake, Wallace, Battle Frontier"
+  },
+  "firered-leafgreen": {
+    "Part 1: Pallet Town to Pewter City": "Pallet Town, Route 1, Viridian City, Oak's Parcel, Route 22, Route 2, Viridian Forest, Pewter City, Pewter Gym",
+    "Part 2: Pewter City to Cerulean City": "Route 3, Mt. Moon, Route 4, Cerulean City, Cerulean Gym",
+    "Part 3: Cerulean City to Vermilion City": "Route 24, Route 25, Bill's Cottage, Route 5, Route 6, Vermilion City, S.S. Anne, Vermilion Gym",
+    "Part 4: Vermilion City to Celadon City": "Route 11, Diglett's Cave, Route 9, Route 10, Rock Tunnel, Lavender Town, Route 8, Celadon City, Celadon Gym, Rocket Hideout, Pokémon Tower",
+    "Part 5: Celadon City to Fuchsia City": "Route 16, Cycling Road, Route 18, Fuchsia City, Fuchsia Gym, Safari Zone, Route 12, Route 13, Route 14, Route 15",
+    "Part 6: Saffron City & Sevii Islands 1-3": "Silph Co., Saffron Gym, One Island, Treasure Beach, Two Island, Cape Brink, Three Island, Berry Forest",
+    "Part 7: Cinnabar Island to Viridian Gym": "Route 19, Seafoam Islands, Route 20, Cinnabar Island, Pokémon Mansion, Cinnabar Gym, Power Plant, Viridian Gym",
+    "Part 8: Indigo Plateau & Post-Game": "Route 23, Victory Road, Lorelei, Bruno, Agatha, Lance, Blue, Four Island, Icefall Cave, Five Island, Rocket Warehouse, Six Island, Ruin Valley, Dotted Hole, Seven Island, Cerulean Cave, Mewtwo"
+  },
+  "diamond-pearl-platinum": {
+    "Part 1: Twinleaf Town to Oreburgh City": "Twinleaf Town, Lake Verity, Route 201, Sandgem Town, Route 202, Jubilife City, Route 204, Ravaged Path, Route 203, Oreburgh Gate, Oreburgh City, Oreburgh Mine, Oreburgh Gym",
+    "Part 2: Oreburgh City to Eterna City": "Route 204, Floaroma Town, Valley Windworks, Route 205, Eterna Forest, Eterna City, Eterna Gym, Team Galactic Eterna Building",
+    "Part 3: Eterna City to Hearthome City": "Route 206 Cycling Road, Route 207, Mt. Coronet, Route 208, Hearthome City, Amity Square, Route 209, Lost Tower, Solaceon Town, Solaceon Ruins",
+    "Part 4: Solaceon Town to Veilstone City": "Route 210, Route 215, Veilstone City, Veilstone Gym, Galactic Warehouse",
+    "Part 5: Veilstone City to Pastoria City": "Route 214, Valor Lakefront, Route 213, Pastoria City, Great Marsh, Pastoria Gym",
+    "Part 6: Pastoria City to Canalave City": "Route 212, Pokémon Mansion, Route 210 North, Celestic Town, Fuego Ironworks, Route 218, Canalave City, Canalave Gym, Iron Island",
+    "Part 7: Canalave City to Snowpoint City": "Lake Valor, Lake Verity, Mt. Coronet North, Route 216, Route 217, Acuity Lakefront, Snowpoint City, Snowpoint Gym, Lake Acuity",
+    "Part 8: Galactic HQ & Spear Pillar": "Veilstone Galactic HQ, Mt. Coronet Peak, Spear Pillar, Distortion World, Sunyshore City, Sunyshore Gym",
+    "Part 9: Sinnoh Pokémon League": "Route 222, Route 223, Victory Road, Aaron, Bertha, Flint, Lucian, Cynthia"
+  },
+  "heartgold-soulsilver": {
+    "Part 1: New Bark Town to Violet City": "New Bark Town, Route 29, Cherrygrove City, Route 30, Mr. Pokémon, Route 31, Violet City, Sprout Tower, Violet Gym",
+    "Part 2: Violet City to Goldenrod City": "Route 32, Ruins of Alph, Union Cave, Route 33, Azalea Town, Slowpoke Well, Azalea Gym, Ilex Forest, Route 34, Goldenrod City, Goldenrod Gym, Pokéathlon Dome",
+    "Part 3: Goldenrod City to Ecruteak City": "Route 35, National Park, Route 36, Route 37, Ecruteak City, Burned Tower, Ecruteak Gym, Bell Tower",
+    "Part 4: Ecruteak City to Cianwood City": "Route 38, Route 39, Olivine City, Route 40, Route 41, Whirl Islands, Cianwood City, Cianwood Gym, Safari Zone Gate",
+    "Part 5: Olivine Gym to Mahogany Town": "Glitter Lighthouse, Olivine Gym, Route 42, Mt. Mortar, Mahogany Town, Route 43, Lake of Rage, Rocket Hideout, Mahogany Gym",
+    "Part 6: Goldenrod Radio Tower to Blackthorn": "Goldenrod Radio Tower, Underground Warehouse, Route 44, Ice Path, Blackthorn City, Blackthorn Gym, Dragon's Den, Whirl Islands / Bell Tower Legendaries",
+    "Part 7: Johto Pokémon League": "Route 45, Route 46, Route 27, Tohjo Falls, Route 26, Victory Road, Indigo Plateau, Will, Koga, Bruno, Karen, Lance",
+    "Part 8: Kanto Badges 1-4": "S.S. Aqua, Vermilion City, Vermilion Gym, Saffron City, Saffron Gym, Cerulean City, Route 24, Route 25, Power Plant, Cerulean Gym, Route 9, Route 10, Rock Tunnel, Lavender Town, Celadon City, Celadon Gym",
+    "Part 9: Kanto Badges 5-8 & Mt. Silver": "Route 16, Route 17, Route 18, Fuchsia City, Fuchsia Gym, Route 19, Route 20, Seafoam Islands, Blaine, Route 21, Cinnabar Island, Route 1, Pallet Town, Viridian City, Pewter City, Pewter Gym, Route 22, Route 28, Mt. Silver, Red"
+  },
+  "black-white": {
+    "Part 1: Nuvema Town to Striaton City": "Nuvema Town, Route 1, Accumula Town, Route 2, Striaton City, Dreamyard, Striaton Gym",
+    "Part 2: Striaton City to Nacrene City": "Route 3, Wellspring Cave, Nacrene City, Nacrene Gym, Pinwheel Forest",
+    "Part 3: Nacrene City to Castelia City": "Skyarrow Bridge, Castelia City, Castelia Gym, Route 4, Desert Resort, Relic Castle",
+    "Part 4: Castelia City to Nimbasa City": "Nimbasa City, Nimbasa Gym, Battle Subway, Route 5, Route 16, Lostlorn Forest",
+    "Part 5: Nimbasa City to Driftveil City": "Driftveil Drawbridge, Driftveil City, Cold Storage, Driftveil Gym",
+    "Part 6: Driftveil City to Mistralton City": "Route 6, Chargestone Cave, Mistralton City, Route 7, Celestial Tower, Mistralton Gym",
+    "Part 7: Mistralton City to Icirrus City": "Twist Mountain, Icirrus City, Dragonspiral Tower, Route 8, Moor of Icirrus, Icirrus Gym",
+    "Part 8: Icirrus City to Opelucid City": "Route 9, Tubeline Bridge, Shopping Mall Nine, Route 10, Opelucid City, Opelucid Gym",
+    "Part 9: Unova League & N's Castle": "Victory Road, Shauntal, Grimsley, Caitlin, Marshal, N's Castle, Reshiram / Zekrom, N, Ghetsis"
+  },
+  "black-2-white-2": {
+    "Part 1: Aspertia City to Virbank City": "Aspertia City, Route 19, Floccesy Town, Route 20, Floccesy Ranch, Aspertia Gym, Virbank City, Virbank Complex, Virbank Gym",
+    "Part 2: Virbank City to Castelia City": "Pokéstar Studios, Castelia City, Castelia Sewers, Castelia Gym, Route 4, Desert Resort, Relic Castle",
+    "Part 3: Castelia City to Nimbasa City": "Join Avenue, Nimbasa City, Nimbasa Gym, Anville Town, Route 5, Driftveil Drawbridge",
+    "Part 4: Nimbasa City to Driftveil City": "Driftveil City, Driftveil Gym, Pokémon World Tournament, Plasma Frigate, Relic Passage",
+    "Part 5: Driftveil City to Mistralton City": "Route 6, Chargestone Cave, Mistralton City, Route 7, Celestial Tower, Mistralton Gym",
+    "Part 6: Mistralton City to Opelucid City": "Lentimas Town, Reversal Mountain, Undella Town, Route 13, Lacunosa Town, Route 12, Village Bridge, Route 11, Opelucid City, Opelucid Gym",
+    "Part 7: Opelucid City to Humilau City": "Frozen Opelucid, Marine Tube, Humilau City, Humilau Gym, Route 21, Seaside Cave",
+    "Part 8: Giant Chasm & Plasma Frigate": "Route 22, Giant Chasm, Plasma Frigate, Colress, Kyurem, Ghetsis",
+    "Part 9: Victory Road & League": "Route 23, Victory Road, Shauntal, Grimsley, Caitlin, Marshal, Champion Iris"
+  },
+  "x-y": {
+    "Part 1: Vaniville Town to Santalune City": "Vaniville Town, Route 1, Aquacorde Town, Route 2, Santalune Forest, Route 3, Santalune City, Santalune Gym",
+    "Part 2: Santalune City to Lumiose City": "Route 4, Lumiose City, Sycamore Lab, Route 5, Camphrier Town, Route 7, Route 6, Parfum Palace",
+    "Part 3: Camphrier Town to Cyllage City": "Connecting Cave, Route 8, Ambrette Town, Route 9, Glittering Cave, Cyllage City, Cyllage Gym",
+    "Part 4: Cyllage City to Shalour City": "Route 10, Geosenge Town, Route 11, Reflection Cave, Shalour City, Tower of Mastery, Shalour Gym",
+    "Part 5: Shalour City to Coumarine City": "Route 12, Azure Bay, Coumarine City, Coumarine Gym",
+    "Part 6: Coumarine City to Laverre City": "Route 13, Kalos Power Plant, Lumiose City Gym, Route 14, Laverre City, Poké Ball Factory, Laverre Gym",
+    "Part 7: Laverre City to Anistar City": "Route 15, Dendemille Town, Frost Cavern, Route 16, Route 17, Anistar City, Anistar Gym",
+    "Part 8: Team Flare Secret HQ": "Lysandre Labs, Geosenge Team Flare HQ, Xerneas / Yveltal, Route 18, Couriway Town, Route 19, Snowbelle City, Winding Woods, Pokémon Village, Snowbelle Gym",
+    "Part 9: Victory Road & Kalos League": "Route 21, Victory Road, Malva, Wikstrom, Drasna, Siebold, Champion Diantha, Kiloude City"
+  },
+  "omega-ruby-alpha-sapphire": {
+    "Part 1: Littleroot Town to Rustboro City": "Littleroot Town, Route 101, Oldale Town, Route 103, Route 102, Petalburg City, Route 104, Petalburg Woods, Rustboro City, Rustboro Gym",
+    "Part 2: Rustboro City to Dewford Town": "Route 116, Rusturf Tunnel, Devon Corporation, Dewford Town, Dewford Gym, Granite Cave",
+    "Part 3: Dewford Town to Mauville City": "Route 107, Route 108, Route 109, Slateport City, Oceanic Museum, Route 110, Mauville City, Mauville Gym",
+    "Part 4: Mauville City to Lavaridge Town": "Route 117, Verdanturf Town, Route 111, Route 112, Fiery Path, Route 113, Fallarbor Town, Route 114, Meteor Falls, Mt. Chimney, Jagged Pass, Lavaridge Town, Lavaridge Gym",
+    "Part 5: Lavaridge Town to Fortree City": "Petalburg Gym, Route 118, Southern Island, Latios / Latias, Route 119, Weather Institute, Fortree City, Route 120, Fortree Gym",
+    "Part 6: Fortree City to Mossdeep City": "Route 121, Safari Zone, Lilycove City, Mt. Pyre, Team Hideout, Route 124, Mossdeep City, Mossdeep Gym, Space Center",
+    "Part 7: Mossdeep City to Sootopolis City": "Route 127, Route 128, Seafloor Cavern, Route 126, Sootopolis City, Cave of Origin, Primal Reversion, Sootopolis Gym",
+    "Part 8: Ever Grande City & Delta Episode": "Route 129, Route 130, Route 131, Sky Pillar, Ever Grande City, Victory Road, Sidney, Phoebe, Glacia, Drake, Steven, Delta Episode, Rayquaza, Deoxys"
+  },
+  "sun-moon": {
+    "Part 1: Melemele Island Trials": "Iki Town, Mahalo Trail, Route 1, Trainers' School, Hau'oli City, Route 2, Hau'oli Cemetery, Verdant Cavern, Melemele Trial, Route 3, Melemele Meadow, Iki Town Grand Trial",
+    "Part 2: Akala Island - Brooklet Hill": "Heahea City, Route 4, Paniola Town, Paniola Ranch, Route 5, Brooklet Hill, Water Trial",
+    "Part 3: Akala Island - Fire & Grass Trials": "Route 6, Royal Avenue, Battle Royal Dome, Route 7, Wela Volcano Park, Fire Trial, Route 8, Lush Jungle, Grass Trial",
+    "Part 4: Akala Grand Trial & Aether Paradise": "Diglett's Tunnel, Route 9, Konikoni City, Memorial Hill, Akala Outskirts, Ruins of Life, Akala Grand Trial, Aether Paradise",
+    "Part 5: Ula'ula Island - Electric & Ghost Trials": "Malie City, Malie Garden, Route 10, Mount Hokulani, Electric Trial, Route 11, Route 12, Blush Mountain, Route 13, Haina Desert, Tapu Village, Route 14, Abandoned Thrifty Megamart, Ghost Trial",
+    "Part 6: Ula'ula Island - Po Town & Grand Trial": "Route 15, Aether House, Route 16, Ula'ula Meadow, Route 17, Po Town, Shady House, Malie Port Grand Trial",
+    "Part 7: Aether Paradise Infiltration": "Aether Paradise B1F, Secret Labs, Master Docks, Lusamine, Ultra Beast Nihilego",
+    "Part 8: Poni Island & Altar of the Sunne / Moone": "Seafolk Village, Poni Wilds, Ancient Poni Path, Vast Poni Canyon, Poni Grand Trial, Altar of Sunne/Moone, Ultra Space, Solgaleo / Lunala",
+    "Part 9: Mount Lanakila & Pokémon League": "Mount Lanakila, Hala, Olivia, Acerola, Kahili, Professor Kukui"
+  },
+  "ultra-sun-ultra-moon": {
+    "Part 1: Melemele Island Trials": "Iki Town, Mahalo Trail, Route 1, Trainers' School, Hau'oli City, Route 2, Hau'oli Cemetery, Big Wave Beach, Verdant Cavern, Melemele Trial, Route 3, Melemele Meadow, Iki Town Grand Trial",
+    "Part 2: Akala Island - Brooklet Hill & Volcano": "Heahea City, Route 4, Paniola Town, Paniola Ranch, Route 5, Brooklet Hill, Water Trial, Route 6, Royal Avenue, Route 7, Wela Volcano Park, Fire Trial",
+    "Part 3: Akala Island - Grass Trial & Grand Trial": "Route 8, Lush Jungle, Grass Trial, Diglett's Tunnel, Route 9, Konikoni City, Memorial Hill, Ruins of Life, Akala Grand Trial, Hano Grand Resort, Aether Paradise",
+    "Part 4: Ula'ula Island - Electric & Ghost Trials": "Malie City, Malie Garden, Route 10, Mount Hokulani, Electric Trial, Route 11, Route 12, Blush Mountain, Route 13, Tapu Village, Route 14, Abandoned Thrifty Megamart, Ghost Trial",
+    "Part 5: Ula'ula Island - Po Town & Grand Trial": "Route 15, Aether House, Route 16, Ula'ula Meadow, Route 17, Po Town, Shady House, Malie Port Grand Trial",
+    "Part 6: Aether Paradise & Ultra Recon Squad": "Aether Paradise Labs, Docks, President's Room, Nihilego, Ultra Recon Squad",
+    "Part 7: Poni Island Trials & Ultra Megalopolis": "Seafolk Village, Poni Wilds, Ancient Poni Path, Exeggutor Island, Vast Poni Canyon, Dragon Trial, Altar of Sunne/Moone, Ultra Warp Ride, Ultra Megalopolis, Megalo Tower, Ultra Necrozma",
+    "Part 8: Mount Lanakila & Pokémon League": "Mina's Fairy Trial, Mount Lanakila, Molayne, Olivia, Acerola, Kahili, Hau, Episode RR"
+  }
+};
+// 1. Update UI Elements In-Place
+function updateTaskCardUI(progress, name) {
+    const progEl = document.getElementById('task-progress-display');
+    const nameEl = document.getElementById('task-name-display');
+    if (progEl) progEl.innerText = progress;
+    if (nameEl) nameEl.innerText = name;
+}
+
+// 2. Bulbapedia Game Selection -> Populate Part Dropdown
+function onWalkthroughGameChange() {
+    const gameSelect = document.getElementById('walkthrough-game-select');
+    const partSelect = document.getElementById('walkthrough-part-select');
+    if (!gameSelect || !partSelect) return;
+
+    const chosenGame = gameSelect.value;
+    partSelect.innerHTML = '<option value="">-- Choose Chapter Part --</option>';
+
+    if (!chosenGame || !walkthroughData[chosenGame]) {
+        partSelect.disabled = true;
+        return;
+    }
+
+    // Persist game version preference
+    localStorage.setItem('selected_pokemon_version', chosenGame);
+
+    const parts = walkthroughData[chosenGame];
+    Object.keys(parts).forEach(partTitle => {
+        const opt = document.createElement('option');
+        opt.value = partTitle;
+        opt.textContent = partTitle;
+        partSelect.appendChild(opt);
+    });
+
+    partSelect.disabled = false;
+}
+
+// 3. Load Selected Walkthrough Chapter into Server & DOM (In-Place)
+async function loadSelectedPartTasks() {
+    const gameSelect = document.getElementById('walkthrough-game-select');
+    const partSelect = document.getElementById('walkthrough-part-select');
+    
+    const chosenGame = gameSelect ? gameSelect.value : '';
+    const chosenPart = partSelect ? partSelect.value : '';
+    
+    if (!chosenGame || !chosenPart || !walkthroughData[chosenGame]) return;
+
+    const rawTaskList = walkthroughData[chosenGame][chosenPart];
+    if (!rawTaskList) return;
+
+    const encodedTasks = encodeURIComponent(rawTaskList).replace(/%20/g, '+');
+    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+
+    try {
+        const res = await fetch(`${endpoint}?set_tasks=${encodedTasks}`);
+        if (res.ok) {
+            const text = (await res.text()).trim();
+            // Guard against full HTML page dumps
+            if (text.includes('|') && !text.startsWith('<')) {
+                const [prog, name] = text.split('|');
+                updateTaskCardUI(prog, name);
+            }
+        }
+    } catch (err) {
+        console.error("Set tasks failed:", err);
+    }
+}
+
+// 4. Step Prev / Next (In-Place)
+async function navigateTask(direction) {
+    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+    try {
+        const res = await fetch(`${endpoint}?task_nav=${encodeURIComponent(direction)}`);
+        if (res.ok) {
+            const text = (await res.text()).trim();
+            // Guard against full HTML page dumps
+            if (text.includes('|') && !text.startsWith('<')) {
+                const [prog, name] = text.split('|');
+                updateTaskCardUI(prog, name);
+            }
+        }
+    } catch (err) {
+        console.error("Task nav failed:", err);
+    }
+}
+
+// 5. Restore Saved Version on Page Load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedVer = localStorage.getItem('selected_pokemon_version');
+    const gameSelect = document.getElementById('walkthrough-game-select');
+    if (gameSelect && savedVer) {
+        const exists = Array.from(gameSelect.options).some(opt => opt.value === savedVer);
+        if (exists) {
+            gameSelect.value = savedVer;
+            onWalkthroughGameChange();
+        }
+    }
+});       function updateTargetEVDisplay(selectedVer) {
             const evDisplay = document.getElementById('target-ev-yield-display');
             if (!evDisplay) return;
 
@@ -514,6 +804,20 @@ const VERSION_TO_GEN_JS = {
             }
         }
 
+function applyVersionFilter(chosenVersion) {
+    const selected = (chosenVersion || 'ALL').toLowerCase().trim();
+    const cards = document.querySelectorAll('.game-version-card');
+
+    cards.forEach(card => {
+        const cardVer = (card.getAttribute('data-version') || '').toLowerCase().trim();
+        if (selected === 'all' || cardVer === selected) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
 // 1. Search Autocomplete (Pokemon)
 function filterPokemon() {
     const input = document.getElementById('search-input');
@@ -549,28 +853,65 @@ function filterPokemon() {
     box.style.display = 'block';
 }
 
-function filterRouteVersion() {
-            const select = document.getElementById('route-version-filter');
-            if (!select || !select.value) return;
-            const selected = select.value.toLowerCase().trim();
-            
-            const cards = document.querySelectorAll('.game-version-card');
-            cards.forEach(card => {
-                const cardVer = (card.getAttribute('data-version') || '').toLowerCase().trim();
-                if (cardVer === selected) {
-                    card.style.setProperty('display', 'block', 'important');
-                } else {
-                    card.style.setProperty('display', 'none', 'important');
-                }
-            });
+// --- 1. Version Filter & Persistence ---
+function filterGameVersion() {
+    const select = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
+    if (!select) return;
+    const chosen = select.value.trim();
+
+    // Persist selected version
+    localStorage.setItem('selected_pokemon_version', chosen);
+
+    const cards = document.querySelectorAll('.game-version-card');
+    cards.forEach(card => {
+        const cardVer = (card.getAttribute('data-version') || '').trim();
+        if (chosen === 'ALL' || cardVer.toLowerCase() === chosen.toLowerCase()) {
+            card.style.setProperty('display', 'block', 'important');
+        } else {
+            card.style.setProperty('display', 'none', 'important');
         }
+    });
 
+    if (chosen !== 'ALL' && typeof updateTargetEVDisplay === 'function') {
+        updateTargetEVDisplay(chosen);
+    }
+}
 
-// 2. Search Autocomplete (Locations)
+// Restore saved version filter on load
+document.addEventListener('DOMContentLoaded', () => {
+    const select = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
+    const saved = localStorage.getItem('selected_pokemon_version');
+    if (select && saved) {
+        const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === saved.toLowerCase());
+        if (exists) {
+            select.value = saved;
+        }
+    }
+    const gameSelect = document.getElementById('walkthrough-game-select');
+    const partSelect = document.getElementById('walkthrough-part-select');
+
+    if (gameSelect) {
+        gameSelect.selectedIndex = 0; // Resets to "-- Choose Game --"
+    }
+    if (partSelect) {
+        partSelect.innerHTML = '<option value="">-- Select Game First --</option>';
+        partSelect.disabled = true;
+    }
+    filterGameVersion();
+});
+
+// --- 2. Search Autocomplete (Locations) ---
+function cleanStr(str) {
+    return (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// --- 2. Location Search Autocomplete ---
 function filterLocations() {
-    const input = document.getElementById('location-input');
-    const box = document.getElementById('location-results');
-    if (!input || !box || typeof locationAreas === 'undefined') return;
+    const input = document.getElementById('location-input') || document.getElementById('route-search-input');
+    const box = document.getElementById('location-results') || document.getElementById('route-live-results');
+    const locationsList = (typeof locationAreas !== 'undefined') ? locationAreas : ((typeof allLocations !== 'undefined') ? allLocations : []);
+
+    if (!input || !box || locationsList.length === 0) return;
 
     const val = input.value.toLowerCase().trim();
     if (!val || val.length < 2) {
@@ -578,21 +919,34 @@ function filterLocations() {
         box.innerHTML = '';
         return;
     }
-    const matches = locationAreas.filter(loc => loc.name.toLowerCase().includes(val)).slice(0, 10);
+
+    const tokens = val.split(/\s+/).filter(Boolean);
+    const matches = locationsList.filter(loc => {
+        const name = (loc.name || '').toLowerCase();
+        const slug = (loc.slug || '').toLowerCase();
+        return tokens.every(token => name.includes(token) || slug.includes(token));
+    }).slice(0, 10);
+
     if (matches.length === 0) {
         box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400 italic">No locations found.</div>';
         box.style.display = 'block';
         return;
     }
+
     box.innerHTML = '';
     const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+    const currentVer = localStorage.getItem('selected_pokemon_version') || 'ALL';
+
     matches.forEach(loc => {
         const item = document.createElement('div');
         item.className = "px-4 py-2 hover:bg-slate-700/80 flex items-center justify-between border-b border-slate-700/40 last:border-none transition";
         item.innerHTML = `
-            <span class="font-bold text-slate-200 text-xs">${loc.name}</span>
+            <div>
+                <span class="font-bold text-slate-200 text-xs">${loc.name}</span>
+                <span class="font-mono text-[10px] text-indigo-400 block">${loc.slug}</span>
+            </div>
             <div class="flex gap-1.5">
-                <a href="${endpoint}?action=set_location&slug=${encodeURIComponent(loc.slug)}" onclick="document.getElementById('location-input').value='';" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded">View Route</a>
+                <a href="${endpoint}?action=set_location&slug=${encodeURIComponent(loc.slug)}&ver=${encodeURIComponent(currentVer)}" onclick="document.getElementById('location-input').value='';" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded">View Route</a>
             </div>
         `;
         box.appendChild(item);
@@ -600,24 +954,6 @@ function filterLocations() {
     box.style.display = 'block';
 }
 
-// 3. Route Filter by Version
-function filterGameVersion() {
-    const select = document.getElementById('game-filter-select');
-    if (!select) return;
-    const chosen = select.value;
-    const cards = document.querySelectorAll('.game-version-card');
-
-    cards.forEach(card => {
-        if (chosen === 'ALL' || card.getAttribute('data-version') === chosen) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-    if (selected !== "ALL") {
-        updateTargetEVDisplay(selected);
-    }
-}
 
 // 4. Historical Matchup Calculations
 function calculateHistoricalMatchups(types, gen) {
@@ -1088,28 +1424,56 @@ def save_ev_state(state):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
+def infer_versions_from_slug(slug: str) -> list:
+    """Infers known game versions from the location area slug prefix."""
+    slug_lower = slug.lower().strip()
+    for region, versions in REGION_VERSION_MAP.items():
+        if slug_lower.startswith(region):
+            return versions
+    return []
+
+
+def infer_versions_from_slug(slug: str) -> list:
+    slug_lower = slug.lower().strip()
+    for key, versions in LANDMARK_REGION_MAP.items():
+        if key in slug_lower:
+            return versions
+    return []
+
 def load_all_location_areas():
     global all_location_areas
     if all_location_areas:
         return all_location_areas
 
-    # 1. Read local cache if present
+    # 1. Read local cache and ensure "versions" key exists
     if os.path.exists(ROUTES_CACHE_FILE):
         try:
             with open(ROUTES_CACHE_FILE, "r", encoding="utf-8") as f:
                 cached = json.load(f)
-                if cached:
+                if cached and isinstance(cached, list):
+                    # Auto-migrate any cache missing the versions field
+                    needs_resave = False
+                    for item in cached:
+                        if "versions" not in item or not item["versions"]:
+                            item["versions"] = infer_versions_from_slug(item.get("slug", ""))
+                            needs_resave = True
+                    if needs_resave:
+                        with open(ROUTES_CACHE_FILE, "w", encoding="utf-8") as wf:
+                            json.dump(cached, wf, indent=2)
                     all_location_areas = cached
                     return all_location_areas
         except Exception:
             pass
 
-    # 2. Pure pokebase fetch
+    # 2. Pokébase fetch fallback
     try:
         resource = pb.APIResourceList("location-area")
-        # resource.names is a generator/list of slug strings: ['kanto-route-1-area', ...]
         all_location_areas = [
-            {"slug": slug, "name": format_area_name(slug)}
+            {
+                "slug": slug,
+                "name": format_area_name(slug),
+                "versions": infer_versions_from_slug(slug)
+            }
             for slug in resource.names
         ]
 
@@ -1122,51 +1486,67 @@ def load_all_location_areas():
     return all_location_areas
 
 def parse_location_encounters_by_game(location_area_data):
-  """Groups route encounters by game version, deduplicating species per version
+    """Groups route encounters by game version and updates the location's version cache."""
+    global all_location_areas
+    games = {}
+    found_versions = set()
 
-  and aggregating their encounter methods and levels.
-  """
-  games = {}
+    for p_enc in location_area_data.get("pokemon_encounters", []):
+        p_name = p_enc.get("pokemon", {}).get("name", "").title()
 
-  for p_enc in location_area_data.get("pokemon_encounters", []):
-    p_name = p_enc.get("pokemon", {}).get("name", "").title()
+        for v_detail in p_enc.get("version_details", []):
+            raw_ver = v_detail.get("version", {}).get("name", "unknown")
+            ver_slug = raw_ver.lower().strip()
+            version_name = raw_ver.replace("-", " ").title()
 
-    for v_detail in p_enc.get("version_details", []):
-      version_name = (
-          v_detail.get("version", {}).get("name", "unknown").replace("-", " ")
-      )
+            found_versions.add(ver_slug)
 
-      if version_name not in games:
-        games[version_name] = {}
+            if version_name not in games:
+                games[version_name] = {}
 
-      if p_name not in games[version_name]:
-        games[version_name][p_name] = {
-            "methods": set(),
-            "min_level": 100,
-            "max_level": 1,
-            "chance": 0,
-        }
+            if p_name not in games[version_name]:
+                games[version_name][p_name] = {
+                    "methods": set(),
+                    "min_level": 100,
+                    "max_level": 1,
+                    "chance": 0,
+                }
 
-      # Aggregate methods, levels, and max chances
-      for enc in v_detail.get("encounter_details", []):
-        method_name = enc.get("method", {}).get("name", "").replace("-", " ")
-        if method_name:
-          games[version_name][p_name]["methods"].add(method_name)
+            # Aggregate methods, levels, and max chances
+            for enc in v_detail.get("encounter_details", []):
+                method_name = enc.get("method", {}).get("name", "").replace("-", " ")
+                if method_name:
+                    games[version_name][p_name]["methods"].add(method_name)
 
-        min_lvl = enc.get("min_level", 1)
-        max_lvl = enc.get("max_level", 1)
-        chance = enc.get("chance", 0)
+                min_lvl = enc.get("min_level", 1)
+                max_lvl = enc.get("max_level", 1)
+                chance = enc.get("chance", 0)
 
-        games[version_name][p_name]["min_level"] = min(
-            games[version_name][p_name]["min_level"], min_lvl
-        )
-        games[version_name][p_name]["max_level"] = max(
-            games[version_name][p_name]["max_level"], max_lvl
-        )
-        games[version_name][p_name]["chance"] += chance
+                games[version_name][p_name]["min_level"] = min(
+                    games[version_name][p_name]["min_level"], min_lvl
+                )
+                games[version_name][p_name]["max_level"] = max(
+                    games[version_name][p_name]["max_level"], max_lvl
+                )
+                games[version_name][p_name]["chance"] += chance
 
-  return games
+    # Update version tags in the master location list if available
+    area_name = location_area_data.get("name")
+    if area_name and all_location_areas and found_versions:
+        updated = False
+        for loc in all_location_areas:
+            if loc.get("slug") == area_name:
+                loc["versions"] = sorted(list(found_versions))
+                updated = True
+                break
+        if updated:
+            try:
+                with open(ROUTES_CACHE_FILE, "w", encoding="utf-8") as f:
+                    json.dump(all_location_areas, f, indent=2)
+            except Exception:
+                pass
 
+    return games
 
 # --- Persistence Helpers ---
 
@@ -1798,6 +2178,9 @@ def render_ev_training_widget(ev_state, target, is_remote=False):
 def handle_dashboard(params):
     action = params.get("action", [""])[0] if isinstance(params, dict) else ""
 
+    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+
     # --- Action Handling ---
     if action == "team_add":
         name = params.get("name", [""])[0].strip()
@@ -1834,22 +2217,37 @@ def handle_dashboard(params):
             if route_data:
                 save_active_route(route_data)
 
-
-    elif action == "set_tasks":
-        raw = params.get("tasks", [""])[0]
+    elif action == "set_tasks" or set_tasks_raw:
+        raw = set_tasks_raw if set_tasks_raw else params.get("tasks", [""])[0]
         parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
         if parsed:
             save_tasks_state({"tasks": parsed, "index": 0})
+        
+        if set_tasks_raw:
+            t_state = load_tasks_state()
+            tasks = t_state.get("tasks", [])
+            total = len(tasks)
+            active_name = tasks[0] if tasks else "None"
+            progress_str = f"TASK 1 OF {total}" if total > 0 else "0 TASKS"
+            return f"{progress_str}|{active_name}"
 
-    elif action == "task_nav":
-        step = params.get("step", [""])[0]
-        state = load_tasks_state()
-        if state["tasks"]:
-            if step == "next":
-                state["index"] = min(state["index"] + 1, len(state["tasks"]) - 1)
-            elif step == "prev":
-                state["index"] = max(state["index"] - 1, 0)
-            save_tasks_state(state)
+    elif action == "task_nav" or task_nav:
+        direction = task_nav if task_nav else params.get("step", [""])[0]
+        t_state = load_tasks_state()
+        if t_state.get("tasks"):
+            if direction == "next":
+                t_state["index"] = min(t_state["index"] + 1, len(t_state["tasks"]) - 1)
+            elif direction == "prev":
+                t_state["index"] = max(t_state["index"] - 1, 0)
+            save_tasks_state(t_state)
+        
+        if task_nav:
+            idx = t_state.get("index", 0)
+            tasks = t_state.get("tasks", [])
+            total = len(tasks)
+            active_name = tasks[idx] if (tasks and 0 <= idx < total) else "None"
+            progress_str = f"TASK {idx + 1} OF {total}" if total > 0 else "0 TASKS"
+            return f"{progress_str}|{active_name}"
 
     elif action == "dec_counter":
         p_name = unquote_plus(params.get("name", [""])[0])
@@ -1925,14 +2323,6 @@ def handle_dashboard(params):
         }
 
         save_catch_state(catch_state)
-
-        # Return clean 200 OK
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(b'{"status": "ok"}')
-        return
 
     # -------------------------------------------------------------
     # EV Tracker Actions
@@ -2034,9 +2424,18 @@ def handle_dashboard(params):
         self.wfile.write(b'{"status": "ok"}')
         return
 
+    # 2. Extract values for HTML template placeholders:
+    t_state = load_tasks_state()
+    tasks = t_state.get("tasks", [])
+    idx = t_state.get("index", 0)
+    total = len(tasks)
+
+    active_task = tasks[idx] if (tasks and 0 <= idx < total) else "None"
+    task_count_str = f"TASK {idx + 1} OF {total}" if total > 0 else "0 TASKS"
+
     # --- Load Data Collections AFTER Actions Execute ---
     pkmn_list = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
-    area_list = load_all_location_areas()
+
     team = load_team()
     target = load_active_target()
     active_route = load_active_route()
@@ -2048,6 +2447,7 @@ def handle_dashboard(params):
 
 
     js_pokemon_array = json.dumps(pkmn_list)
+    area_list = load_all_location_areas()
     js_location_array = json.dumps(area_list)
     active_target_json = json.dumps(target if target else {})
 
@@ -2593,23 +2993,63 @@ def handle_dashboard(params):
                 </div>
             </div>
 
-            <!-- Task Queue Manager -->
-            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[10px] uppercase font-bold text-slate-400">{task_count_str}</span>
-                    <span class="text-[10px] font-mono text-emerald-400 font-bold">CURRENT TASK</span>
-                </div>
-                <div class="text-sm font-bold text-white mb-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">{active_task}</div>
-                <div class="flex gap-2 mb-3">
-                    <a href="/?action=task_nav&step=prev" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-center text-xs font-bold rounded-lg transition">◀ Prev</a>
-                    <a href="/?action=task_nav&step=next" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-center text-xs font-bold rounded-lg transition">Next ▶</a>
-                </div>
-                <form action="/" method="GET" class="space-y-1.5">
-                    <input type="hidden" name="action" value="set_tasks" />
-                    <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
-                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Update Tasks</button>
-                </form>
-            </div>
+	    <!-- Bulbapedia Walkthrough Task Loader -->
+<div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3 mb-3">
+    <div class="flex justify-between items-center">
+        <span class="text-[10px] uppercase font-bold text-slate-400">Bulbapedia Walkthrough</span>
+        <span class="text-[10px] font-mono text-indigo-400 font-bold">TASK LOADER</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <!-- 1. Game Selection Dropdown -->
+        <div>
+            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">1. Select Game:</label>
+            <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-500">
+                <option value="">-- Choose Game --</option>
+                <option value="red-blue">Red / Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
+                <option value="ruby-sapphire">Ruby / Sapphire</option>
+                <option value="emerald">Emerald</option>
+                <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
+                <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                <option value="black-white">Black / White</option>
+                <option value="black-2-white-2">Black 2 / White 2</option>
+                <option value="x-y">X / Y</option>
+                <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
+                <option value="sun-moon">Sun / Moon</option>
+                <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
+            </select>
+        </div>
+
+        <!-- 2. Chapter / Part Dropdown -->
+        <div>
+            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">2. Select Chapter / Part:</label>
+            <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+                <option value="">-- Select Game First --</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Task Queue Manager -->
+<div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+    <div class="flex justify-between items-center mb-1">
+        <span id="task-progress-display" class="text-[10px] uppercase font-bold text-slate-400">{task_count_str}</span>
+        <span class="text-[10px] font-mono text-emerald-400 font-bold">CURRENT TASK</span>
+    </div>
+    <div id="task-name-display" class="text-sm font-bold text-white mb-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">{active_task}</div>
+    <div class="flex gap-2 mb-3">
+        <button type="button" onclick="navigateTask('prev')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-center text-xs font-bold rounded-lg transition active:scale-95 text-slate-200">◀ Prev</button>
+        <button type="button" onclick="navigateTask('next')" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-center text-xs font-bold rounded-lg transition active:scale-95 text-white">Next ▶</button>
+    </div>
+    <form action="/" method="GET" class="space-y-1.5">
+        <input type="hidden" name="action" value="set_tasks" />
+        <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
+        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Update Tasks</button>
+    </form>
+</div>
 
             <!-- Video Message -->
             <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
@@ -2893,15 +3333,47 @@ def handle_pokemon_remote(params):
         return "", ("Content-Type", "text/plain")
 
     # 2. Remote-Specific Shortcuts
-    task_action = params.get("task_action", [""])[0] if isinstance(params, dict) else ""
-    if task_action:
+    # 1. Handle Navigation (next / prev)
+    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+    if task_nav or set_tasks_raw:
         t_state = load_tasks_state()
-        if t_state.get("tasks"):
-            if task_action == "next":
-                t_state["index"] = min(t_state["index"] + 1, len(t_state["tasks"]) - 1)
-            elif task_action == "prev":
-                t_state["index"] = max(t_state["index"] - 1, 0)
-            save_tasks_state(t_state)
+
+        if set_tasks_raw:
+            parsed = [t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()]
+            if parsed:
+                t_state = {"tasks": parsed, "index": 0}
+                save_tasks_state(t_state)
+        elif task_nav:
+            if t_state.get("tasks"):
+                if task_nav == "next":
+                    t_state["index"] = min(t_state["index"] + 1, len(t_state["tasks"]) - 1)
+                elif task_nav == "prev":
+                    t_state["index"] = max(t_state["index"] - 1, 0)
+                save_tasks_state(t_state)
+
+        # Return just the inner snippet or continue rendering your normal page template
+        idx = t_state.get("index", 0)
+        tasks = t_state.get("tasks", [])
+        total = len(tasks)
+        active_task_name = tasks[idx] if (tasks and 0 <= idx < total) else "None"
+        task_progress = f"Task {idx + 1} of {total}" if total > 0 else "No Active Task"
+
+        # If you return the snippet directly for AJAX:
+        return f"{task_progress}|{active_task_name}"
+
+    # 2. Handle Setting New Task List
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+    if set_tasks_raw:
+        parsed = [t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()]
+        if parsed:
+            save_tasks_state({"tasks": parsed, "index": 0})
+            return send_json_response({
+                "task_progress": f"Task 1 of {len(parsed)}",
+                "active_task_name": parsed[0],
+                "index": 0,
+                "total": len(parsed)
+            })
 
     set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
     if set_tasks_raw:
@@ -2962,6 +3434,9 @@ def handle_pokemon_remote(params):
     state = load_catch_state()
     route_data = load_active_route()
     active_route = load_active_route()
+
+    area_list = load_all_location_areas()
+    js_location_array = json.dumps(area_list)
 
     task_progress = f"Task {tasks_state['index'] + 1} of {len(tasks_state['tasks'])}" if tasks_state.get("tasks") else "No Tasks Set"
     active_task_name = (
@@ -3060,11 +3535,8 @@ def handle_pokemon_remote(params):
                 if ver not in games:
                     games[ver] = {}
 
-
                 if p_name not in games[ver]:
-                    # Pass species slug first
                     version_evs = resolve_ev_yield_for_version(p_slug, modern_evs, past_evs, ver)
-
                     games[ver][p_name] = {
                         "slug": p_slug,
                         "ev_yield": version_evs,
@@ -3079,15 +3551,9 @@ def handle_pokemon_remote(params):
                     games[ver][p_name]["levels"].append(str(d["level"]))
                 games[ver][p_name]["total_chance"] += d.get("chance", 0)
 
+        # Selected version dropdown
         game_options = ['<option value="ALL">All Versions</option>']
         game_sections = []
-
-        for ver_name, species_dict in sorted(games.items()):
-            ver_slug = ver_name.lower().replace(" ", "-")
-            game_options.append(
-                f'<option value="{ver_slug}">{ver_name}'
-                f" ({len(species_dict)})</option>"
-            )
 
         STAT_SHORT_MAP = {
             "hp": "HP",
@@ -3098,56 +3564,59 @@ def handle_pokemon_remote(params):
             "speed": "Spe"
         }
 
-        poke_rows = []
-        for p_name, data in sorted(species_dict.items()):
-            methods_str = ", ".join(sorted(data.get("methods", []))) or "Wild"
-            levels_list = data.get("levels", [])
-            levels_str = ", ".join(levels_list[:2]) if levels_list else "Any"
-            total_chance = data.get("total_chance", 0)
-            chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
-            p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
+        for ver_name, species_dict in sorted(games.items()):
+            ver_slug = ver_name.lower().replace(" ", "-")
+            game_options.append(
+                f'<option value="{ver_slug}">{ver_name} ({len(species_dict)})</option>'
+            )
 
-            # Safely evaluate EV button
-            ev_btn_html = ""
-            try:
-                evs = data.get("ev_yield")
-                if isinstance(evs, dict) and evs:
-                    # Filter only positive entries
-                    valid_evs = {k: v for k, v in evs.items() if isinstance(v, int) and v > 0}
-                    if valid_evs:
-                        top_stat, top_amt = max(valid_evs.items(), key=lambda item: item[1])
-                        stat_clean = str(top_stat).lower()
-                        stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
-                        btn_text = f"+{top_amt} {stat_label}"
-                        ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
-                        ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
-            except Exception:
+            poke_rows = []
+            for p_name, data in sorted(species_dict.items()):
+                methods_str = ", ".join(sorted(data.get("methods", []))) or "Wild"
+                levels_list = data.get("levels", [])
+                levels_str = ", ".join(levels_list[:2]) if levels_list else "Any"
+                total_chance = data.get("total_chance", 0)
+                chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
+                p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
+
+                # Safely evaluate EV button
                 ev_btn_html = ""
+                try:
+                    evs = data.get("ev_yield")
+                    if isinstance(evs, dict) and evs:
+                        valid_evs = {k: v for k, v in evs.items() if isinstance(v, int) and v > 0}
+                        if valid_evs:
+                            top_stat, top_amt = max(valid_evs.items(), key=lambda item: item[1])
+                            stat_clean = str(top_stat).lower()
+                            stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
+                            btn_text = f"+{top_amt} {stat_label}"
+                            ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
+                            ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
+                except Exception:
+                    ev_btn_html = ""
 
-            chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
+                chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
 
-            poke_rows.append(f"""
-            <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
-                <div>
-                    <div class="font-bold text-white text-xs">{p_name}</div>
-                    <div class="text-[10px] text-slate-400">{methods_str}</div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="text-right">
-                        <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
-                        {chance_badge}
+                poke_rows.append(f"""
+                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                    <div>
+                        <div class="font-bold text-white text-xs">{p_name}</div>
+                        <div class="text-[10px] text-slate-400">{methods_str}</div>
                     </div>
-                    <div class="flex gap-1 ml-1">
-                        <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
-                        {ev_btn_html}
-                        <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                        <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
-                            </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-right">
+                            <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
+                            {chance_badge}
+                        </div>
+                        <div class="flex gap-1 ml-1">
+                            <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                            {ev_btn_html}
+                            <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            """)
-
-
+                """)
 
             game_sections.append(f"""
             <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
@@ -3161,24 +3630,27 @@ def handle_pokemon_remote(params):
             </div>
             """)
 
+        select_html = f"""
+        <div class="mb-3 space-y-1.5">
+            <div class="flex justify-between items-center">
+                <label class="text-[11px] text-slate-400 font-semibold block">Filter by Version:</label>
+                <span class="text-[10px] text-amber-400/90 italic font-mono">⚠️ Route list uses modern EVs</span>
+            </div>
+            <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                {''.join(game_options)}
+            </select>
+        </div>
+        """
+
         route_section_html = f"""
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-md mt-4">
-            <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
-                <div class="text-[10px] uppercase font-bold text-emerald-400">Current Location</div>
-                <div class="text-base font-black text-white">{active_route.get('name', 'Unknown Route')}</div>
-                <div class="text-xs text-slate-400 mt-0.5">{active_route.get('total_species', len(active_route.get('pokemon', [])))} total species</div>
+        <div class="space-y-3">
+            <div class="relative">
+                <input type="text" id="location-input" oninput="filterLocations()" placeholder="Search routes or locations..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                <div id="location-results" class="absolute z-20 left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden hidden max-h-60 overflow-y-auto"></div>
             </div>
-
-            <!-- Game Version Selector Row -->
-            <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
-                <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
-                <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-bold rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-400">
-                    {''.join(game_options)}
-                </select>
-            </div>
-
-            <div class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                {"".join(game_sections) or '<div class="text-slate-500 text-xs italic">No encounter tables for this sub-area.</div>'}
+            {select_html}
+            <div id="route-game-sections" class="space-y-2">
+                {''.join(game_sections)}
             </div>
         </div>
         """
@@ -3225,8 +3697,9 @@ def handle_pokemon_remote(params):
     </style>
     <script>
         const activeTargetData = {active_target_json};
-        const allLocations = {locations_json};
-        const allPokemon = {pkmn_json};
+	const pokemonNames = {pkmn_json};
+        const locationAreas = {locations_json};
+
 
         {SHARED_POKEMON_JS}
 
@@ -3251,108 +3724,7 @@ def handle_pokemon_remote(params):
                 .catch(err => console.log("Background sync failed", err));
         }}
 
-        function filterRouteVersion() {{
-            const select = document.getElementById('route-version-filter');
-            if (!select) return;
-            const selected = select.value;
-            document.querySelectorAll('.game-version-card').forEach(card => {{
-                if (card.getAttribute('data-version') === selected) {{
-                    card.style.display = 'block';
-                }} else {{
-                    card.style.display = 'none';
-                }}
-            }});
-        }}
-
-        // Dynamic Instant Dropdown Filter for Routes
-        function liveFilterRoutes() {{
-            const query = document.getElementById('route-search-input').value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('route-live-results');
-            const listContainer = document.getElementById('route-results-list');
-            const countLabel = document.getElementById('route-results-count');
-
-            if (!query || query.length < 1) {{
-                resultsContainer.style.display = 'none';
-                listContainer.innerHTML = '';
-                return;
-            }}
-
-            const tokens = query.split(/\s+/);
-            const matches = allLocations.filter(loc => {{
-                const name = loc.name.toLowerCase();
-                const slug = loc.slug.toLowerCase();
-                return tokens.every(token => name.includes(token) || slug.includes(token));
-            }}).slice(0, 15);
-
-            if (matches.length === 0) {{
-                countLabel.innerText = "0 matches found";
-                listContainer.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No matching routes</div>';
-                resultsContainer.style.display = 'block';
-                return;
-            }}
-
-            countLabel.innerText = `${{matches.length}} matching locations`;
-            listContainer.innerHTML = matches.map(m => `
-                <a href="/remote?action=set_location&slug=${{encodeURIComponent(m.slug)}}" class="flex justify-between items-center bg-slate-950/80 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-500 rounded-lg p-2.5 text-xs text-slate-200 transition active:scale-98">
-                    <span class="font-bold text-white">${{m.name}}</span>
-                    <span class="font-mono text-[10px] text-indigo-400 font-semibold">${{m.slug}}</span>
-                </a>
-            `).join('');
-
-            resultsContainer.style.display = 'block';
-        }}
-
-        // Dynamic Instant Dropdown Filter for Pokémon Targets
-        function liveFilterPokemon() {{
-            const query = document.getElementById('pkmn-search-input').value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('pkmn-live-results');
-            const listContainer = document.getElementById('pkmn-results-list');
-            const countLabel = document.getElementById('pkmn-results-count');
-
-            if (!query || query.length < 1) {{
-                resultsContainer.style.display = 'none';
-                listContainer.innerHTML = '';
-                return;
-            }}
-
-            const tokens = query.split(/\s+/);
-            const matches = allPokemon.filter(p => {{
-                const name = p.name.toLowerCase();
-                const slug = p.slug.toLowerCase();
-                return tokens.every(token => name.includes(token) || slug.includes(token));
-            }}).slice(0, 15);
-
-            if (matches.length === 0) {{
-                countLabel.innerText = "0 matches found";
-                listContainer.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No matching Pokémon</div>';
-                resultsContainer.style.display = 'block';
-                return;
-            }}
-
-            countLabel.innerText = `${{matches.length}} matching Pokémon`;
-            listContainer.innerHTML = matches.map(p => `
-                <div class="flex justify-between items-center bg-slate-950/80 hover:bg-amber-950/30 border border-slate-800 hover:border-amber-500 rounded-lg p-2 text-xs text-slate-200 transition">
-                    <span class="font-bold text-white">${{p.name}}</span>
-                    <div class="flex gap-1.5">
-                        <a href="/remote?action=set_target&name=${{encodeURIComponent(p.slug)}}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded active:scale-95 transition">Target</a>
-                        <a href="/remote?action=team_add&name=${{encodeURIComponent(p.slug)}}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2 py-1 rounded active:scale-95 transition">+Party</a>
-                        <a href="/remote?action=inc_counter&name=${{encodeURIComponent(p.name)}}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 rounded active:scale-95 transition">+Track</a>
-                    </div>
-                </div>
-            `).join('');
-
-            resultsContainer.style.display = 'block';
-        }}
-
-        window.addEventListener('DOMContentLoaded', () => {{
-            updateTargetGenView();
-            filterRouteVersion();
-        }});
-        window.addEventListener('DOMContentLoaded', () => {{
-            if (typeof updateTargetGenView === "function") updateTargetGenView();
-            setTimeout(filterRouteVersion, 50);
-        }});
-    </script>
+            </script>
 </head>
 <body class="p-3 md:p-6 pb-36 bg-[#121212] text-[#e0e0e0] font-sans antialiased min-h-screen selection:bg-indigo-500 selection:text-white" style="padding-bottom: calc(9rem + env(safe-area-inset-bottom));">
 
@@ -3453,25 +3825,19 @@ def handle_pokemon_remote(params):
         <!-- COLUMN 2: Route Search -> Route Info -> Tasks -> Forms -->
         <div class="space-y-4 flex flex-col">
 
-            <!-- Search 2: Route Location Search -->
-            <div class="card" style="border: 1px solid #6366f1; margin-top: 0;">
-                <h3 style="color: #a5b4fc; margin-bottom: 8px;">Search Route / Location</h3>
-                <input 
-                    type="text" 
-                    id="route-search-input" 
-                    oninput="liveFilterRoutes()" 
-                    placeholder="Search route (e.g. kanto-route-1, viridian)..." 
-                    autocomplete="off" 
-                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
-                />
-                <div id="route-live-results" class="bg-slate-900/95 border border-indigo-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;">
-                    <div class="flex justify-between items-center text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
-                        <span id="route-results-count">0 matching locations</span>
-                        <button type="button" onclick="document.getElementById('route-live-results').style.display='none';" class="text-slate-500 hover:text-white text-xs">✕</button>
-                    </div>
-                    <div id="route-results-list" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
-                </div>
-            </div>
+		<!-- Search 2: Route Location Search -->
+		<div class="card" style="border: 1px solid #6366f1; margin-top: 0;">
+		    <h3 style="color: #a5b4fc; margin-bottom: 8px;">Search Route / Location</h3>
+		    <input 
+		        type="text" 
+		        id="location-input" 
+		        oninput="filterLocations()" 
+		        placeholder="Search route (e.g. kanto-route-1, viridian)..." 
+		        autocomplete="off" 
+		        class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+		    />
+		    <div id="location-results" class="bg-slate-900/95 border border-indigo-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;"></div>
+		</div>
             
             <!-- Route Encounters Table -->
             <div style="margin-top: 0;">
@@ -3480,15 +3846,53 @@ def handle_pokemon_remote(params):
 
             <!-- Stream Tasks -->
             <div class="card" style="border: 2px solid #3b82f6; margin-top: 0;">
-                <div style="font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">{task_progress}</div>
-                <div style="font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 14px;">{active_task_name}</div>
-                <div style="display: flex; gap: 10px;">
-                    <a href="/remote?task_action=prev" class="nav-btn">◀ Back</a>
-                    <a href="/remote?task_action=next" class="nav-btn" style="background: #2563eb;">Forward ▶</a>
-                </div>
-            </div>
+	        <div id="task-progress-display" style="font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">{task_progress}</div>
+	        <div id="task-name-display" style="font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 14px;">{active_task_name}</div>
+	        <div style="display: flex; gap: 10px;">
+	            <button type="button" onclick="navigateTask('prev')" class="nav-btn" style="cursor: pointer;">◀ Back</button>
+	            <button type="button" onclick="navigateTask('next')" class="nav-btn" style="background: #2563eb; cursor: pointer;">Forward ▶</button>
+	        </div>
+	    </div>
 
             <!-- Task Management -->
+			    <div class="card space-y-2.5" style="border: 1px solid #6366f1;">
+    <div class="flex justify-between items-center">
+        <h3 style="color: #a5b4fc;" class="text-xs font-bold uppercase tracking-wider">Bulbapedia Walkthrough Task Loader</h3>
+        <span class="text-[10px] text-indigo-400 font-mono">?action=set_tasks</span>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <!-- 1. Game Selection Dropdown -->
+        <div>
+            <label class="text-[11px] text-slate-400 font-semibold mb-1 block">1. Select Game:</label>
+            <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-400">
+                <option value="">-- Choose Game --</option>
+                <option value="red-blue">Red / Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
+                <option value="ruby-sapphire">Ruby / Sapphire</option>
+                <option value="emerald">Emerald</option>
+                <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
+                <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                <option value="black-white">Black / White</option>
+                <option value="black-2-white-2">Black 2 / White 2</option>
+                <option value="x-y">X / Y</option>
+                <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
+                <option value="sun-moon">Sun / Moon</option>
+                <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
+            </select>
+        </div>
+
+        <!-- 2. Chapter / Part Dropdown -->
+        <div>
+            <label class="text-[11px] text-slate-400 font-semibold mb-1 block">2. Select Chapter / Part:</label>
+            <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-400 disabled:opacity-50">
+                <option value="">-- Select Game First --</option>
+            </select>
+        </div>
+    </div>
+</div>
             <div class="card" style="margin-top: 0;">
                 <h3>Set Task Queue</h3>
                 <form action="/remote" method="GET">
@@ -3496,6 +3900,7 @@ def handle_pokemon_remote(params):
                     <button type="submit" style="background: #0ea5e9;">Load Tasks</button>
                 </form>
             </div>
+
 
             <!-- Bulk Counters -->
             <div class="card" style="margin-top: 0;">
