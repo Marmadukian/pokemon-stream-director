@@ -2397,7 +2397,7 @@ def handle_dashboard(params):
                             stat_clean = str(top_stat).lower()
                             stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
                             btn_text = f"+{top_amt} {stat_label}"
-                            ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
+                            ev_link = f"/?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
                             ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
                 except Exception:
                     ev_btn_html = ""
@@ -2416,10 +2416,10 @@ def handle_dashboard(params):
                             {chance_badge}
                         </div>
                         <div class="flex gap-1 ml-1">
-                            <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                            <a href="/?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
                             {ev_btn_html}
-                            <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                            <a href="/?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                            <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
                         </div>
                     </div>
                 </div>
