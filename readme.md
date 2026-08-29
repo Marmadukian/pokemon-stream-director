@@ -25,7 +25,6 @@ Includes ready-to-use browser source overlays for showing a target pokemon, the 
 
 * Python 3.10+
 * pokebase
-* urllib
 * The ability to troubleshoot
 
 ---
@@ -39,13 +38,16 @@ Includes ready-to-use browser source overlays for showing a target pokemon, the 
 	```
 
 2. Install dependencies:
-	pip install pokebase, urllib
+	pip install pokebase
 
 3. Run the server:
 	python pkmn_server.py
 
 4. READ THE ENDPOINTS PRINTED:
 	I assume that you are technically adept enough to parse a url. 
+
+5. Let it run for 15-30 minutes to pre-cache the pokedex.
+	- On the initial launch, the dashboard starts a low-priority background worker to prefetch and cache National Dex data locally (~15–30 minutes). The dashboard is fully functional immediately; subsequent launches and route loads will be near-instant once the cache is populated.
 
 4. Use the provided ip address on your phone's browser, your pc browser, or into a browser source in obs:
 	http://[The compter's IP address]:1350

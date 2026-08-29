@@ -1,3 +1,6 @@
+import io
+import csv
+import urllib.request
 import os
 import json
 from datetime import datetime
@@ -688,6 +691,46 @@ const walkthroughData = {
     "Part 8: Mount Lanakila & Pokémon League": "Mina's Fairy Trial, Mount Lanakila, Molayne, Olivia, Acerola, Kahili, Hau, Episode RR"
   }
 };
+
+
+function trackAllRoutePokemon(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const names = new Set();
+    const nameEls = document.querySelectorAll('.poke-name, [data-poke-name]');
+
+    if (nameEls.length > 0) {
+        nameEls.forEach(el => {
+            if (el.offsetParent !== null) {
+                const name = el.getAttribute('data-poke-name') || el.innerText.trim();
+                if (name) names.add(name);
+            }
+        });
+    } else {
+        document.querySelectorAll('a[href*="action=inc_counter"]').forEach(link => {
+            if (link.offsetParent !== null) {
+                const url = new URL(link.href, window.location.origin);
+                const name = url.searchParams.get("name");
+                if (name) names.add(name);
+            }
+        });
+    }
+
+    if (names.size === 0) return;
+
+    const formattedList = Array.from(names).map(name => `${name} 1`).join(',');
+    const listParam = encodeURIComponent(formattedList);
+    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+
+    fetch(`${endpoint}?action=add_counters&counter_list=${listParam}`)
+        .then(() => {
+            if (typeof renderCounters === 'function') renderCounters();
+            else if (typeof loadCounters === 'function') loadCounters();
+            else window.location.reload();
+        })
+        .catch(err => console.error("Error adding counters:", err));
+}
+
 // 1. Update UI Elements In-Place
 function updateTaskCardUI(progress, name) {
     const progEl = document.getElementById('task-progress-display');
@@ -1478,31 +1521,55 @@ def load_active_route():
             pass
     return {}
 
+
 def load_all_pokemon_names():
     global all_pkmn_collection
     
+    # 1. Load from local cache if exists
     if os.path.exists(PKMN_NAMES_CACHE):
         try:
             with open(PKMN_NAMES_CACHE, "r", encoding="utf-8") as f:
                 all_pkmn_collection = json.load(f)
-                if all_pkmn_collection:
-                    print(f"[POKEMON] Loaded {len(all_pkmn_collection)} names from cache.")
+                if all_pkmn_collection and isinstance(all_pkmn_collection, dict):
                     return all_pkmn_collection
         except Exception:
             pass
 
-    print("[POKEMON] Fetching names via pokebase...")
+    print("[POKEMON] Fetching full species dataset in 1 request from GitHub...")
+    evo_map = {}
     try:
-        # pokebase yields name strings directly
-        resource_list = pb.APIResourceList('pokemon')
-        all_pkmn_collection = list(resource_list.names)
+        # Fetch PokeAPI's raw species CSV directly from GitHub (single request, ~50KB)
+        url = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            csv_text = response.read().decode('utf-8')
         
-        if all_pkmn_collection:
-            with open(PKMN_NAMES_CACHE, "w", encoding="utf-8") as f:
-                json.dump(all_pkmn_collection, f)
-            print(f"[POKEMON] Cached {len(all_pkmn_collection)} names.")
+        reader = csv.DictReader(io.StringIO(csv_text))
+        
+        # 1. Group species count by evolution_chain_id
+        chain_counts = {}
+        species_entries = []
+        for row in reader:
+            s_name = row['identifier'].replace('-', ' ').title()
+            chain_id = row['evolution_chain_id']
+            species_entries.append((s_name, chain_id))
+            chain_counts[chain_id] = chain_counts.get(chain_id, 0) + 1
+
+        # 2. Map each species name to its total line count
+        for s_name, chain_id in species_entries:
+            evo_map[s_name] = chain_counts.get(chain_id, 1)
+
+        all_pkmn_collection = evo_map
+
+        # Save to local cache file
+        with open(PKMN_NAMES_CACHE, "w", encoding="utf-8") as f:
+            json.dump(all_pkmn_collection, f, indent=2)
+            
+        print(f"[POKEMON] Successfully built & cached {len(all_pkmn_collection)} species in 1 request.")
+
     except Exception as e:
-        print(f"[POKEMON ERROR] {e}")
+        print(f"[POKEMON ERROR] Bulk fetch failed ({e}), falling back to 1s.")
+        all_pkmn_collection = {}
 
     return all_pkmn_collection
 
@@ -2366,12 +2433,46 @@ def handle_dashboard(params):
             if c[p_name] <= 0:
                 del c[p_name]
             save_pokemon_counters(c)
+
     elif action == "inc_counter":
         p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
         if p_name:
             c = load_pokemon_counters()
             c[p_name] = c.get(p_name, 0) + 1
             save_pokemon_counters(c)
+
+    elif action == "add_counters":
+        raw = params.get("counter_list", [""])[0]
+        raw = unquote_plus(raw)
+
+        if raw:
+            c = load_pokemon_counters() or {}
+            pkmn_evos = load_all_pokemon_names() or {}
+
+            for item in raw.split(","):
+                item = item.strip()
+                if not item:
+                    continue
+
+                parts = item.rsplit(" ", 1)
+                
+                # Check if explicit multiplier/count was passed or if we default to total evolutions
+                if len(parts) == 2 and parts[1].strip().isdigit():
+                    name = parts[0].strip().title()
+                    # Use the evolution count from lookup (or provided multiplier if > 1)
+                    default_evos = pkmn_evos.get(name, 1)
+                    passed_val = int(parts[1].strip())
+                    amt = max(default_evos, passed_val) if passed_val > 1 else default_evos
+                else:
+                    name = item.title()
+                    amt = pkmn_evos.get(name, 1)
+
+                if name:
+                    current_val = int(c.get(name, 0)) if str(c.get(name, 0)).isdigit() else 0
+                    c[name] = current_val + amt
+
+            save_pokemon_counters(c)
+    
 
     elif action == "set_counters":
         raw = unquote_plus(params.get("counter_list", [""])[0])
@@ -2553,7 +2654,13 @@ def handle_dashboard(params):
     task_count_str = f"TASK {idx + 1} OF {total}" if total > 0 else "0 TASKS"
 
     # --- Load Data Collections AFTER Actions Execute ---
-    pkmn_list = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
+    pkmn_data = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
+
+    # Extract just the list of names for JS
+    if isinstance(pkmn_data, dict):
+        js_pokemon_array = json.dumps(list(pkmn_data.keys()))
+    else:
+        js_pokemon_array = json.dumps(pkmn_data or [])
 
     team = load_team()
     target = load_active_target()
@@ -2564,8 +2671,7 @@ def handle_dashboard(params):
     ev_state = load_ev_state()
     state = load_catch_state()
 
-
-    js_pokemon_array = json.dumps(pkmn_list)
+	
     area_list = load_all_location_areas()
     js_location_array = json.dumps(area_list)
     active_target_json = json.dumps(target if target else {})
@@ -2961,7 +3067,7 @@ def handle_dashboard(params):
                 poke_rows.append(f"""
                 <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
                     <div>
-                        <div class="font-bold text-white text-xs">{p_name}</div>
+                        <div class="poke-name font-bold text-white text-xs" data-poke-name="{p_name}">{p_name}</div>
                         <div class="text-[10px] text-slate-400">{methods_str}</div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2998,7 +3104,17 @@ def handle_dashboard(params):
                 <div class="text-lg font-black text-white">{active_route['name']}</div>
                 <div class="text-xs text-slate-400 mt-0.5">{active_route['total_species']} total species across all versions</div>
             </div>
-		<div class="ev-warning">⚠️ Warning: On route list, only modern EVs are used</div>
+
+            <!-- Track All Route Pokemon Button -->
+            <button 
+                onclick="trackAllRoutePokemon()" 
+                class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-emerald-200 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
+                <span>➕</span>
+                <span>Click here to add all Pokémon on the route to tracking</span>
+            </button>
+
+            <div class="ev-warning">⚠️ Warning: On route list, only modern EVs are used</div>
+
             <!-- Game Version Selector Row -->
             <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
                 <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
@@ -3088,7 +3204,7 @@ def handle_dashboard(params):
             <!-- Catch Target Quick Taps -->
             <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
                 <h3 class="text-xs uppercase font-bold text-slate-300 mb-2">Catch Targets (-1)</h3>
-                <div class="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
+                <div class="space-y-1.5 mb-3 max-h-80 overflow-y-auto">
                     {counter_pills}
                 </div>
                 <form action="/" method="GET" class="space-y-1.5">
@@ -3307,6 +3423,7 @@ def handle_pokemon_stream(params=None):
 
 def handle_pokemon_remote(params):
     action = params.get("action", [""])[0] if isinstance(params, dict) else ""
+    active_route = load_active_route()
 
     # 1. Base / Shared Action Dispatcher
     if action == "team_add":
@@ -3360,6 +3477,26 @@ def handle_pokemon_remote(params):
                 del c[p_name]
             save_pokemon_counters(c)
 
+    elif action == "add_counters":
+        raw = unquote_plus(params.get("counter_list", [""])[0]).strip()
+        if raw:
+            c = load_pokemon_counters() or {}
+            for item in raw.split(","):
+                item = item.strip()
+                if not item:
+                    continue
+                parts = item.rsplit(" ", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    name = parts[0].strip().title()
+                    amt = int(parts[1])
+                else:
+                    name = item.title()
+                    amt = 1
+                
+                current_val = int(c.get(name, 0)) if str(c.get(name, 0)).isdigit() else 0
+                c[name] = current_val + amt
+            save_pokemon_counters(c)
+
     elif action == "set_counters":
         raw = unquote_plus(params.get("counter_list", [""])[0])
         new_c = {}
@@ -3373,6 +3510,16 @@ def handle_pokemon_remote(params):
             else:
                 new_c[item.title()] = 0
         save_pokemon_counters(new_c)
+
+    elif action == "track_all_route":
+        raw_list = unquote_plus(params.get("pokemon_list", [""])[0]).strip()
+        if raw_list:
+            counters = load_pokemon_counters()
+            for item in raw_list.split(","):
+                name = item.strip().title()
+                if name and name not in counters:
+                    counters[name] = 0
+            save_pokemon_counters(counters)
 
     elif action == "ev_add_target":
         ev_state = load_ev_state()
@@ -3572,7 +3719,6 @@ def handle_pokemon_remote(params):
     ev_state = load_ev_state()
     state = load_catch_state()
     route_data = load_active_route()
-    active_route = load_active_route()
 
     area_list = load_all_location_areas()
     js_location_array = json.dumps(area_list)
