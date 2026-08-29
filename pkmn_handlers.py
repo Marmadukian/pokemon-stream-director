@@ -19,6 +19,7 @@ ROUTES_CACHE_FILE = os.path.join(BASE_DIR, "all_location_areas.json")
 ACTIVE_ROUTE_FILE = os.path.join(BASE_DIR, "active_route.json")
 SHINY_HUNT_FILE = os.path.join(BASE_DIR, "shiny_hunt.json")
 STATE_FILE = os.path.join(BASE_DIR, "stream_state.json")
+EV_CACHE_FILE = "ev_yields.json"
 
 all_location_areas = []
 all_pkmn_collection = []
@@ -41,7 +42,67 @@ DEFAULT_CATCH_STATE = {
 }
 
 
-
+# Initial seed data for the EV yield file
+INITIAL_LOCAL_EV_YIELDS = {
+    "caterpie": {"hp": 1},
+    "metapod": {"defense": 2},
+    "butterfree": {"special-attack": 2, "special-defense": 1},
+    "weedle": {"speed": 1},
+    "kakuna": {"defense": 2},
+    "beedrill": {"attack": 2, "special-defense": 1},
+    "pidgey": {"speed": 1},
+    "pidgeotto": {"speed": 2},
+    "rattata": {"speed": 1},
+    "raticate": {"speed": 2},
+    "spearow": {"speed": 1},
+    "ekans": {"attack": 1},
+    "pikachu": {"speed": 2},
+    "zubat": {"speed": 1},
+    "golbat": {"speed": 2},
+    "oddish": {"special-attack": 1},
+    "gloom": {"special-attack": 2},
+    "meowth": {"speed": 1},
+    "psyduck": {"special-attack": 1},
+    "poliwag": {"speed": 1},
+    "machop": {"attack": 1},
+    "bellsprout": {"attack": 1},
+    "geodude": {"defense": 1},
+    "graveler": {"defense": 2},
+    "magnemite": {"special-attack": 1},
+    "gastly": {"special-attack": 1},
+    "haunter": {"special-attack": 2},
+    "magikarp": {"speed": 1},
+    "gyarados": {"attack": 2},
+    "ditto": {"hp": 1},
+    "roselia": {"special-attack": 2},
+    "feebas": {"special-defense": 1},
+    "chimecho": {"special-attack": 1, "special-defense": 1},
+    "poochyena": {"attack": 1},
+    "zigzagoon": {"speed": 1},
+    "wurmple": {"hp": 1},
+    "silcoon": {"defense": 2},
+    "cascoon": {"defense": 2},
+    "taillow": {"speed": 1},
+    "wingull": {"speed": 1},
+    "ralts": {"special-attack": 1},
+    "shroomish": {"hp": 1},
+    "slakoth": {"hp": 1},
+    "whismur": {"hp": 1},
+    "makuhita": {"hp": 1},
+    "aron": {"defense": 1},
+    "electrike": {"speed": 1},
+    "numel": {"special-attack": 1},
+    "spoink": {"special-defense": 1},
+    "spinda": {"special-attack": 1},
+    "swablu": {"special-defense": 1},
+    "zangoose": {"attack": 2},
+    "seviper": {"attack": 1, "special-attack": 1},
+    "corphish": {"attack": 1},
+    "duskull": {"defense": 1, "special-defense": 1},
+    "snorunt": {"hp": 1},
+    "spheal": {"hp": 1},
+    "bagon": {"attack": 1}
+}
 VERSION_TO_GEN = {
     "red": "generation-i", "blue": "generation-i", "yellow": "generation-i",
     "gold": "generation-ii", "silver": "generation-ii", "crystal": "generation-ii",
@@ -96,39 +157,76 @@ HISTORICAL_EV_OVERRIDES = {
     }
 }
 
+def load_local_ev_yields(file_path=EV_CACHE_FILE) -> dict:
+    """Loads yield cache from disk or initializes it with seed data."""
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    
+    # Initialize file if missing or corrupted
+    save_local_ev_yields(INITIAL_LOCAL_EV_YIELDS, file_path)
+    return INITIAL_LOCAL_EV_YIELDS.copy()
+
+def save_local_ev_yields(data: dict, file_path=EV_CACHE_FILE):
+    """Persists current in-memory cache to disk."""
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"Error saving EV yields cache: {e}")
+
+
+LOCAL_EV_YIELDS = load_local_ev_yields()
+
+
+# --- Resolution Logic ---
 def resolve_ev_yield_for_version(species_slug, ev_yield_modern, past_ev_yields, version_name):
+    s_clean = str(species_slug).lower().strip()
     v_clean = str(version_name).lower().replace(" ", "-")
     target_gen = VERSION_TO_GEN.get(v_clean)
 
-    if not target_gen:
-        return ev_yield_modern
+    # 1. Check Hardcoded Gen Overrides First (e.g. Gen 3 Roselia)
+    if target_gen and s_clean in HISTORICAL_EV_OVERRIDES:
+        try:
+            target_idx = GEN_ORDER.index(target_gen)
+            for past_gen_slug, override_yield in HISTORICAL_EV_OVERRIDES[s_clean].items():
+                if past_gen_slug in GEN_ORDER:
+                    past_idx = GEN_ORDER.index(past_gen_slug)
+                    if target_idx <= past_idx:
+                        return override_yield
+        except ValueError:
+            pass
 
-    try:
-        target_idx = GEN_ORDER.index(target_gen)
-    except ValueError:
-        return ev_yield_modern
+    # 2. Check PokéAPI past_stats
+    if target_gen and past_ev_yields:
+        try:
+            target_idx = GEN_ORDER.index(target_gen)
+            for past_gen_slug, past_yield in past_ev_yields.items():
+                if past_gen_slug in GEN_ORDER and past_yield:
+                    past_idx = GEN_ORDER.index(past_gen_slug)
+                    if target_idx <= past_idx:
+                        return past_yield
+        except ValueError:
+            pass
 
-    # 1. Check Hardcoded Gen Overrides First
-    s_clean = str(species_slug).lower().strip()
-    if s_clean in HISTORICAL_EV_OVERRIDES:
-        for past_gen_slug, override_yield in HISTORICAL_EV_OVERRIDES[s_clean].items():
-            if past_gen_slug in GEN_ORDER:
-                past_idx = GEN_ORDER.index(past_gen_slug)
-                if target_idx <= past_idx:
-                    return override_yield
+    # 3. Fast lookup from local persistent cache
+    if s_clean in LOCAL_EV_YIELDS:
+        return LOCAL_EV_YIELDS[s_clean]
 
-    # 2. Check PokéAPI past_stats (if present with effort > 0)
-    if past_ev_yields:
-        for past_gen_slug, past_yield in past_ev_yields.items():
-            if past_gen_slug in GEN_ORDER and past_yield:
-                past_idx = GEN_ORDER.index(past_gen_slug)
-                if target_idx <= past_idx:
-                    return past_yield
+    # 4. Fallback: Dynamic Cache Miss
+    # If the modern yield was resolved, cache it to memory and write to ev_yields.json
+    final_yield = ev_yield_modern if ev_yield_modern else {}
+    if final_yield:
+        LOCAL_EV_YIELDS[s_clean] = final_yield
+        save_local_ev_yields(LOCAL_EV_YIELDS)
 
-    # 3. Modern PokéAPI stats default
-    return ev_yield_modern
+    return final_yield
 
 
+# --- State Loading & Saving ---
 def load_ev_state():
     state = DEFAULT_EV_STATE.copy()
     if os.path.exists(STATE_FILE):
@@ -137,7 +235,6 @@ def load_ev_state():
                 data = json.load(f)
                 raw = data.get("ev_state", {})
                 
-                # Check if file has legacy schema (e.g., 'kills' instead of stat keys)
                 needs_migration = not any(k in raw for k in DEFAULT_EV_STATE)
                 
                 for k in DEFAULT_EV_STATE:
@@ -153,7 +250,6 @@ def load_ev_state():
     return state
 
 def save_ev_state(state):
-    # Ensure only clean integer values for the 6 stats are saved
     clean_state = {k: int(state.get(k, 0)) for k in DEFAULT_EV_STATE}
     data = {}
     if os.path.exists(STATE_FILE):
@@ -166,8 +262,6 @@ def save_ev_state(state):
     data["ev_state"] = clean_state
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-
-
 def load_catch_state():
     if os.path.exists(STATE_FILE):
         try:
@@ -1290,67 +1384,8 @@ def save_pokemon_counters(data):
 def save_active_route(data):
     with open(ACTIVE_ROUTE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-# Fast local fallback for common / historical EV yields to avoid network overhead
-LOCAL_EV_YIELDS = {
-    "caterpie": {"hp": 1},
-    "metapod": {"defense": 2},
-    "butterfree": {"special-attack": 2, "special-defense": 1},
-    "weedle": {"speed": 1},
-    "kakuna": {"defense": 2},
-    "beedrill": {"attack": 2, "special-defense": 1},
-    "pidgey": {"speed": 1},
-    "pidgeotto": {"speed": 2},
-    "rattata": {"speed": 1},
-    "raticate": {"speed": 2},
-    "spearow": {"speed": 1},
-    "ekans": {"attack": 1},
-    "pikachu": {"speed": 2},
-    "zubat": {"speed": 1},
-    "golbat": {"speed": 2},
-    "oddish": {"special-attack": 1},
-    "gloom": {"special-attack": 2},
-    "meowth": {"speed": 1},
-    "psyduck": {"special-attack": 1},
-    "poliwag": {"speed": 1},
-    "machop": {"attack": 1},
-    "bellsprout": {"attack": 1},
-    "geodude": {"defense": 1},
-    "graveler": {"defense": 2},
-    "magnemite": {"special-attack": 1},
-    "gastly": {"special-attack": 1},
-    "haunter": {"special-attack": 2},
-    "magikarp": {"speed": 1},
-    "gyarados": {"attack": 2},
-    "ditto": {"hp": 1},
-    "roselia": {"special-attack": 2}, # Gen 3 override handles dropping to 1
-    "feebas": {"special-defense": 1},
-    "chimecho": {"special-attack": 1, "special-defense": 1},
-    "poochyena": {"attack": 1},
-    "zigzagoon": {"speed": 1},
-    "wurmple": {"hp": 1},
-    "silcoon": {"defense": 2},
-    "cascoon": {"defense": 2},
-    "taillow": {"speed": 1},
-    "wingull": {"speed": 1},
-    "ralts": {"special-attack": 1},
-    "shroomish": {"hp": 1},
-    "slakoth": {"hp": 1},
-    "whismur": {"hp": 1},
-    "makuhita": {"hp": 1},
-    "aron": {"defense": 1},
-    "electrike": {"speed": 1},
-    "numel": {"special-attack": 1},
-    "spoink": {"special-defense": 1},
-    "spinda": {"special-attack": 1},
-    "swablu": {"special-defense": 1},
-    "zangoose": {"attack": 2},
-    "seviper": {"attack": 1, "special-attack": 1},
-    "corphish": {"attack": 1},
-    "duskull": {"defense": 1, "special-defense": 1},
-    "snorunt": {"hp": 1},
-    "spheal": {"hp": 1},
-    "bagon": {"attack": 1}
-}
+
+
 
 STAT_SHORT_NAMES = {
     "hp": "HP",
@@ -2444,7 +2479,7 @@ def handle_dashboard(params):
                 <div class="text-lg font-black text-white">{active_route['name']}</div>
                 <div class="text-xs text-slate-400 mt-0.5">{active_route['total_species']} total species across all versions</div>
             </div>
-
+		<div class="ev-warning">⚠️ Warning: On route list, only modern EVs are used</div>
             <!-- Game Version Selector Row -->
             <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
                 <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
@@ -2478,6 +2513,18 @@ def handle_dashboard(params):
             if (typeof calcExpGap === 'function') calcExpGap();
         }});
     </script>
+    <style>
+         .ev-warning {{
+  font-family: monospace;
+  font-size: 11px;
+  color: #fbbf24; /* soft amber warning */
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid #f59e0b;
+  display: block;
+}}
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
     <!-- Header with Dual Search -->
@@ -2517,6 +2564,20 @@ def handle_dashboard(params):
 
         <!-- Col 3: Stream Management, Queue, & Counters (4 Cols) -->
         <section class="lg:col-span-4 space-y-4">
+
+
+            <!-- Catch Target Quick Taps -->
+            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+                <h3 class="text-xs uppercase font-bold text-slate-300 mb-2">Catch Targets (-1)</h3>
+                <div class="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
+                    {counter_pills}
+                </div>
+                <form action="/" method="GET" class="space-y-1.5">
+                    <input type="hidden" name="action" value="set_counters" />
+                    <input name="counter_list" placeholder="caterpie 3, rattata 2" class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Set Target Batches</button>
+                </form>
+            </div>
             
             {shiny_card}
             {ev_card_html}
@@ -2547,19 +2608,6 @@ def handle_dashboard(params):
                     <input type="hidden" name="action" value="set_tasks" />
                     <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
                     <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Update Tasks</button>
-                </form>
-            </div>
-
-            <!-- Catch Target Quick Taps -->
-            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
-                <h3 class="text-xs uppercase font-bold text-slate-300 mb-2">Catch Targets (-1)</h3>
-                <div class="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
-                    {counter_pills}
-                </div>
-                <form action="/" method="GET" class="space-y-1.5">
-                    <input type="hidden" name="action" value="set_counters" />
-                    <input name="counter_list" placeholder="caterpie 3, rattata 2" class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
-                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Set Target Batches</button>
                 </form>
             </div>
 
