@@ -1,3 +1,4 @@
+import os
 import socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
@@ -20,67 +21,74 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
-
 def _run_ev_cache_loop():
+    import os
+    import time
     global LOCAL_EV_YIELDS
 
-    print("[EV CACHE] Starting background EV prefetcher (0.75s cadence)...")
-    
-    # Standard National Dex IDs 1 to 1025
-    TOTAL_DEX = 1025
+    print("[DEX CACHE] Starting background National Dex prefetcher...")
+
+    cache_dir = getattr(handlers, "TARGET_CACHE_DIR", "target_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # 1. Get all names locally if already loaded in memory, otherwise range 1..1025
+    species_list = []
+    pkmn_evos = getattr(handlers, "all_pkmn_collection", None) or getattr(handlers, "load_all_pokemon_names", lambda: {})()
+    if isinstance(pkmn_evos, dict) and pkmn_evos:
+        species_list = list(pkmn_evos.keys())
+    else:
+        species_list = [str(i) for i in range(1, 1026)]
+
+    total = len(species_list)
     dirty_count = 0
 
-    for p_id in range(1, TOTAL_DEX + 1):
-        # Determine if we already have this Pokémon by ID or slug in memory
-        # (We check by slug after resolving or fallback check)
+    for idx, item in enumerate(species_list, 1):
+        slug = str(item).lower().strip().replace(" ", "-")
+        target_file = os.path.join(cache_dir, f"{slug}.json")
+
+        # 1. FAST CHECK: If target file exists, read EVs from disk instantly (0 network calls)
+        if os.path.exists(target_file):
+            if slug not in handlers.LOCAL_EV_YIELDS:
+                try:
+                    import json
+                    with open(target_file, "r", encoding="utf-8") as f:
+                        cached_data = json.load(f)
+                        if "ev_yield" in cached_data and cached_data["ev_yield"]:
+                            handlers.LOCAL_EV_YIELDS[slug] = cached_data["ev_yield"]
+                            dirty_count += 1
+                except Exception:
+                    pass
+            continue
+
+        # 2. MISS: Only hit PokéAPI if the file genuinely does not exist
         try:
-            # 1. Quick check without network if possible
-            # If you already have slug mappings, you can skip here.
-            p_data = pb.pokemon(p_id)
-            slug = str(p_data.name).lower().strip()
+            print(f"[DEX CACHE] [{idx}/{total}] Downloading & baking {slug.title()}...")
+            data = handlers.fetch_complete_pokemon_info(slug)
 
-            if slug in handlers.LOCAL_EV_YIELDS and handlers.LOCAL_EV_YIELDS[slug]:
-                continue  # Already cached
-
-            # 2. Extract base stat effort values (EV yield)
-            ev_yield = {}
-            for stat_entry in p_data.stats:
-                effort = getattr(stat_entry, "effort", 0)
-                if effort > 0:
-                    stat_name = getattr(stat_entry.stat, "name", "").lower()
-                    if stat_name:
-                        ev_yield[stat_name] = effort
-
-            # 3. Store in LOCAL_EV_YIELDS dictionary
-            if ev_yield:
-                handlers.LOCAL_EV_YIELDS[slug] = ev_yield
+            if data and "ev_yield" in data:
+                handlers.LOCAL_EV_YIELDS[slug] = data["ev_yield"]
                 dirty_count += 1
-                print(f"[EV CACHE] [{p_id}/{TOTAL_DEX}] Cached {slug.title()}: {ev_yield}")
 
-            # 4. Flush to disk every 10 new entries so progress is preserved across restarts
+            # Only pause on real network activity
+            time.sleep(0.6)
+
             if dirty_count >= 10:
                 handlers.save_local_ev_yields(handlers.LOCAL_EV_YIELDS)
                 dirty_count = 0
 
-            # 5. Polite timing interval (0.75s)
-            time.sleep(0.75)
-
         except Exception as e:
-            # Handle rate-limit 429 or network hiccups gracefully
             err_str = str(e).lower()
             if "429" in err_str or "too many requests" in err_str:
-                print("[EV CACHE] Hit rate limit (429), pausing for 60s...")
+                print(f"[DEX CACHE] Hit 429 rate limit at {slug}. Pausing 60s...")
                 time.sleep(60)
             else:
-                print(f"[EV CACHE ERROR] ID {p_id}: {e}")
-                time.sleep(1.5)
+                print(f"[DEX CACHE ERROR] {slug}: {e}")
+                time.sleep(1.0)
 
-    # Final flush to disk when complete
     if dirty_count > 0:
         handlers.save_local_ev_yields(handlers.LOCAL_EV_YIELDS)
-        
-    print("[EV CACHE] Complete! All National Dex species EV yields cached locally.")
 
+    print("[DEX CACHE] Finished National Dex check.")
 
 def start_ev_cache_worker():
     """Starts the EV cache worker in a daemon thread so it runs in the background."""

@@ -11,3 +11,4 @@ tasks_list.json
 current_task.txt
 stream_state.json
 ev_yields.json
+/target_cache

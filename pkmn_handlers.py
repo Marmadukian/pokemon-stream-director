@@ -25,6 +25,12 @@ STATE_FILE = os.path.join(BASE_DIR, "stream_state.json")
 EV_CACHE_FILE = os.path.join(BASE_DIR, "ev_yields.json")
 IGNORED_CACHE_FILE = os.path.join(BASE_DIR, "deselected_pokemon.json")
 
+TARGET_CACHE_DIR = "target_cache"
+os.makedirs(TARGET_CACHE_DIR, exist_ok=True)
+
+# In-memory session cache for shared evolution chains
+GLOBAL_EVO_CACHE = {}
+
 all_location_areas = []
 all_pkmn_collection = []
 
@@ -215,6 +221,72 @@ HISTORICAL_EV_OVERRIDES = {
         "generation-iii": {"special-attack": 1}
     }
 }
+
+BASE_TYPE_CHART = {
+    "normal":   {"rock": 0.5, "ghost": 0.0, "steel": 0.5},
+    "fire":     {"fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 2.0, "bug": 2.0, "rock": 0.5, "dragon": 0.5, "steel": 2.0},
+    "water":    {"fire": 2.0, "water": 0.5, "grass": 0.5, "ground": 2.0, "rock": 2.0, "dragon": 0.5},
+    "electric": {"water": 2.0, "electric": 0.5, "grass": 0.5, "ground": 0.0, "flying": 2.0, "dragon": 0.5},
+    "grass":    {"fire": 0.5, "water": 2.0, "grass": 0.5, "poison": 0.5, "ground": 2.0, "flying": 0.5, "bug": 0.5, "rock": 2.0, "dragon": 0.5, "steel": 0.5},
+    "ice":      {"fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 0.5, "ground": 2.0, "flying": 2.0, "dragon": 2.0, "steel": 0.5},
+    "fighting": {"normal": 2.0, "ice": 2.0, "poison": 0.5, "flying": 0.5, "psychic": 0.5, "bug": 0.5, "rock": 2.0, "ghost": 0.0, "dark": 2.0, "steel": 2.0, "fairy": 0.5},
+    "poison":   {"grass": 2.0, "poison": 0.5, "ground": 0.5, "rock": 0.5, "ghost": 0.5, "steel": 0.0, "fairy": 2.0},
+    "ground":   {"fire": 2.0, "electric": 2.0, "grass": 0.5, "poison": 2.0, "flying": 0.0, "bug": 0.5, "rock": 2.0, "steel": 2.0},
+    "flying":   {"electric": 0.5, "grass": 2.0, "fighting": 2.0, "bug": 2.0, "rock": 0.5, "steel": 0.5},
+    "psychic":  {"fighting": 2.0, "poison": 2.0, "psychic": 0.5, "dark": 0.0, "steel": 0.5},
+    "bug":      {"fire": 0.5, "grass": 2.0, "fighting": 0.5, "poison": 0.5, "flying": 0.5, "psychic": 2.0, "ghost": 0.5, "dark": 2.0, "steel": 0.5, "fairy": 0.5},
+    "rock":     {"fire": 2.0, "ice": 2.0, "fighting": 0.5, "ground": 0.5, "flying": 2.0, "bug": 2.0, "steel": 0.5},
+    "ghost":    {"normal": 0.0, "psychic": 2.0, "ghost": 2.0, "dark": 0.5, "steel": 0.5},
+    "dragon":   {"dragon": 2.0, "steel": 0.5, "fairy": 0.0},
+    "steel":    {"fire": 0.5, "water": 0.5, "electric": 0.5, "ice": 2.0, "rock": 2.0, "steel": 0.5, "fairy": 2.0},
+    "dark":     {"fighting": 0.5, "psychic": 2.0, "ghost": 2.0, "dark": 0.5, "fairy": 0.5},
+    "fairy":    {"fire": 0.5, "fighting": 2.0, "poison": 0.5, "dragon": 2.0, "dark": 2.0, "steel": 0.5}
+}
+
+def calculate_matchups(types, gen="modern"):
+    """
+    Computes defending damage multipliers.
+    gen: 'gen-1', 'gen-2', 'gen-3', 'gen-4', 'gen-5', or 'modern'
+    """
+    all_types = list(BASE_TYPE_CHART.keys())
+    
+    valid_attackers = []
+    for t in all_types:
+        if gen == 'gen-1' and t in ['dark', 'steel', 'fairy']:
+            continue
+        if gen in ['gen-2', 'gen-3', 'gen-4', 'gen-5'] and t == 'fairy':
+            continue
+        valid_attackers.append(t)
+
+    multipliers = {t: 1.0 for t in valid_attackers}
+
+    for def_type in types:
+        def_t = str(def_type).lower().strip()
+        for atk in valid_attackers:
+            eff = BASE_TYPE_CHART.get(atk, {}).get(def_t, 1.0)
+
+            # Gen 1 Quirks
+            if gen == 'gen-1':
+                if atk == 'ghost' and def_t == 'psychic':
+                    eff = 0.0  # Gen 1 psychic immunity bug
+                elif (atk == 'poison' and def_t == 'bug') or (atk == 'bug' and def_t == 'poison'):
+                    eff = 2.0  # Gen 1 mutual super-effective
+                elif atk == 'ice' and def_t == 'fire':
+                    eff = 1.0  # Neutral in Gen 1
+
+            # Gens 2-5 Steel Resistances
+            elif gen in ['gen-2', 'gen-3', 'gen-4', 'gen-5']:
+                if (atk == 'dark' or atk == 'ghost') and def_t == 'steel':
+                    eff = 0.5  # Steel resisted Ghost and Dark before Gen 6
+
+            multipliers[atk] *= eff
+
+    weaknesses = {k: v for k, v in multipliers.items() if v > 1.0}
+    resistances = {k: v for k, v in multipliers.items() if 0.0 < v < 1.0}
+    immunities = [k for k, v in multipliers.items() if v == 0.0]
+
+    return weaknesses, resistances, immunities
+
 
 def load_deselected_pokemon():
     if os.path.exists(IGNORED_CACHE_FILE):
@@ -2052,246 +2124,155 @@ def fetch_route_encounter_info(slug):
 
 # --- PokéAPI Comprehensive Lookup ---
 
+
+def _http_get_json(url):
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (PokemonStreamOverlay/1.0)"}
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
 def fetch_complete_pokemon_info(name):
-  clean_name = name.lower().strip()
-  try:
-    p = pb.pokemon(clean_name)
-    s = pb.pokemon_species(clean_name)
-  except Exception as e:
-    print(f"Error fetching PokéAPI data for {name}: {e}")
-    return None
+    clean_name = str(name).lower().strip().replace(" ", "-")
+    cache_path = os.path.join(TARGET_CACHE_DIR, f"{clean_name}.json")
 
-  # Base Stats
-  stats = {}
-  bst = 0
-  for stat in p.stats:
-    s_name = stat.stat.name
-    val = stat.base_stat
-    stats[s_name] = val
-    bst += val
+    # 1. Instant Cache Hit (< 1ms)
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
 
-  # Current Types & Weaknesses
-  types = [t.type.name for t in p.types]
-  damage_multipliers = {}
-  past_damage_relations = {}
+    # 2. Fetch raw JSON payloads directly (2 fast HTTP calls)
+    try:
+        p_data = _http_get_json(f"https://pokeapi.co/api/v2/pokemon/{clean_name}")
+        s_data = _http_get_json(p_data["species"]["url"])
+    except Exception as e:
+        print(f"[POKEAPI ERROR] Failed fetching {name}: {e}")
+        return None
 
-  for t_entry in p.types:
-    t_name = t_entry.type.name
-    t_data = pb.type_(t_name)
-
-    # Current Damage Relations
-    for dmg in t_data.damage_relations.double_damage_from:
-      damage_multipliers[dmg.name] = (
-          damage_multipliers.get(dmg.name, 1.0) * 2.0
-      )
-    for dmg in t_data.damage_relations.half_damage_from:
-      damage_multipliers[dmg.name] = (
-          damage_multipliers.get(dmg.name, 1.0) * 0.5
-      )
-    for dmg in t_data.damage_relations.no_damage_from:
-      damage_multipliers[dmg.name] = 0.0
-
-    # Historical Damage Relations from PokéAPI
-    for past_rel in getattr(t_data, "past_damage_relations", []):
-      gen_slug = getattr(
-          past_rel.generation, "name", str(past_rel.generation)
-      ).lower()
-      if gen_slug not in past_damage_relations:
-        past_damage_relations[gen_slug] = {}
-
-      rel = getattr(past_rel, "damage_relations", past_rel)
-      past_damage_relations[gen_slug][t_name] = {
-          "double_damage_from": [
-              d.name for d in getattr(rel, "double_damage_from", [])
-          ],
-          "half_damage_from": [
-              h.name for h in getattr(rel, "half_damage_from", [])
-          ],
-          "no_damage_from": [n.name for n in getattr(rel, "no_damage_from", [])],
-      }
-
-  weaknesses = {k: v for k, v in damage_multipliers.items() if v > 1.0}
-  resistances = {k: v for k, v in damage_multipliers.items() if 0.0 < v < 1.0}
-  immunities = [k for k, v in damage_multipliers.items() if v == 0.0]
-
-  # Base Stats & EV Yields (Modern + Historical)
-  ev_yield = {}
-  stats = {}
-  bst = 0
-
-  for stat in getattr(p, "stats", []):
-        s_name = ""
-        if hasattr(stat, "stat"):
-            s_name = getattr(stat.stat, "name", str(stat.stat))
-        elif isinstance(stat, dict):
-            s_name = stat.get("stat", {}).get("name", "")
-
-        val = getattr(stat, "base_stat", 0)
-        if isinstance(stat, dict):
-            val = stat.get("base_stat", 0)
-
-        effort = getattr(stat, "effort", 0)
-        if isinstance(stat, dict):
-            effort = stat.get("effort", 0)
-
+    # Base Stats & EV Yields
+    stats = {}
+    ev_yield = {}
+    bst = 0
+    for st in p_data.get("stats", []):
+        s_name = st.get("stat", {}).get("name", "").lower()
+        val = int(st.get("base_stat", 0))
+        effort = int(st.get("effort", 0))
         if s_name:
-            stats[s_name] = int(val)
-            bst += int(val)
-            if int(effort) > 0:
-                ev_yield[s_name] = int(effort)
+            stats[s_name] = val
+            bst += val
+            if effort > 0:
+                ev_yield[s_name] = effort
 
-    # Historical EV Yields from PokéAPI past_stats (if present)
-  past_ev_yields = {}
-  for past_s in getattr(p, "past_stats", []):
-        gen_slug = getattr(past_s.generation, "name", str(past_s.generation)).lower()
-        past_ev_yields[gen_slug] = {}
-        for st in getattr(past_s, "stats", []):
-            st_name = getattr(st.stat, "name", str(st.stat))
-            st_effort = getattr(st, "effort", 0)
-            if int(st_effort) > 0:
-                past_ev_yields[gen_slug][st_name] = int(st_effort)
+    # Types & RAM-based Matchup Multipliers
+    types = [t.get("type", {}).get("name", "").title() for t in p_data.get("types", [])]
+    weaknesses, resistances, immunities = calculate_matchups(types, gen="modern")
 
-  # Historical Pokémon Typings (e.g. Clefairy Normal -> Fairy, Magnemite Electric -> Electric/Steel)
-  past_types = {}
-  for past_t in getattr(p, "past_types", []):
-    gen_slug = getattr(
-        past_t.generation, "name", str(past_t.generation)
-    ).lower()
-    past_types[gen_slug] = [
-        getattr(entry.type, "name", str(entry.type)).title()
-        for entry in getattr(past_t, "types", [])
-    ]
+    # Movepool Parsing
+    tm_moves = []
+    level_moves = []
+    for m in p_data.get("moves", []):
+        m_name = m.get("move", {}).get("name", "").replace("-", " ").title()
+        for vgd in m.get("version_group_details", []):
+            method = vgd.get("move_learn_method", {}).get("name", "")
+            if method == "machine":
+                tm_moves.append(m_name)
+            elif method == "level-up":
+                level_moves.append({
+                    "move": m_name,
+                    "level": int(vgd.get("level_learned_at", 0)),
+                    "vg": str(vgd.get("version_group", {}).get("name", "all")).lower().replace("_", "-")
+                })
 
-  # Evolution Chain (Levels / Methods)
-  evo_details = []
-  try:
-    evo_chain_res = s.evolution_chain
-    if hasattr(evo_chain_res, "id"):
-      chain_id = evo_chain_res.id
-    elif hasattr(evo_chain_res, "url"):
-      chain_id = int(evo_chain_res.url.strip("/").split("/")[-1])
-    else:
-      chain_id = int(str(evo_chain_res).strip("/").split("/")[-1])
+    tm_moves = sorted(list(set(tm_moves)))
+    level_moves.sort(key=lambda x: (x["level"], x["move"]))
 
-    chain_data = pb.evolution_chain(chain_id)
+    # Evolution Chain (Cached by Chain URL)
+    evo_details = []
+    try:
+        evo_url = s_data.get("evolution_chain", {}).get("url")
+        if evo_url:
+            if evo_url in GLOBAL_EVO_CACHE:
+                evo_details = GLOBAL_EVO_CACHE[evo_url]
+            else:
+                c_data = _http_get_json(evo_url)
+                chain_node = c_data.get("chain", {})
 
-    def parse_chain(node):
-      species_name = node.species.name.title()
-      evolves_to = getattr(node, "evolves_to", [])
-      for evo in evolves_to:
-        target_name = evo.species.name.title()
-        methods = []
-        evo_details_list = getattr(evo, "evolution_details", [])
+                def parse_evo_node(node, acc):
+                    sp_name = node.get("species", {}).get("name", "").title()
+                    for next_node in node.get("evolves_to", []):
+                        target_name = next_node.get("species", {}).get("name", "").title()
+                        methods = []
+                        for det in next_node.get("evolution_details", []):
+                            if det.get("min_level"):
+                                methods.append(f"Level {det['min_level']}")
+                            if det.get("item"):
+                                methods.append(f"Use {det['item']['name'].replace('-', ' ').title()}")
+                            if det.get("trigger", {}).get("name") == "trade":
+                                held = det.get("held_item")
+                                held_str = f" holding {held['name'].replace('-', ' ').title()}" if held else ""
+                                methods.append(f"Trade{held_str}")
+                            if det.get("min_happiness"):
+                                methods.append(f"Happiness {det['min_happiness']}")
+                            if det.get("time_of_day"):
+                                methods.append("Daytime" if det["time_of_day"] == "day" else "Night")
 
-        for det in evo_details_list:
-          min_lvl = getattr(det, "min_level", None)
-          if min_lvl:
-            methods.append(f"Level {min_lvl}")
+                        m_desc = ", ".join(methods) if methods else "Level up / Special"
+                        acc.append(f"{sp_name} ➔ {target_name} ({m_desc})")
+                        parse_evo_node(next_node, acc)
 
-          item = getattr(det, "item", None)
-          if item:
-            item_name = (
-                getattr(item, "name", str(item)).replace("-", " ").title()
-            )
-            methods.append(f"Use {item_name}")
+                parsed_list = []
+                parse_evo_node(chain_node, parsed_list)
+                GLOBAL_EVO_CACHE[evo_url] = parsed_list if parsed_list else ["Does not evolve"]
+                evo_details = GLOBAL_EVO_CACHE[evo_url]
+    except Exception as e:
+        print(f"[EVO ERROR] {clean_name}: {e}")
+        evo_details = ["Does not evolve"]
 
-          trigger = getattr(det, "trigger", None)
-          trigger_name = getattr(trigger, "name", "") if trigger else ""
-          if trigger_name == "trade":
-            held = getattr(det, "held_item", None)
-            held_name = f" holding {held.name.title()}" if held else ""
-            methods.append(f"Trade{held_name}")
+    # Growth & Egg Groups
+    growth_name = s_data.get("growth_rate", {}).get("name", "Unknown").replace("-", " ").title()
+    egg_groups = [g.get("name", "").replace("-", " ").title() for g in s_data.get("egg_groups", [])]
+    hatch_counter = s_data.get("hatch_counter")
+    hatch_steps = (hatch_counter + 1) * 255 if hatch_counter is not None else 0
 
-          min_happy = getattr(det, "min_happiness", None)
-          if min_happy:
-            methods.append(f"Happiness {min_happy}")
+    sprites = p_data.get("sprites", {})
+    sprite_url = sprites.get("front_default") or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_data.get('id', 1)}.png"
 
-          time_of_day = getattr(det, "time_of_day", "")
-          if time_of_day:
-            methods.append("Daytime" if time_of_day == "day" else "Night")
+    result = {
+        "name": p_data.get("name", clean_name).title(),
+        "id": int(p_data.get("id", 1)),
+        "sprite": sprite_url,
+        "types": types,
+        "past_types": {},
+        "past_damage_relations": {},
+        "bst": bst,
+        "stats": stats,
+        "ev_yield": ev_yield,
+        "weaknesses": weaknesses,
+        "resistances": resistances,
+        "immunities": immunities,
+        "catch_rate": s_data.get("capture_rate", 45),
+        "base_experience": p_data.get("base_experience", 0),
+        "growth_rate": growth_name,
+        "egg_groups": egg_groups,
+        "hatch_steps": hatch_steps,
+        "evolutions": evo_details,
+        "level_moves": level_moves,
+        "tm_moves": tm_moves,
+    }
 
-        method_str = ", ".join(methods) if methods else "Level up / Special"
-        evo_details.append(f"{species_name} ➔ {target_name} ({method_str})")
-        parse_chain(evo)
+    # Save to disk
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2)
+    except Exception as e:
+        print(f"[CACHE WRITE ERROR] {clean_name}: {e}")
 
-    parse_chain(chain_data.chain)
-    if not evo_details:
-      evo_details = ["Does not evolve"]
-  except Exception as e:
-    print(f"[EVO ERROR] Failed parsing evolution chain: {e}")
-    evo_details = ["No evolution data available"]
+    return result
 
-  # TM Moves
-  tm_moves = []
-  for m in getattr(p, "moves", []):
-    m_name = getattr(m.move, "name", "").replace("-", " ").title()
-    for vgd in getattr(m, "version_group_details", []):
-      method = getattr(vgd.move_learn_method, "name", "")
-      if method == "machine":
-        tm_moves.append(m_name)
-        break
-  tm_moves = sorted(list(set(tm_moves)))
-
-  # Level-Up Moves (Version Group Tagged)
-  level_moves = []
-  for m in getattr(p, "moves", []):
-    m_name = getattr(m.move, "name", "").replace("-", " ").title()
-
-    for vgd in getattr(m, "version_group_details", []):
-      method = ""
-      if hasattr(vgd, "move_learn_method"):
-        method = getattr(
-            vgd.move_learn_method, "name", str(vgd.move_learn_method)
-        )
-      elif isinstance(vgd, dict):
-        method = vgd.get("move_learn_method", {}).get("name", "")
-
-      if "level-up" in str(method).lower():
-        lvl = getattr(vgd, "level_learned_at", 0)
-        if isinstance(vgd, dict):
-          lvl = vgd.get("level_learned_at", 0)
-
-        vg_slug = "all"
-        if hasattr(vgd, "version_group"):
-          vg_slug = getattr(vgd.version_group, "name", str(vgd.version_group))
-        elif isinstance(vgd, dict):
-          vg_slug = vgd.get("version_group", {}).get("name", "all")
-
-        level_moves.append({
-            "move": m_name,
-            "level": int(lvl),
-            "vg": str(vg_slug).lower().replace("_", "-"),
-        })
-
-  level_moves.sort(key=lambda x: (x["level"], x["move"]))
-  sprite_url = p.sprites.front_default or ""
-
-  return {
-      "name": p.name.title(),
-      "id": p.id,
-      "sprite": sprite_url,
-      "types": [t.title() for t in types],
-      "past_types": past_types,
-      "past_damage_relations": past_damage_relations,
-      "bst": bst,
-      "stats": stats,
-      "ev_yield": ev_yield,
-      "weaknesses": weaknesses,
-      "resistances": resistances,
-      "immunities": immunities,
-      "catch_rate": s.capture_rate,
-      "base_experience": p.base_experience,
-      "growth_rate": (
-          s.growth_rate.name.replace("-", " ").title()
-          if s.growth_rate
-          else "Unknown"
-      ),
-      "egg_groups": [g.name.replace("-", " ").title() for g in s.egg_groups],
-      "hatch_steps": (s.hatch_counter + 1) * 255 if s.hatch_counter else 0,
-      "evolutions": evo_details,
-      "level_moves": level_moves,
-      "tm_moves": tm_moves,
-  }
 
 def render_ev_training_widget(ev_state, target, is_remote=False):
   total_evs = sum(
