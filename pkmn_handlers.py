@@ -2238,13 +2238,68 @@ def fetch_complete_pokemon_info(name):
     hatch_counter = s_data.get("hatch_counter")
     hatch_steps = (hatch_counter + 1) * 255 if hatch_counter is not None else 0
 
-    sprites = p_data.get("sprites", {})
-    sprite_url = sprites.get("front_default") or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_data.get('id', 1)}.png"
+    p_id = int(p_data.get("id", 1))
+    sprites_raw = p_data.get("sprites", {}) or {}
+    versions = sprites_raw.get("versions", {}) or {}
+
+    gen_sprites = {
+        # Generation 1 (Red/Blue / Yellow)
+        "gen-1": (
+            versions.get("generation-i", {}).get("red-blue", {}).get("front_default")
+            or versions.get("generation-i", {}).get("yellow", {}).get("front_default")
+        ),
+        # Generation 2 (Gold/Silver / Crystal)
+        "gen-2": (
+            versions.get("generation-ii", {}).get("crystal", {}).get("front_default")
+            or versions.get("generation-ii", {}).get("gold", {}).get("front_default")
+        ),
+        # Generation 3 (Ruby/Sapphire / Emerald / FireRed-LeafGreen)
+        "gen-3": (
+            versions.get("generation-iii", {}).get("emerald", {}).get("front_default")
+            or versions.get("generation-iii", {}).get("ruby-sapphire", {}).get("front_default")
+            or versions.get("generation-iii", {}).get("firered-leafgreen", {}).get("front_default")
+        ),
+        # Generation 4 (Diamond/Pearl / Platinum / HeartGold-SoulSilver)
+        "gen-4": (
+            versions.get("generation-iv", {}).get("platinum", {}).get("front_default")
+            or versions.get("generation-iv", {}).get("diamond-pearl", {}).get("front_default")
+            or versions.get("generation-iv", {}).get("heartgold-soulsilver", {}).get("front_default")
+        ),
+        # Generation 5 (Black/White / Animated)
+        "gen-5": (
+            versions.get("generation-v", {}).get("black-white", {}).get("animated", {}).get("front_default")
+            or versions.get("generation-v", {}).get("black-white", {}).get("front_default")
+        ),
+        # Generation 6 (X/Y / Omega Ruby-Alpha Sapphire)
+        "gen-6": (
+            versions.get("generation-vi", {}).get("x-y", {}).get("front_default")
+            or versions.get("generation-vi", {}).get("omegaruby-alphasapphire", {}).get("front_default")
+        ),
+        # Generation 7 (Sun/Moon / Ultra Sun-Ultra Moon)
+        "gen-7": (
+            versions.get("generation-vii", {}).get("ultra-sun-ultra-moon", {}).get("front_default")
+            or versions.get("generation-vii", {}).get("icons", {}).get("front_default")
+        ),
+        # Modern / Showdown / Default
+        "modern": (
+            sprites_raw.get("other", {}).get("showdown", {}).get("front_default")
+            or sprites_raw.get("front_default")
+            or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png"
+        ),
+    }
+
+    # Default fallback sprite if a specific gen doesn't exist (e.g. Gen 9 Pokémon in Gen 1)
+    default_sprite = (
+        gen_sprites["modern"]
+        or sprites_raw.get("front_default")
+        or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png"
+    )
 
     result = {
         "name": p_data.get("name", clean_name).title(),
         "id": int(p_data.get("id", 1)),
-        "sprite": sprite_url,
+        "sprite": default_sprite,            # default modern/standard
+        "sprites": gen_sprites,              # full map of all gen sprites
         "types": types,
         "past_types": {},
         "past_damage_relations": {},
