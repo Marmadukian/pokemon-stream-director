@@ -23,6 +23,7 @@ ACTIVE_ROUTE_FILE = os.path.join(BASE_DIR, "active_route.json")
 SHINY_HUNT_FILE = os.path.join(BASE_DIR, "shiny_hunt.json")
 STATE_FILE = os.path.join(BASE_DIR, "stream_state.json")
 EV_CACHE_FILE = os.path.join(BASE_DIR, "ev_yields.json")
+IGNORED_CACHE_FILE = os.path.join(BASE_DIR, "deselected_pokemon.json")
 
 all_location_areas = []
 all_pkmn_collection = []
@@ -214,6 +215,22 @@ HISTORICAL_EV_OVERRIDES = {
         "generation-iii": {"special-attack": 1}
     }
 }
+
+def load_deselected_pokemon():
+    if os.path.exists(IGNORED_CACHE_FILE):
+        try:
+            with open(IGNORED_CACHE_FILE, "r", encoding="utf-8") as f:
+                return set(json.load(f))
+        except Exception:
+            pass
+    return set()
+
+def save_deselected_pokemon(deselected_set):
+    try:
+        with open(IGNORED_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(deselected_set), f, indent=2)
+    except Exception as e:
+        print(f"[ERROR] Failed to save deselected pokemon: {e}")
 
 def load_local_ev_yields(file_path=EV_CACHE_FILE) -> dict:
     """Loads yield cache from disk or initializes it with seed data."""
@@ -692,25 +709,45 @@ const walkthroughData = {
   }
 };
 
+// Updates local storage / track state when manually unchecked
+function onPokemonCheckboxChange(checkbox) {
+    const name = checkbox.getAttribute('data-poke-name');
+    let deselected = JSON.parse(localStorage.getItem('deselected_pokemon') || '[]');
+    
+    if (!checkbox.checked) {
+        if (!deselected.includes(name)) deselected.push(name);
+    } else {
+        deselected = deselected.filter(n => n !== name);
+    }
+    localStorage.setItem('deselected_pokemon', JSON.stringify(deselected));
+}
 
+// Gathers only CHECKED pokemon on the route and sends to add_counters
 function trackAllRoutePokemon(e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const names = new Set();
-    const nameEls = document.querySelectorAll('.poke-name, [data-poke-name]');
+    
+    // 1. Find the currently active/visible container or tab
+    // Adjust selector to match your active tab class (e.g. .active-tab, #route-view, or visible container)
+    const activeContainer = document.querySelector('.tab-pane.active, .route-version-active, #active-route-content') || document;
 
-    if (nameEls.length > 0) {
-        nameEls.forEach(el => {
-            if (el.offsetParent !== null) {
-                const name = el.getAttribute('data-poke-name') || el.innerText.trim();
+    // 2. Select ONLY visible, checked checkboxes
+    const checkedBoxes = activeContainer.querySelectorAll('.route-poke-checkbox:checked');
+
+    if (checkedBoxes.length > 0) {
+        checkedBoxes.forEach(cb => {
+            // Ensure the element or its parent is actually visible (not display: none)
+            if (cb.offsetParent !== null) {
+                const name = cb.getAttribute('data-poke-name');
                 if (name) names.add(name);
             }
         });
     } else {
-        document.querySelectorAll('a[href*="action=inc_counter"]').forEach(link => {
-            if (link.offsetParent !== null) {
-                const url = new URL(link.href, window.location.origin);
-                const name = url.searchParams.get("name");
+        // Fallback: grab only VISIBLE .poke-name elements
+        activeContainer.querySelectorAll('.poke-name, [data-poke-name]').forEach(el => {
+            if (el.offsetParent !== null) {
+                const name = el.getAttribute('data-poke-name') || el.innerText.trim();
                 if (name) names.add(name);
             }
         });
@@ -718,7 +755,7 @@ function trackAllRoutePokemon(e) {
 
     if (names.size === 0) return;
 
-    const formattedList = Array.from(names).map(name => `${name} 1`).join(',');
+    const formattedList = Array.from(names).join(',');
     const listParam = encodeURIComponent(formattedList);
     const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
 
@@ -728,8 +765,9 @@ function trackAllRoutePokemon(e) {
             else if (typeof loadCounters === 'function') loadCounters();
             else window.location.reload();
         })
-        .catch(err => console.error("Error adding counters:", err));
+        .catch(err => console.error("Error adding checked counters:", err));
 }
+
 
 // 1. Update UI Elements In-Place
 function updateTaskCardUI(progress, name) {
@@ -2349,15 +2387,7 @@ def render_ev_training_widget(ev_state, target, is_remote=False):
         </div>
     </div>
     """
-
-# --- Router Endpoints ---
-def handle_dashboard(params):
-    action = params.get("action", [""])[0] if isinstance(params, dict) else ""
-
-    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
-    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
-
-    # --- Action Handling ---
+def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav=None):
     if action == "team_add":
         name = params.get("name", [""])[0].strip()
         if name:
@@ -2441,38 +2471,27 @@ def handle_dashboard(params):
             c[p_name] = c.get(p_name, 0) + 1
             save_pokemon_counters(c)
 
+	
     elif action == "add_counters":
         raw = params.get("counter_list", [""])[0]
         raw = unquote_plus(raw)
-
         if raw:
             c = load_pokemon_counters() or {}
-            pkmn_evos = load_all_pokemon_names() or {}
-
+            pkmn_evos = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names() or {}
             for item in raw.split(","):
                 item = item.strip()
                 if not item:
                     continue
-
                 parts = item.rsplit(" ", 1)
-                
-                # Check if explicit multiplier/count was passed or if we default to total evolutions
                 if len(parts) == 2 and parts[1].strip().isdigit():
                     name = parts[0].strip().title()
-                    # Use the evolution count from lookup (or provided multiplier if > 1)
-                    default_evos = pkmn_evos.get(name, 1)
-                    passed_val = int(parts[1].strip())
-                    amt = max(default_evos, passed_val) if passed_val > 1 else default_evos
+                    amt = int(parts[1].strip())
                 else:
                     name = item.title()
-                    amt = pkmn_evos.get(name, 1)
-
+                    amt = int(pkmn_evos.get(name, 1))
                 if name:
-                    current_val = int(c.get(name, 0)) if str(c.get(name, 0)).isdigit() else 0
-                    c[name] = current_val + amt
-
+                    c[name] = int(c.get(name, 0)) + max(1, amt)
             save_pokemon_counters(c)
-    
 
     elif action == "set_counters":
         raw = unquote_plus(params.get("counter_list", [""])[0])
@@ -2644,6 +2663,18 @@ def handle_dashboard(params):
         }
         save_exp_state(exp_state)
 
+
+
+# --- Router Endpoints ---
+def handle_dashboard(params):
+    action = params.get("action", [""])[0] if isinstance(params, dict) else ""
+
+    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+
+    # --- Action Handling ---
+    handle_common_action(action, params, set_tasks_raw, task_nav)
+
     # 2. Extract values for HTML template placeholders:
     t_state = load_tasks_state()
     tasks = t_state.get("tasks", [])
@@ -2670,6 +2701,7 @@ def handle_dashboard(params):
     hunt = load_shiny_hunt()
     ev_state = load_ev_state()
     state = load_catch_state()
+    deselected_pokemon = load_deselected_pokemon()
 
 	
     area_list = load_all_location_areas()
@@ -3064,26 +3096,38 @@ def handle_dashboard(params):
 
                 chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
 
+                # Determine if this species should be checked by default
+                is_checked = "checked" if p_name not in deselected_pokemon else ""
+
                 poke_rows.append(f"""
-                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
-                    <div>
-                        <div class="poke-name font-bold text-white text-xs" data-poke-name="{p_name}">{p_name}</div>
-                        <div class="text-[10px] text-slate-400">{methods_str}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-right">
-                            <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
-                            {chance_badge}
+                    <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                        <div class="flex items-center gap-2.5">
+                            <input 
+                                type="checkbox" 
+                                class="route-poke-checkbox w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                                data-poke-name="{p_name}" 
+                                onchange="onPokemonCheckboxChange(this)"
+                                {is_checked}
+                            />
+                            <div>
+                                <div class="poke-name font-bold text-white text-xs" data-poke-name="{p_name}">{p_name}</div>
+                                <div class="text-[10px] text-slate-400">{methods_str}</div>
+                            </div>
                         </div>
-                        <div class="flex gap-1 ml-1">
-                            <a href="/?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
-                            {ev_btn_html}
-                            <a href="/?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                            <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                        <div class="flex items-center gap-2">
+                            <div class="text-right">
+                                <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
+                                {chance_badge}
+                            </div>
+                            <div class="flex gap-1 ml-1">
+                                <a href="/?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
+                                {ev_btn_html}
+                                <a href="/?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
+                                <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                """)
+                    """)
 
             game_sections.append(f"""
             <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
@@ -3423,293 +3467,12 @@ def handle_pokemon_stream(params=None):
 
 def handle_pokemon_remote(params):
     action = params.get("action", [""])[0] if isinstance(params, dict) else ""
-    active_route = load_active_route()
 
-    # 1. Base / Shared Action Dispatcher
-    if action == "team_add":
-        name = params.get("name", [""])[0].strip()
-        if name:
-            team = load_team()
-            try:
-                p_id = pb.pokemon(name.lower()).id
-            except Exception:
-                p_id = 1
-            team.append({
-                "name": name.title(),
-                "sprite": f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png",
-            })
-            save_team(team)
-            
-    elif action == "team_remove":
-        idx = int(params.get("index", [-1])[0])
-        team = load_team()
-        if 0 <= idx < len(team):
-            team.pop(idx)
-            save_team(team)
-            
-    elif action == "set_target":
-        name = params.get("name", [""])[0].strip()
-        if name:
-            data = fetch_complete_pokemon_info(name)
-            if data:
-                save_active_target(data)
-                
-    elif action == "set_location":
-        slug = params.get("slug", [""])[0].strip().lower().replace(" ", "-")
-        if slug:
-            route_data = fetch_route_encounter_info(slug)
-            if route_data:
-                save_active_route(route_data)
-
-    elif action == "inc_counter":
-        p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
-        if p_name:
-            c = load_pokemon_counters()
-            c[p_name] = c.get(p_name, 0) + 1
-            save_pokemon_counters(c)
-
-    elif action == "dec_counter":
-        p_name = unquote_plus(params.get("name", [""])[0]).strip().title()
-        if p_name:
-            c = load_pokemon_counters()
-            c[p_name] = c.get(p_name, 0) - 1
-            if c[p_name] <= 0:
-                del c[p_name]
-            save_pokemon_counters(c)
-
-    elif action == "add_counters":
-        raw = unquote_plus(params.get("counter_list", [""])[0]).strip()
-        if raw:
-            c = load_pokemon_counters() or {}
-            for item in raw.split(","):
-                item = item.strip()
-                if not item:
-                    continue
-                parts = item.rsplit(" ", 1)
-                if len(parts) == 2 and parts[1].isdigit():
-                    name = parts[0].strip().title()
-                    amt = int(parts[1])
-                else:
-                    name = item.title()
-                    amt = 1
-                
-                current_val = int(c.get(name, 0)) if str(c.get(name, 0)).isdigit() else 0
-                c[name] = current_val + amt
-            save_pokemon_counters(c)
-
-    elif action == "set_counters":
-        raw = unquote_plus(params.get("counter_list", [""])[0])
-        new_c = {}
-        for item in raw.split(","):
-            item = item.strip()
-            if not item:
-                continue
-            parts = item.rsplit(" ", 1)
-            if len(parts) == 2 and parts[1].isdigit():
-                new_c[parts[0].strip().title()] = int(parts[1])
-            else:
-                new_c[item.title()] = 0
-        save_pokemon_counters(new_c)
-
-    elif action == "track_all_route":
-        raw_list = unquote_plus(params.get("pokemon_list", [""])[0]).strip()
-        if raw_list:
-            counters = load_pokemon_counters()
-            for item in raw_list.split(","):
-                name = item.strip().title()
-                if name and name not in counters:
-                    counters[name] = 0
-            save_pokemon_counters(counters)
-
-    elif action == "ev_add_target":
-        ev_state = load_ev_state()
-        target = load_active_target()
-        
-        yields = target.get("ev_yield", {}) if target else {}
-        if not yields and target and target.get("name"):
-            fresh = fetch_complete_pokemon_info(target.get("name"))
-            if fresh and fresh.get("ev_yield"):
-                target["ev_yield"] = fresh["ev_yield"]
-                save_active_target(target)
-                yields = target.get("ev_yield", {})
-
-        stat_map = {
-            "hp": "hp", "attack": "attack", "defense": "defense",
-            "special-attack": "special-attack", "special-defense": "special-defense", "speed": "speed"
-        }
-
-        for raw_k, raw_v in yields.items():
-            norm_k = stat_map.get(str(raw_k).lower().replace("_", "-"))
-            try:
-                val = int(raw_v)
-            except (ValueError, TypeError):
-                val = 0
-
-            if norm_k and val > 0:
-                cur = int(ev_state.get(norm_k, 0))
-                total = sum(int(ev_state.get(k, 0)) for k in stat_map.values() if str(ev_state.get(k, 0)).lstrip('-').isdigit())
-                add = min(val, 252 - cur, 510 - total)
-                if add > 0:
-                    ev_state[norm_k] = cur + add
-
-        save_ev_state(ev_state)
-
-    elif action == "ev_adjust":
-        ev_state = load_ev_state()
-        
-        raw_stat = params.get("stat", "")
-        if isinstance(raw_stat, list):
-            raw_stat = raw_stat[0] if raw_stat else ""
-        stat = str(raw_stat).strip().lower().replace("_", "-")
-
-        raw_amt = params.get("amt", "1")
-        if isinstance(raw_amt, list):
-            raw_amt = raw_amt[0] if raw_amt else "1"
-        try:
-            amt = int(str(raw_amt).replace("+", "").strip())
-        except (ValueError, TypeError):
-            amt = 1
-
-        if stat in ["hp", "attack", "defense", "special-attack", "special-defense", "speed"]:
-            cur = int(ev_state.get(stat, 0))
-            total = sum(int(ev_state.get(k, 0)) for k in ["hp", "attack", "defense", "special-attack", "special-defense", "speed"] if str(ev_state.get(k, 0)).lstrip('-').isdigit())
-            if amt > 0:
-                add = min(amt, 252 - cur, 510 - total)
-                ev_state[stat] = cur + max(0, add)
-            else:
-                ev_state[stat] = max(0, cur + amt)
-            save_ev_state(ev_state)
-
-    elif action == "ev_reset":
-        ev_state = {
-            "hp": 0, "attack": 0, "defense": 0,
-            "special-attack": 0, "special-defense": 0, "speed": 0
-        }
-        save_ev_state(ev_state)
-    
-    elif action == "sync_catch":
-        hp = params.get("hp", ["100"])[0]
-        lvl = params.get("lvl", ["50"])[0]
-        status = params.get("status", ["1"])[0]
-        ball = params.get("ball", ["poke"])[0]
-        odds = unquote_plus(params.get("odds", ["--%"])[0])
-        target_name = unquote_plus(params.get("target", ["None"])[0])
-
-        state = {
-            "hp": hp,
-            "lvl": lvl,
-            "status": status,
-            "ball": ball,
-            "odds": odds,
-            "target": target_name
-        }
-
-        save_catch_state(state)
-
-    elif action == "sync_exp":
-        exp_state = {
-            "growth_rate": unquote_plus(params.get("growth_rate", ["medium-fast"])[0]),
-            "lvl_from": params.get("from", ["1"])[0],
-            "lvl_to": params.get("to", ["36"])[0],
-            "exp_needed": unquote_plus(params.get("exp", ["0 EXP"])[0]),
-            "exp_per_kill": params.get("per_kill", ["120"])[0],
-            "kills": unquote_plus(params.get("kills", ["0 kills"])[0]),
-            "est_time": unquote_plus(params.get("time", ["~0m"])[0])
-        }
-        save_exp_state(exp_state)
-
-    # 2. Remote-Specific Shortcuts
-    # 1. Handle Navigation (next / prev)
     task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
     set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
-    if task_nav or set_tasks_raw:
-        t_state = load_tasks_state()
 
-        if set_tasks_raw:
-            parsed = [t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()]
-            if parsed:
-                t_state = {"tasks": parsed, "index": 0}
-                save_tasks_state(t_state)
-        elif task_nav:
-            if t_state.get("tasks"):
-                if task_nav == "next":
-                    t_state["index"] = min(t_state["index"] + 1, len(t_state["tasks"]) - 1)
-                elif task_nav == "prev":
-                    t_state["index"] = max(t_state["index"] - 1, 0)
-                save_tasks_state(t_state)
-
-        # Return just the inner snippet or continue rendering your normal page template
-        idx = t_state.get("index", 0)
-        tasks = t_state.get("tasks", [])
-        total = len(tasks)
-        active_task_name = tasks[idx] if (tasks and 0 <= idx < total) else "None"
-        task_progress = f"Task {idx + 1} of {total}" if total > 0 else "No Active Task"
-
-        # If you return the snippet directly for AJAX:
-        return f"{task_progress}|{active_task_name}"
-
-    # 2. Handle Setting New Task List
-    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
-    if set_tasks_raw:
-        parsed = [t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()]
-        if parsed:
-            save_tasks_state({"tasks": parsed, "index": 0})
-            return send_json_response({
-                "task_progress": f"Task 1 of {len(parsed)}",
-                "active_task_name": parsed[0],
-                "index": 0,
-                "total": len(parsed)
-            })
-
-    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
-    if set_tasks_raw:
-        parsed = [t.strip() for t in unquote_plus(set_tasks_raw).split(",") if t.strip()]
-        if parsed:
-            save_tasks_state({"tasks": parsed, "index": 0})
-
-    inc_counter_name = params.get("inc_counter", [""])[0] if isinstance(params, dict) else ""
-    if inc_counter_name:
-        p_name = unquote_plus(inc_counter_name).strip().title()
-        c = load_pokemon_counters()
-        c[p_name] = c.get(p_name, 0) + 1
-        save_pokemon_counters(c)
-
-    dec_counter_name = params.get("dec_counter", [""])[0] if isinstance(params, dict) else ""
-    if dec_counter_name:
-        p_name = unquote_plus(dec_counter_name).strip().title()
-        c = load_pokemon_counters()
-        if p_name in c:
-            c[p_name] -= 1
-            if c[p_name] <= 0:
-                del c[p_name]
-            save_pokemon_counters(c)
-
-    set_list_raw = params.get("set_list", [""])[0] if isinstance(params, dict) else ""
-    if set_list_raw:
-        raw = unquote_plus(set_list_raw)
-        new_c = {}
-        for item in raw.split(","):
-            item = item.strip()
-            if not item:
-                continue
-            parts = item.rsplit(" ", 1)
-            if len(parts) == 2 and parts[1].isdigit():
-                new_c[parts[0].strip().title()] = int(parts[1])
-            else:
-                new_c[item.title()] = 0
-        save_pokemon_counters(new_c)
-
-    # 3. Shiny Hunting Actions
-    shiny_action = params.get("shiny_action", [""])[0] if isinstance(params, dict) else ""
-    if shiny_action:
-        hunt = load_shiny_hunt()
-        if shiny_action == "inc":
-            hunt["count"] += 1
-        elif shiny_action == "dec":
-            hunt["count"] = max(0, hunt["count"] - 1)
-        elif shiny_action == "reset":
-            hunt["count"] = 0
-        save_shiny_hunt(hunt)
+    
+    handle_common_action(action, params, set_tasks_raw, task_nav)
 
     # --- Load Session State AFTER Actions Execute ---
     tasks_state = load_tasks_state()
