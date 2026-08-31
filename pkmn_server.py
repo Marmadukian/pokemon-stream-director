@@ -8,6 +8,7 @@ import pokebase as pb
 
 # Import all handler functions from handlers.py
 import pkmn_handlers as handlers
+from pkmn_handlers import *
 
 PORT = 1350
 
@@ -44,14 +45,20 @@ def _run_ev_cache_loop():
 
     for idx, item in enumerate(species_list, 1):
         slug = str(item).lower().strip().replace(" ", "-")
-        target_file = os.path.join(cache_dir, f"{slug}.json")
+        endpoint_slug = getattr(handlers, "resolve_pokemon_endpoint_slug", lambda x: x)(slug)
 
-        # 1. FAST CHECK: If target file exists, read EVs from disk instantly (0 network calls)
-        if os.path.exists(target_file):
+        target_file = os.path.join(cache_dir, f"{slug}.json")
+        endpoint_file = os.path.join(cache_dir, f"{endpoint_slug}.json")
+
+        # Check either file path
+        found_file = target_file if os.path.exists(target_file) else (endpoint_file if os.path.exists(endpoint_file) else None)
+
+        # 1. FAST CHECK: If either target file exists, read EVs instantly (0 network calls)
+        if found_file:
             if slug not in handlers.LOCAL_EV_YIELDS:
                 try:
                     import json
-                    with open(target_file, "r", encoding="utf-8") as f:
+                    with open(found_file, "r", encoding="utf-8") as f:
                         cached_data = json.load(f)
                         if "ev_yield" in cached_data and cached_data["ev_yield"]:
                             handlers.LOCAL_EV_YIELDS[slug] = cached_data["ev_yield"]
@@ -60,7 +67,7 @@ def _run_ev_cache_loop():
                     pass
             continue
 
-        # 2. MISS: Only hit PokéAPI if the file genuinely does not exist
+        # 2. MISS: Only hit PokéAPI if neither file exists
         try:
             print(f"[DEX CACHE] [{idx}/{total}] Downloading & baking {slug.title()}...")
             data = handlers.fetch_complete_pokemon_info(slug)
@@ -69,7 +76,6 @@ def _run_ev_cache_loop():
                 handlers.LOCAL_EV_YIELDS[slug] = data["ev_yield"]
                 dirty_count += 1
 
-            # Only pause on real network activity
             time.sleep(0.6)
 
             if dirty_count >= 10:

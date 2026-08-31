@@ -1,3 +1,8 @@
+GLOBAL_EVO_CACHE = {}
+
+all_location_areas = []
+all_pkmn_collection = []
+
 
 DEFAULT_EV_STATE = {
     "hp": 0,
@@ -217,3 +222,80 @@ STAT_SHORT_NAMES = {
     "speed": "Spe"
 }
 
+
+DEFAULT_FORM_ALIASES = {
+    # Species that require a default form suffix in PokéAPI /pokemon/
+    "deoxys": "deoxys-normal",
+    "wormadam": "wormadam-plant",
+    "giratina": "giratina-altered",
+    "shaymin": "shaymin-land",
+    "basculin": "basculin-red-striped",
+    "darmanitan": "darmanitan-standard",
+    "tornadus": "tornadus-incarnate",
+    "thundurus": "thundurus-incarnate",
+    "landorus": "landorus-incarnate",
+    "keldeo": "keldeo-ordinary",
+    "meloetta": "meloetta-aria",
+    "meowstic": "meowstic-male",
+    "aegislash": "aegislash-shield",
+    "pumpkaboo": "pumpkaboo-average",
+    "gourgeist": "gourgeist-average",
+    "zygarde": "zygarde-50",
+    "oricorio": "oricorio-baile",
+    "lycanroc": "lycanroc-midday",
+    "wishiwashi": "wishiwashi-solo",
+    "minior": "minior-red-meteor",
+    "mimikyu": "mimikyu-disguised",
+    "toxtricity": "toxtricity-amped",
+    "eiscue": "eiscue-ice",
+    "indeedee": "indeedee-male",
+    "morpeko": "morpeko-full-belly",
+    "urshifu": "urshifu-single-strike",
+    "enamorus": "enamorus-incarnate",
+    "ogerpon": "ogerpon-teal-mask",
+    "terapagos": "terapagos-normal",
+    
+    # Special punctuation cases
+    "mr-mime": "mr-mime",
+    "mime-jr": "mime-jr",
+    "mr-rime": "mr-rime",
+    "farfetchd": "farfetchd",
+    "sirfetchd": "sirfetchd",
+    "type-null": "type-null",
+    "flabebe": "flabebe",
+    "nidoran-f": "nidoran-f",
+    "nidoran-m": "nidoran-m",
+
+    # Gender-differentiated default forms
+    "frillish": "frillish-male",
+    "jellicent": "jellicent-male",
+    "unfezant": "unfezant-male",
+    "pyroar": "pyroar-male",
+    "basculegion": "basculegion-male",
+    "oinkologne": "oinkologne-male",
+    "meowstic": "meowstic-male",
+    "indeedee": "indeedee-male",
+    
+
+    # Gen 9 Form Defaults
+    "maushold": "maushold-family-of-four",
+    "squawkabilly": "squawkabilly-green-plumage",
+    "palafin": "palafin-zero",
+    "tatsugiri": "tatsugiri-curly",
+    "dudunsparce": "dudunsparce-two-segment",
+    "gimmighoul": "gimmighoul-chest",
+    "koraidon": "koraidon-apex-build",
+    "miraidon": "miraidon-ultimate-mode",
+
+    # Gen 8 Form Defaults
+    "sinistea": "sinistea-phony",
+    "polteageist": "polteageist-phony",
+    "poltchageist": "poltchageist-counterfeit",
+    "sinistcha": "sinistcha-unremarkable",
+    "morpeko": "morpeko-full-belly",
+    "urshifu": "urshifu-single-strike",
+    "eiscue": "eiscue-ice",
+    "indeedee": "indeedee-male",
+    "basculegion": "basculegion-male",
+    "oinkologne": "oinkologne-male"
+}
