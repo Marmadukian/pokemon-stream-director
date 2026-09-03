@@ -1060,27 +1060,27 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
 
 
 # --- Router Endpoints ---
-# --- Router Endpoints ---
 def handle_dashboard(params):
-    action = params.get("action", [""])[0] if isinstance(params, dict) else ""
+    action = params.get("action", [""])[0] if isinstance(params, dict) and isinstance(params.get("action"), list) else (params.get("action", "") if isinstance(params, dict) else "")
 
-    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
-    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) and isinstance(params.get("task_nav"), list) else (params.get("task_nav", "") if isinstance(params, dict) else "")
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) and isinstance(params.get("set_tasks"), list) else (params.get("set_tasks", "") if isinstance(params, dict) else "")
 
     # --- Action Handling ---
-    handle_common_action(action, params, set_tasks_raw, task_nav)
+    if "handle_common_action" in globals():
+        handle_common_action(action, params, set_tasks_raw, task_nav)
 
     # 2. Extract values for HTML template placeholders:
-    t_state = load_tasks_state()
+    t_state = load_tasks_state() if "load_tasks_state" in globals() else {}
     tasks = t_state.get("tasks", [])
     idx = t_state.get("index", 0)
     total = len(tasks)
 
-    active_task = tasks[idx] if (tasks and 0 <= idx < total) else "None"
-    task_count_str = f"TASK {idx + 1} OF {total}" if total > 0 else "0 TASKS"
+    active_task = tasks[idx] if (tasks and 0 <= idx < total) else "No active task"
+    task_count_str = f"{idx + 1} / {total}" if total > 0 else "0 / 0"
 
     # --- Load Data Collections AFTER Actions Execute ---
-    pkmn_data = all_pkmn_collection if all_pkmn_collection else load_all_pokemon_names()
+    pkmn_data = all_pkmn_collection if "all_pkmn_collection" in globals() and all_pkmn_collection else (load_all_pokemon_names() if "load_all_pokemon_names" in globals() else [])
 
     # Extract just the list of names for JS
     if isinstance(pkmn_data, dict):
@@ -1088,45 +1088,33 @@ def handle_dashboard(params):
     else:
         js_pokemon_array = json.dumps(pkmn_data or [])
 
-    team = load_team()
-    target = load_active_target()
-    active_route = load_active_route()
-    tasks_state = load_tasks_state()
-    counters = load_pokemon_counters()
-    hunt = load_shiny_hunt()
-    ev_state = load_ev_state()
-    state = load_catch_state()
-    deselected_pokemon = load_deselected_pokemon()
+    team = load_team() if "load_team" in globals() else []
+    target = load_active_target() if "load_active_target" in globals() else {}
+    active_route = load_active_route() if "load_active_route" in globals() else {}
+    counters = load_pokemon_counters() if "load_pokemon_counters" in globals() else {}
+    hunt = load_shiny_hunt() if "load_shiny_hunt" in globals() else {}
+    ev_state = load_ev_state() if "load_ev_state" in globals() else {}
+    state = load_catch_state() if "load_catch_state" in globals() else {}
+    deselected_pokemon = load_deselected_pokemon() if "load_deselected_pokemon" in globals() else []
 
-    area_list = load_all_location_areas()
+    area_list = load_all_location_areas() if "load_all_location_areas" in globals() else []
     js_location_array = json.dumps(area_list)
     active_target_json = json.dumps(target if target else {})
 
-    # --- Task Strings ---
-    active_task = (
-        tasks_state["tasks"][tasks_state["index"]]
-        if (tasks_state.get("tasks") and 0 <= tasks_state["index"] < len(tasks_state["tasks"]))
-        else "No active task"
-    )
-    task_count_str = (
-        f"{tasks_state['index'] + 1} / {len(tasks_state['tasks'])}"
-        if tasks_state.get("tasks") else "0 / 0"
-    )
-
     # --- Party Pills ---
     team_pills = (
-            "".join([
-                f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-400">#{i + 1}</span>
-                    <span class="font-semibold text-sm">{m['name']}</span>
-                    {f'<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">Active 6</span>' if i < 6 else ''}
-                </div>
-                <a href="/?action=team_remove&index={i}" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</a>
-            </div>"""
-                for i, m in enumerate(team)
-            ])
-            or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
+        "".join([
+            f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-400">#{i + 1}</span>
+                <span class="font-semibold text-sm">{m.get('name', 'Unknown')}</span>
+                {f'<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">Active 6</span>' if i < 6 else ''}
+            </div>
+            <a href="/?action=team_remove&index={i}" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</a>
+        </div>"""
+            for i, m in enumerate(team)
+        ])
+        or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
     )
 
     # --- Shiny Hunting Card ---
@@ -1156,19 +1144,19 @@ def handle_dashboard(params):
     </div>
     """
 
-    # Generate EV Card using the freshly modified EV State
-    ev_card_html = generate_ev_widget(ev_state, target, is_remote=False)
+    # Generate EV Card
+    ev_card_html = generate_ev_widget(ev_state, target, is_remote=False) if "generate_ev_widget" in globals() else ""
 
     # --- Catch Targets Pills ---
     counter_pills = (
-            "".join([
-                f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
-            <span class="font-bold text-slate-200 text-sm">{name}</span>
-            <span class="bg-indigo-600 text-white font-mono px-2.5 py-0.5 rounded-full text-xs font-bold">{count}</span>
-        </a>"""
-                for name, count in counters.items()
-            ])
-            or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
+        "".join([
+            f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
+                <span class="font-bold text-slate-200 text-sm">{name}</span>
+                <span class="bg-indigo-600 text-white font-mono px-2.5 py-0.5 rounded-full text-xs font-bold">{count}</span>
+            </a>"""
+            for name, count in counters.items()
+        ])
+        or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
     )
 
     active_gen_slug = target.get("selected_gen", "generation-ix") if target else "generation-ix"
@@ -1176,14 +1164,16 @@ def handle_dashboard(params):
     past_target_evs = target.get("past_ev_yields", {}) if target else {}
     target_slug = target.get("name", "").lower().strip() if target else ""
 
-    resolved_target_evs = resolve_ev_yield_for_version(
-        target_slug,
-        modern_target_evs,
-        past_target_evs,
-        active_gen_slug
-    )
+    if "resolve_ev_yield_for_version" in globals():
+        resolved_target_evs = resolve_ev_yield_for_version(
+            target_slug,
+            modern_target_evs,
+            past_target_evs,
+            active_gen_slug
+        )
+    else:
+        resolved_target_evs = modern_target_evs
 
-    # 2. Format short clean labels (e.g., "1 Sp. Atk", "2 Speed")
     STAT_DISPLAY_MAP = {
         "hp": "HP",
         "attack": "Atk",
@@ -1214,17 +1204,16 @@ def handle_dashboard(params):
 
         moves_list = "".join([
             f"""<div class="target-move-row flex justify-between text-xs py-1 border-b border-slate-700/40" data-vg="{m.get('vg', 'all')}" data-move="{m.get('move', '')}">
-            <span class="text-slate-300">{m['move']} <span class="text-[10px] text-slate-500">({m.get('vg', '')})</span></span>
-            <span class="font-mono text-amber-400 font-bold">Lv. {m['level']}</span>
-        </div>"""
+                <span class="text-slate-300">{m['move']} <span class="text-[10px] text-slate-500">({m.get('vg', '')})</span></span>
+                <span class="font-mono text-amber-400 font-bold">Lv. {m['level']}</span>
+            </div>"""
             for m in target.get("level_moves", [])
         ])
 
-        # --- Selected Version Encounters for Target Pokémon (Server-Side Dedup) ---
+        # Selected Version Encounters
         target_selected_version = str(target.get("selected_gen") or "yellow").lower().strip()
         all_target_encounters = target.get("encounters", {})
 
-        # 1. Collect encounters matching direct version or sub-versions (e.g. 'red-blue' -> 'red', 'blue')
         raw_version_encounters = []
         if target_selected_version == "modern":
             for v_list in all_target_encounters.values():
@@ -1239,7 +1228,6 @@ def handle_dashboard(params):
                 if sub_v in all_target_encounters:
                     raw_version_encounters.extend(all_target_encounters[sub_v])
 
-        # 2. Deduplicate identical spawns (same location, levels, methods)
         dedup_encounters = {}
         for enc in raw_version_encounters:
             loc = enc.get("location", "Unknown Area")
@@ -1251,7 +1239,6 @@ def handle_dashboard(params):
             if dedup_key not in dedup_encounters:
                 dedup_encounters[dedup_key] = dict(enc)
             else:
-                # Keep highest encounter chance across paired versions
                 if enc.get("chance", 0) > dedup_encounters[dedup_key].get("chance", 0):
                     dedup_encounters[dedup_key]["chance"] = enc.get("chance", 0)
 
@@ -1268,17 +1255,17 @@ def handle_dashboard(params):
                 chance_badge = f'<span class="text-[10px] font-mono font-bold text-emerald-400">{chance_val}%</span>' if chance_val > 0 else ""
 
                 enc_rows.append(f"""
-                        <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 text-xs">
-                            <div>
-                                <div class="font-bold text-slate-200">{enc.get('location', 'Unknown Area')}</div>
-                                <div class="text-[10px] text-slate-400">{methods_str}</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-mono text-amber-400 font-semibold">{lvl_str}</div>
-                                {chance_badge}
-                            </div>
+                    <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 text-xs">
+                        <div>
+                            <div class="font-bold text-slate-200">{enc.get('location', 'Unknown Area')}</div>
+                            <div class="text-[10px] text-slate-400">{methods_str}</div>
                         </div>
-                        """)
+                        <div class="text-right">
+                            <div class="font-mono text-amber-400 font-semibold">{lvl_str}</div>
+                            {chance_badge}
+                        </div>
+                    </div>
+                """)
             target_encounters_html = "".join(enc_rows)
         else:
             target_encounters_html = f'<div class="text-slate-500 text-xs italic p-2">No wild encounters listed for version "{target_selected_version}".</div>'
@@ -1547,13 +1534,9 @@ def handle_dashboard(params):
                 chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
                 p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
 
-                # Evolution data attribute for JS filtering
-                # Evolution data attribute for JS filtering
                 evos_data = data.get("evolutions", [])
                 if not evos_data:
-                    cache_dir = getattr(handlers, "TARGET_CACHE_DIR",
-                                        "target_cache") if "handlers" in globals() else "target_cache"
-                    # Try species slug or resolved endpoint slug
+                    cache_dir = getattr(handlers, "TARGET_CACHE_DIR", "target_cache") if "handlers" in globals() else "target_cache"
                     slug_candidates = [p_slug]
                     if "handlers" in globals() and hasattr(handlers, "resolve_pokemon_endpoint_slug"):
                         slug_candidates.append(handlers.resolve_pokemon_endpoint_slug(p_slug))
@@ -1570,16 +1553,13 @@ def handle_dashboard(params):
                             except Exception:
                                 pass
 
-                # Fallback to in-memory collection if disk file didn't have it
                 if not evos_data:
-                    all_pk = getattr(handlers, "all_pkmn_collection", {}) if "handlers" in globals() else globals().get(
-                        "all_pkmn_collection", {})
+                    all_pk = getattr(handlers, "all_pkmn_collection", {}) if "handlers" in globals() else globals().get("all_pkmn_collection", {})
                     if isinstance(all_pk, dict) and p_slug in all_pk:
                         evos_data = all_pk[p_slug].get("evolutions", [])
 
                 evos_json_attr = json.dumps(evos_data).replace('"', '&quot;')
 
-                # Safely evaluate EV button
                 ev_btn_html = ""
                 try:
                     evs = data.get("ev_yield")
@@ -1623,11 +1603,11 @@ def handle_dashboard(params):
                                 <a href="/?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
                                 {ev_btn_html}
                                 <a href="/?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                                <a href="/?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                                <a href="/?action=inc_counter&name={quote_plus(p_name) if 'quote_plus' in globals() else p_name}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
                             </div>
                         </div>
                     </div>
-                    """)
+                """)
 
             game_sections.append(f"""
             <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
@@ -1645,7 +1625,6 @@ def handle_dashboard(params):
 
         route_view = f"""
         <div class="space-y-3">
-            <!-- Runner Tools Dropdown Container -->
             <div class="mb-1">
                 {tools_dropdown_html}
             </div>
@@ -1656,7 +1635,6 @@ def handle_dashboard(params):
                 <div class="text-xs text-slate-400 mt-0.5">{active_route['total_species']} total species across all versions</div>
             </div>
 
-            <!-- Track All Route Pokemon Button -->
             <button 
                 onclick="trackAllRoutePokemon(event)" 
                 class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-emerald-200 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
@@ -1666,7 +1644,6 @@ def handle_dashboard(params):
 
             <div class="ev-warning">⚠️ Warning: On route list, only modern EVs are used</div>
 
-            <!-- Game Version Selector Row -->
             <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
                 <span class="font-bold text-slate-400 uppercase text-[10px] tracking-wider whitespace-nowrap">Filter Game:</span>
                 <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-bold rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-400">
@@ -1692,29 +1669,36 @@ def handle_dashboard(params):
         const pokemonNames = {js_pokemon_array};
         const locationAreas = {js_location_array};
 
-        {SHARED_POKEMON_JS}
+        {SHARED_POKEMON_JS if "SHARED_POKEMON_JS" in globals() else ""}
 
         window.addEventListener('DOMContentLoaded', () => {{
-            updateTargetGenView();
+            if (typeof updateTargetGenView === 'function') updateTargetGenView();
             if (typeof calcExpGap === 'function') calcExpGap();
+            initDashboardSectionToggles();
         }});
     </script>
     <style>
-         .ev-warning {{
-  font-family: monospace;
-  font-size: 11px;
-  color: #fbbf24; /* soft amber warning */
-  background: rgba(0, 0, 0, 0.6);
-  padding: 4px 8px;
-  border-radius: 4px;
-  border-left: 3px solid #f59e0b;
-  display: block;
-}}
-</style>
+        .ev-warning {{
+            font-family: monospace;
+            font-size: 11px;
+            color: #fbbf24;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border-left: 3px solid #f59e0b;
+            display: block;
+        }}
+        .dash-toggle-btn-off {{
+            opacity: 0.35 !important;
+            border-color: #334155 !important;
+            color: #64748b !important;
+            background: #0f172a !important;
+        }}
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
-    <!-- Header with Dual Search -->
-    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-3">
+    <!-- Header with Dual Search and Section Toggles -->
+    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-3 space-y-2.5">
         <div class="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="relative">
                 <input id="search-input" oninput="filterPokemon()" onkeyup="filterPokemon()" type="text" placeholder="Search Pokémon (e.g. gengar, lucario)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400" autocomplete="off" />
@@ -1725,13 +1709,27 @@ def handle_dashboard(params):
                 <div id="location-results" style="display: none;" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto z-50"></div>
             </div>
         </div>
+
+        <!-- Section Toggles Toolbar -->
+        <div class="max-w-[1600px] mx-auto flex items-center gap-1.5 overflow-x-auto text-[11px] font-bold pt-0.5 whitespace-nowrap min-w-max">
+            <span class="text-[10px] uppercase font-bold text-slate-400 mr-1 tracking-wider">Toggles:</span>
+            <button id="btn-sec-target" onclick="toggleDashSec('sec-target')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-amber-400 transition hover:bg-slate-700">Target Pokemon View</button>
+            <button id="btn-sec-route" onclick="toggleDashSec('sec-route')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 transition hover:bg-slate-700">Route</button>
+            <button id="btn-sec-counters" onclick="toggleDashSec('sec-counters')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-indigo-400 transition hover:bg-slate-700">Hunt List</button>
+            <button id="btn-sec-shiny" onclick="toggleDashSec('sec-shiny')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-amber-300 transition hover:bg-slate-700">Shiny</button>
+            <button id="btn-sec-ev" onclick="toggleDashSec('sec-ev')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-rose-400 transition hover:bg-slate-700">EVs</button>
+            <button id="btn-sec-party" onclick="toggleDashSec('sec-party')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-purple-400 transition hover:bg-slate-700">Party</button>
+            <button id="btn-sec-walkthrough" onclick="toggleDashSec('sec-walkthrough')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-teal-400 transition hover:bg-slate-700">Walkthrough</button>
+            <button id="btn-sec-tasks" onclick="toggleDashSec('sec-tasks')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-sky-400 transition hover:bg-slate-700">Tasks</button>
+            <button id="btn-sec-note" onclick="toggleDashSec('sec-note')" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 transition hover:bg-slate-700">Note</button>
+        </div>
     </header>
 
     <!-- 3-Column Responsive Grid -->
     <main class="max-w-[1600px] mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         <!-- Col 1: Active Target Pokémon (4 Cols) -->
-        <section class="lg:col-span-4 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <section id="sec-target" class="lg:col-span-4 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
             <h2 class="text-sm font-black text-white uppercase tracking-wider mb-3 flex items-center justify-between">
                 <span>Active Target Scanner</span>
                 <span class="text-[10px] font-mono text-slate-400">OBS Linked</span>
@@ -1740,7 +1738,7 @@ def handle_dashboard(params):
         </section>
 
         <!-- Col 2: Route Encounters Table (4 Cols) -->
-        <section class="lg:col-span-4 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <section id="sec-route" class="lg:col-span-4 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
             <h2 class="text-sm font-black text-white uppercase tracking-wider mb-3 flex items-center justify-between">
                 <span>Route Encounters</span>
                 <span class="text-[10px] font-mono text-emerald-400">Wild Spawns</span>
@@ -1751,9 +1749,8 @@ def handle_dashboard(params):
         <!-- Col 3: Stream Management, Queue, & Counters (4 Cols) -->
         <section class="lg:col-span-4 space-y-4">
 
-
             <!-- Catch Target Quick Taps -->
-            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div id="sec-counters" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
                 <h3 class="text-xs uppercase font-bold text-slate-300 mb-2">Catch Targets (-1)</h3>
                 <div class="space-y-1.5 mb-3 max-h-80 overflow-y-auto">
                     {counter_pills}
@@ -1765,11 +1762,18 @@ def handle_dashboard(params):
                 </form>
             </div>
 
-            {shiny_card}
-            {ev_card_html}
+            <!-- Shiny Hunt -->
+            <div id="sec-shiny">
+                {shiny_card}
+            </div>
+
+            <!-- EV Card -->
+            <div id="sec-ev">
+                {ev_card_html}
+            </div>
 
             <!-- Party Queue -->
-            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div id="sec-party" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-xs uppercase font-bold text-slate-300">Party Queue ({len(team)})</h3>
                     <a href="/obs/team" target="_blank" class="text-[11px] text-indigo-400 hover:underline">OBS View ↗</a>
@@ -1779,66 +1783,64 @@ def handle_dashboard(params):
                 </div>
             </div>
 
-        <!-- Bulbapedia Walkthrough Task Loader -->
-<div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3 mb-3">
-    <div class="flex justify-between items-center">
-        <span class="text-[10px] uppercase font-bold text-slate-400">Bulbapedia Walkthrough</span>
-        <span class="text-[10px] font-mono text-indigo-400 font-bold">TASK LOADER</span>
-    </div>
+            <!-- Bulbapedia Walkthrough Task Loader -->
+            <div id="sec-walkthrough" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Bulbapedia Walkthrough</span>
+                    <span class="text-[10px] font-mono text-indigo-400 font-bold">TASK LOADER</span>
+                </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <!-- 1. Game Selection Dropdown -->
-        <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">1. Select Game:</label>
-            <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-500">
-                <option value="">-- Choose Game --</option>
-                <option value="red-blue">Red / Blue</option>
-                <option value="yellow">Yellow</option>
-                <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
-                <option value="ruby-sapphire">Ruby / Sapphire</option>
-                <option value="emerald">Emerald</option>
-                <option value="firered-leafgreen">FireRed / LeafGreen</option>
-                <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
-                <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
-                <option value="black-white">Black / White</option>
-                <option value="black-2-white-2">Black 2 / White 2</option>
-                <option value="x-y">X / Y</option>
-                <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
-                <option value="sun-moon">Sun / Moon</option>
-                <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
-            </select>
-        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">1. Select Game:</label>
+                        <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-500">
+                            <option value="">-- Choose Game --</option>
+                            <option value="red-blue">Red / Blue</option>
+                            <option value="yellow">Yellow</option>
+                            <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
+                            <option value="ruby-sapphire">Ruby / Sapphire</option>
+                            <option value="emerald">Emerald</option>
+                            <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                            <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
+                            <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                            <option value="black-white">Black / White</option>
+                            <option value="black-2-white-2">Black 2 / White 2</option>
+                            <option value="x-y">X / Y</option>
+                            <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
+                            <option value="sun-moon">Sun / Moon</option>
+                            <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
+                        </select>
+                    </div>
 
-        <!-- 2. Chapter / Part Dropdown -->
-        <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">2. Select Chapter / Part:</label>
-            <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-500 disabled:opacity-40">
-                <option value="">-- Select Game First --</option>
-            </select>
-        </div>
-    </div>
-</div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">2. Select Chapter / Part:</label>
+                        <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full bg-slate-950/80 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+                            <option value="">-- Select Game First --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-<!-- Task Queue Manager -->
-<div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
-    <div class="flex justify-between items-center mb-1">
-        <span id="task-progress-display" class="text-[10px] uppercase font-bold text-slate-400">{task_count_str}</span>
-        <span class="text-[10px] font-mono text-emerald-400 font-bold">CURRENT TASK</span>
-    </div>
-    <div id="task-name-display" class="text-sm font-bold text-white mb-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">{active_task}</div>
-    <div class="flex gap-2 mb-3">
-        <button type="button" onclick="navigateTask('prev')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-center text-xs font-bold rounded-lg transition active:scale-95 text-slate-200">◀ Prev</button>
-        <button type="button" onclick="navigateTask('next')" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-center text-xs font-bold rounded-lg transition active:scale-95 text-white">Next ▶</button>
-    </div>
-    <form action="/" method="GET" class="space-y-1.5">
-        <input type="hidden" name="action" value="set_tasks" />
-        <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
-        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Update Tasks</button>
-    </form>
-</div>
+            <!-- Task Queue Manager -->
+            <div id="sec-tasks" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="task-progress-display" class="text-[10px] uppercase font-bold text-slate-400">{task_count_str}</span>
+                    <span class="text-[10px] font-mono text-emerald-400 font-bold">CURRENT TASK</span>
+                </div>
+                <div id="task-name-display" class="text-sm font-bold text-white mb-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">{active_task}</div>
+                <div class="flex gap-2 mb-3">
+                    <button type="button" onclick="navigateTask('prev')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-center text-xs font-bold rounded-lg transition active:scale-95 text-slate-200">◀ Prev</button>
+                    <button type="button" onclick="navigateTask('next')" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-center text-xs font-bold rounded-lg transition active:scale-95 text-white">Next ▶</button>
+                </div>
+                <form action="/" method="GET" class="space-y-1.5">
+                    <input type="hidden" name="action" value="set_tasks" />
+                    <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white" />
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Update Tasks</button>
+                </form>
+            </div>
 
             <!-- Video Message -->
-            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div id="sec-note" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
                 <h3 class="text-xs uppercase font-bold text-slate-300 mb-2">Video Message Note</h3>
                 <form action="/videomessage" method="GET" class="space-y-1.5">
                     <textarea name="notes" placeholder="Update video note..." class="w-full bg-slate-800 text-xs border border-slate-700 rounded-lg p-2 text-white h-16"></textarea>
@@ -1848,6 +1850,39 @@ def handle_dashboard(params):
 
         </section>
     </main>
+
+    <!-- Client-side Dashboard Section Toggle Logic -->
+    <script>
+        const dashSections = [
+            'sec-target', 'sec-route', 'sec-counters', 'sec-shiny',
+            'sec-ev', 'sec-party', 'sec-walkthrough', 'sec-tasks', 'sec-note'
+        ];
+
+        function applyDashSecDisplay(secId, visible) {{
+            const el = document.getElementById(secId);
+            const btn = document.getElementById('btn-' + secId);
+            if (el) el.style.display = visible ? '' : 'none';
+            if (btn) {{
+                if (visible) btn.classList.remove('dash-toggle-btn-off');
+                else btn.classList.add('dash-toggle-btn-off');
+            }}
+        }}
+
+        function toggleDashSec(secId) {{
+            const current = localStorage.getItem('dashboard_show_' + secId) !== 'false';
+            const next = !current;
+            localStorage.setItem('dashboard_show_' + secId, next);
+            applyDashSecDisplay(secId, next);
+        }}
+
+        function initDashboardSectionToggles() {{
+            dashSections.forEach(secId => {{
+                const saved = localStorage.getItem('dashboard_show_' + secId);
+                const isVisible = saved !== 'false';
+                applyDashSecDisplay(secId, isVisible);
+            }});
+        }}
+    </script>
 </body>
 </html>"""
     return html, ("Content-Type", "text/html")
@@ -2496,9 +2531,9 @@ def handle_pokemon_remote(params=None):
     <!-- Sticky Section Toggles Bar -->
     <div class="sticky top-[108px] z-30 bg-slate-950/95 backdrop-blur border-b border-slate-800/80 px-3 py-2 overflow-x-auto">
         <div class="flex items-center gap-2 text-xs font-black whitespace-nowrap min-w-max">
-            <button id="btn-sec-target" onclick="toggleSec('sec-target')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-amber-400 transition flex items-center">Scanner</button>
+            <button id="btn-sec-target" onclick="toggleSec('sec-target')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-amber-400 transition flex items-center">Target Pokemon View</button>
             <button id="btn-sec-route" onclick="toggleSec('sec-route')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400 transition flex items-center">Route</button>
-            <button id="btn-sec-counters" onclick="toggleSec('sec-counters')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 transition flex items-center">Counters</button>
+            <button id="btn-sec-counters" onclick="toggleSec('sec-counters')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 transition flex items-center">Hunt List</button>
             <button id="btn-sec-shiny" onclick="toggleSec('sec-shiny')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-amber-300 transition flex items-center">Shiny</button>
             <button id="btn-sec-ev" onclick="toggleSec('sec-ev')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-rose-400 transition flex items-center">EVs</button>
             <button id="btn-sec-party" onclick="toggleSec('sec-party')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-purple-400 transition flex items-center">Party</button>
