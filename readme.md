@@ -1,54 +1,96 @@
 # Pokémon Stream Director & Remote Hub
 
-Built to remove friction when doing pokemon streams and allow me to EASILY display a pokemon core stats. I am not a front end developer and kind of hate html, so I used AI to write the vast majority of the front end, I just hand tweaked some stuff to fit better.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight, self-hosted dashboard for Pokémon streamers and challenge runners. 
-	built with standard Python and PokéAPI (`pokebase`), 
-	it lets you inspect Pokémon stats/weaknesses on the fly, 
-	manage your live party, track task queues, track shinies seen
-	and control catch counters right from your phone.
+Built to remove friction during Pokémon streams and challenge runs. I'm not a front-end dev and mostly hate writing HTML, so AI wrote the majority of the UI and I hand-tweaked it to fit my stream workflow.
 
-Includes ready-to-use browser source overlays for showing a target pokemon, the list youre aiming to catch, or hell whatever task youre working on. 
+A lightweight, self-hosted dashboard built with Python and PokéAPI (`pokebase`). Inspect Pokémon base stats, historical generation data, and wild encounter rates on the fly; manage your live party; run shiny counters; and tap through stream tasks right from your phone.
+
+Includes transparent OBS browser sources for active Pokémon targets, current routes, and party rosters.
 
 ---
 
 ## Features
 
-* **Quick Scanner:** Fuzzy search any Pokémon to pull live base stats, BST, type weaknesses, catch rates, evolutions, and level-up / TM movepools.
-* **OBS Browser Overlays:** Dedicated transparent overlays for your active inspected Pokémon and current 6-member party.
-* **Mobile Remote (`/remote`):** Tap-to-decrement catch counters, and tap-to=increment shiny counters, and navigate your stream task queue from your phone.
-* **Persistent Local Files:** Saves party rosters, catch targets, video messages, and tasks directly to simple local files (`.txt` and `.json`).
+* **Live Target Scanner:** Inspect base stats, BST, type matchups, historical past-gen mechanics, catch odds, and level-up/TM movepools.
+* **Wild Encounter Tables:** Route search with deduplicated wild encounter rates, methods, and levels mapped per game version.
+* **OBS Browser Overlays:** Dedicated transparent overlays (`/obs/target_overlay`, `/obs/team`, `/obs/shiny`) with auto-refresh and version sync.
+* **Mobile Remote (`/remote`):** Touch-friendly dashboard scaled for phones. Increment shiny encounters, decrement catch targets, track EV yields, and step through tasks with one-handed controls.
+* **Modular UI Toggles:** Show or hide any card/section on the dashboard and remote independently (states save automatically to local storage).
+* **Flat File Persistence:** Saves party rosters, catch targets, video notes, and task queues to simple local `.txt` and `.json` files.
 
 ---
 
 ## Requirements
 
 * Python 3.10+
-* pokebase
-* The ability to troubleshoot
+* `pokebase`
+* Basic ability to read terminal output and troubleshoot your local network
 
 ---
 
 ## Installation & Setup
 
-1. Clone or download this repo:
-	```
-	git clone https://github.com/marmadukian/pokemon-stream-director.git
-	cd pokemon-stream-director
-	```
+1. Clone the repository:
+
+       git clone https://github.com/marmadukian/pokemon-stream-director.git
+       cd pokemon-stream-director
 
 2. Install dependencies:
-	pip install pokebase
+
+       pip install pokebase
 
 3. Run the server:
-	python pkmn_server.py
 
-4. READ THE ENDPOINTS PRINTED:
-	I assume that you are technically adept enough to parse a url. 
+       python pkmn_server.py
 
-5. Let it run for 15-30 minutes to pre-cache the pokedex.
-	- On the initial launch, the dashboard starts a low-priority background worker to prefetch and cache National Dex data locally (~15–30 minutes). The dashboard is fully functional immediately; subsequent launches and route loads will be near-instant once the cache is populated.
+4. Note the local IP printed in your terminal:
+   The server will print the active host and port (default 1350). Access the UI from any device on your local network:
+   * **Dashboard:** `http://<YOUR-PC-IP>:1350/`
+   * **Mobile Remote:** `http://<YOUR-PC-IP>:1350/remote`
+   * **OBS Target Overlay:** `http://localhost:1350/obs/target_overlay`
+   * **OBS Team Overlay:** `http://localhost:1350/obs/team`
+   * **OBS Shiny Overlay:** `http://localhost:1350/obs/shiny`
 
-4. Use the provided ip address on your phone's browser, your pc browser, or into a browser source in obs:
-	http://[The compter's IP address]:1350
-	
+5. Initial Cache Build:
+   On initial launch, a low-priority background worker prefetches and caches National Dex and encounter data locally (~15–30 minutes). The dashboard is functional immediately; subsequent launches and route lookups load near-instantly from disk once cached.
+
+---
+
+## Automation & Stream Deck API
+
+All actions can be triggered via either **GET** or **POST** requests to the base dashboard (`http://<YOUR-PC-IP>:1350/`). The IP is printed on server startup 
+
+For GET requests, append parameters to the query string. For POST requests, send them as either URL-encoded form data (`action=...`) or a JSON payload (`{"action": "..."}`). If you trigger an action externally (like via Stream Deck or curl), refresh the dashboard window to reflect the updated state.
+
+### Shiny Hunting
+* `/?action=shiny_inc` - Increment count (+1)
+* `/?action=shiny_dec` - Decrement count (-1)
+* `/?action=shiny_reset` - Reset count to 0
+* `/?action=set_shiny_target&name=Rayquaza&method=Soft+Resets` - Set hunting target & method
+
+### Task Queue Management
+* `/?action=task_nav&step=next` - Advance to next task
+* `/?action=task_nav&step=prev` - Step back to previous task
+* `/?action=set_tasks&tasks=Beat+Brock,Get+Running+Shoes,Clear+Mt+Moon` - Overwrite entire task list
+
+### Party Management
+* `/?action=team_add&name=charizard` - Add Pokémon to party
+* `/?action=team_remove&index=0` - Remove Pokémon from party by 0-based index (0-5)
+
+### Catch Counters
+* `/?action=inc_counter&name=Pidgey` - Increment catch target (+1)
+* `/?action=dec_counter&name=Pidgey` - Decrement catch target (-1, auto-removes at 0)
+* `/?action=add_counters&counter_list=Caterpie+3,Rattata+2` - Add amounts to multiple targets
+* `/?action=set_counters&counter_list=Abra+1,Gastly+2` - Overwrite entire catch targets list
+
+### EV Training Tracker
+* `/?action=ev_add_target` - Add active target Pokémon's EV yield to current tally
+* `/?action=ev_adjust&stat=speed&amt=2` - Adjust specific EV stat (stats: hp, attack, defense, special-attack, special-defense, speed; negative values allowed)
+* `/?action=ev_reset` - Reset all EV stats to 0
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

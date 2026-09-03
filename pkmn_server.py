@@ -103,16 +103,19 @@ def start_ev_cache_worker():
 
 
 class UnifiedTrackerHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        parsed_path = urllib.parse.urlparse(self.path)
-        path = parsed_path.path
-        query_params = urllib.parse.parse_qs(parsed_path.query)
-
+    def _dispatch_route(self, path, params):
         if path in handlers.ROUTES:
             handler = handlers.ROUTES[path]
-            result = handler(query_params)
+            # Handlers expect (params, self) or (params)
+            try:
+                result = handler(params, self)
+            except TypeError:
+                result = handler(params)
 
-            # Unpack tuple if handler explicitly provided a header
+            # Check if the handler already handled headers/writing (e.g. sync_catch)
+            if self.wfile.closed:
+                return
+
             if isinstance(result, tuple):
                 body_text, (header_name, header_value) = result
             else:
@@ -122,13 +125,47 @@ class UnifiedTrackerHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header(header_name, header_value)
             self.end_headers()
-
-            # Always encode body_text (which is strictly a string now)
             self.wfile.write(body_text.encode("utf-8"))
         else:
             self.send_response(404)
             self.end_headers()
             self.wfile.write(b"404 Not Found")
+
+    def do_GET(self):
+        parsed_path = urllib.parse.urlparse(self.path)
+        path = parsed_path.path
+        query_params = urllib.parse.parse_qs(parsed_path.query)
+        self._dispatch_route(path, query_params)
+
+    def do_POST(self):
+        parsed_path = urllib.parse.urlparse(self.path)
+        path = parsed_path.path
+
+        # Start with URL query params if any were attached to the POST
+        params = urllib.parse.parse_qs(parsed_path.query)
+
+        # Read POST body content
+        content_length = int(self.headers.get("Content-Length", 0))
+        if content_length > 0:
+            body_bytes = self.rfile.read(content_length)
+            content_type = self.headers.get("Content-Type", "").lower()
+
+            # Handle JSON body (e.g., {"action": "shiny_inc"})
+            if "application/json" in content_type:
+                try:
+                    json_data = json.loads(body_bytes.decode("utf-8"))
+                    for k, v in json_data.items():
+                        # Wrap values in lists to preserve compatibility with parse_qs dictionary shapes
+                        params[k] = [str(v)] if not isinstance(v, list) else [str(i) for i in v]
+                except Exception:
+                    pass
+            else:
+                # Handle form-urlencoded body (action=shiny_inc)
+                form_params = urllib.parse.parse_qs(body_bytes.decode("utf-8"))
+                for k, v in form_params.items():
+                    params[k] = v
+
+        self._dispatch_route(path, params)
 
 if __name__ == "__main__":
     handlers.init()
