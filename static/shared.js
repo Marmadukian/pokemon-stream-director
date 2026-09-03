@@ -246,36 +246,91 @@ function onPokemonCheckboxChange(checkbox) {
 function trackAllRoutePokemon(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const names = new Set();
-    
-    // 1. Find the currently active/visible container or tab
-    // Adjust selector to match your active tab class (e.g. .active-tab, #route-view, or visible container)
+    // Map: baseName (TitleCase) -> Set of ONLY what it evolves INTO (strictly downstream targets)
+    const candidates = new Map();
     const activeContainer = document.querySelector('.tab-pane.active, .route-version-active, #active-route-content') || document;
 
-    // 2. Select ONLY visible, checked checkboxes
-    const checkedBoxes = activeContainer.querySelectorAll('.route-poke-checkbox:checked');
+    function registerCandidate(el) {
+        if (el.offsetParent === null) return;
 
-    if (checkedBoxes.length > 0) {
-        checkedBoxes.forEach(cb => {
-            // Ensure the element or its parent is actually visible (not display: none)
-            if (cb.offsetParent !== null) {
-                const name = cb.getAttribute('data-poke-name');
-                if (name) names.add(name);
+        const rawName = el.getAttribute('data-poke-name') || el.innerText.trim();
+        if (!rawName) return;
+
+        const cleanName = rawName.split('(')[0].trim();
+        if (!cleanName || candidates.has(cleanName)) return;
+
+        const card = el.closest('[data-evolutions], .pokemon-card, .route-row') || el;
+        const rawEvoAttr = card.getAttribute('data-evolutions') || '[]';
+
+        const downstreamEvos = new Set();
+        try {
+            const parsed = JSON.parse(rawEvoAttr);
+            if (Array.isArray(parsed)) {
+                // If it's a linear chain like ["Ekans", "Arbok (Lv. 22)"]
+                // Find where the current pokemon sits in the chain
+                const selfIndex = parsed.findIndex(item => {
+                    const itemName = (item.includes('➔') ? item.split('➔')[0] : item).split('(')[0].trim().toLowerCase();
+                    return itemName === cleanName.toLowerCase();
+                });
+
+                parsed.forEach((item, idx) => {
+                    // Extract the target species name
+                    const targetPart = item.includes('➔') ? item.split('➔').pop() : item;
+                    const evoClean = targetPart.split('(')[0].trim().toLowerCase();
+
+                    // Only count as downstream if it's strictly AFTER self, or has an explicit trigger/arrow
+                    if (selfIndex !== -1) {
+                        if (idx > selfIndex && evoClean !== cleanName.toLowerCase()) {
+                            downstreamEvos.add(evoClean);
+                        }
+                    } else {
+                        // Fallback: don't include self
+                        if (evoClean && evoClean !== cleanName.toLowerCase()) {
+                            downstreamEvos.add(evoClean);
+                        }
+                    }
+                });
             }
-        });
-    } else {
-        // Fallback: grab only VISIBLE .poke-name elements
-        activeContainer.querySelectorAll('.poke-name, [data-poke-name]').forEach(el => {
-            if (el.offsetParent !== null) {
-                const name = el.getAttribute('data-poke-name') || el.innerText.trim();
-                if (name) names.add(name);
-            }
-        });
+        } catch (err) {
+            console.warn(`Could not parse evolutions for ${cleanName}:`, rawEvoAttr);
+        }
+
+        candidates.set(cleanName, downstreamEvos);
     }
 
-    if (names.size === 0) return;
+    // 1. Gather all candidates
+    const checkedBoxes = activeContainer.querySelectorAll('.route-poke-checkbox:checked');
+    if (checkedBoxes.length > 0) {
+        checkedBoxes.forEach(cb => registerCandidate(cb));
+    } else {
+        activeContainer.querySelectorAll('.poke-name, [data-poke-name]').forEach(el => registerCandidate(el));
+    }
 
-    const formattedList = Array.from(names).join(',');
+    if (candidates.size === 0) return;
+
+    // 2. Collect ALL evolved forms that are descendants of candidate base forms
+    const evolvedTargets = new Set();
+    candidates.forEach((downstreamSet) => {
+        downstreamSet.forEach(evo => evolvedTargets.add(evo));
+    });
+
+    // 3. Keep candidates unless they are a known descendant of an earlier stage present
+    const finalNames = [];
+    const skippedNames = [];
+    candidates.forEach((_, name) => {
+        if (evolvedTargets.has(name.toLowerCase())) {
+            skippedNames.push(name);
+        } else {
+            finalNames.push(name);
+        }
+    });
+
+    console.log("[TRACK ROUTE] Final Keep:", finalNames);
+    console.log("[TRACK ROUTE] Skipped Evolved Stages:", skippedNames);
+
+    if (finalNames.length === 0) return;
+
+    const formattedList = finalNames.join(',');
     const listParam = encodeURIComponent(formattedList);
     const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
 
@@ -287,7 +342,6 @@ function trackAllRoutePokemon(e) {
         })
         .catch(err => console.error("Error adding checked counters:", err));
 }
-
 
 // 1. Update UI Elements In-Place
 function updateTaskCardUI(progress, name) {
@@ -886,12 +940,14 @@ function updateTargetGenView() {
 
     const select = document.getElementById('target-gen-select');
     const chosenGame = select ? select.value : 'modern';
-    const chosenGen = vgToGenMap[chosenGame] || 'gen-modern';
+    const chosenGen = (typeof vgToGenMap !== 'undefined' && vgToGenMap[chosenGame]) ? vgToGenMap[chosenGame] : 'gen-modern';
     const targetId = activeTargetData.id;
 
     // A. Update Sprite
     const img = document.getElementById('target-sprite-img');
-    if (img) img.src = getSpriteForGen(targetId, chosenGen);
+    if (img && typeof getSpriteForGen === 'function') {
+        img.src = getSpriteForGen(targetId, chosenGen);
+    }
 
     // B. Resolve Active Types
     let activeTypes = [...(activeTargetData.types || [])];
@@ -904,7 +960,7 @@ function updateTargetGenView() {
 
     const typeContainer = document.getElementById('target-type-badges');
     if (typeContainer) {
-        typeContainer.innerHTML = activeTypes.map(t => 
+        typeContainer.innerHTML = activeTypes.map(t =>
             `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">${t}</span>`
         ).join('');
     }
@@ -922,7 +978,7 @@ function updateTargetGenView() {
             resistances[k.charAt(0).toUpperCase() + k.slice(1).toLowerCase()] = v;
         });
         immunities = (activeTargetData.immunities || []).map(t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase());
-    } else {
+    } else if (typeof calculateHistoricalMatchups === 'function') {
         const mults = calculateHistoricalMatchups(activeTypes, chosenGen);
         Object.entries(mults).forEach(([k, v]) => {
             const title = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
@@ -937,21 +993,21 @@ function updateTargetGenView() {
     const immEl = document.getElementById('target-immunity-tags');
 
     if (weakEl) {
-        const tags = Object.entries(weaknesses).map(([k, v]) => 
+        const tags = Object.entries(weaknesses).map(([k, v]) =>
             `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">${k} ${v}x</span>`
         ).join('');
         weakEl.innerHTML = tags || '<span class="text-xs text-slate-500 italic">None</span>';
     }
 
     if (resEl) {
-        const tags = Object.entries(resistances).map(([k, v]) => 
+        const tags = Object.entries(resistances).map(([k, v]) =>
             `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${k} ${v}x</span>`
         ).join('');
         resEl.innerHTML = tags || '<span class="text-xs text-slate-500 italic">None</span>';
     }
 
     if (immEl) {
-        const tags = immunities.map(t => 
+        const tags = immunities.map(t =>
             `<span class="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">${t} 0x</span>`
         ).join('');
         immEl.innerHTML = tags || '<span class="text-xs text-slate-500 italic">None</span>';
@@ -986,7 +1042,97 @@ function updateTargetGenView() {
         }
     });
 
-    // E. Render Base Stats (Gen 1 merged Special)
+    let emptyMsg = document.getElementById('moves-empty-notice');
+    if (visibleCount === 0) {
+        if (!emptyMsg && movesContainer) {
+            emptyMsg = document.createElement('div');
+            emptyMsg.id = 'moves-empty-notice';
+            emptyMsg.className = 'text-xs text-slate-500 italic py-2 text-center';
+            emptyMsg.innerText = 'No moves learned in this game.';
+            movesContainer.appendChild(emptyMsg);
+        } else if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+        }
+    } else if (emptyMsg) {
+        emptyMsg.style.display = 'none';
+    }
+
+    // E. Dynamic Wild Encounters List for Chosen Game (Deduplicated)
+    const encountersContainer = document.querySelector('#target-encounters-list') || document.querySelector('#target-encounters-container');
+    const encountersBadge = document.querySelector('#target-encounters-version-badge');
+    if (encountersBadge) encountersBadge.innerText = chosenGame;
+
+    if (encountersContainer) {
+        const allEncounters = activeTargetData.encounters || {};
+        let rawMatches = [];
+
+        if (chosenGame === 'modern') {
+            Object.values(allEncounters).forEach(versionList => {
+                if (Array.isArray(versionList)) rawMatches.push(...versionList);
+            });
+        } else {
+            if (allEncounters[chosenGame]) {
+                rawMatches.push(...allEncounters[chosenGame]);
+            }
+            // Check paired sub-versions (e.g., 'red-blue' -> 'red', 'blue')
+            const subVersions = chosenGame.split('-');
+            subVersions.forEach(v => {
+                if (allEncounters[v]) {
+                    rawMatches.push(...allEncounters[v]);
+                }
+            });
+        }
+
+        // Deduplicate paired version tables (merges identical spots, takes best rate)
+        const dedupMap = new Map();
+        rawMatches.forEach(enc => {
+            const loc = enc.location || 'Unknown Area';
+            const minL = enc.min_level || 1;
+            const maxL = enc.max_level || 1;
+            const methods = (enc.methods || []).slice().sort().join(',');
+            const dedupKey = `${loc}|${minL}|${maxL}|${methods}`;
+
+            if (!dedupMap.has(dedupKey)) {
+                dedupMap.set(dedupKey, { ...enc });
+            } else {
+                // If versions differ in rate (e.g. 15% in Red, 10% in Blue), display the max
+                const existing = dedupMap.get(dedupKey);
+                if ((enc.chance || 0) > (existing.chance || 0)) {
+                    existing.chance = enc.chance;
+                }
+            }
+        });
+
+        const targetEncounters = Array.from(dedupMap.values());
+
+        if (targetEncounters.length > 0) {
+            encountersContainer.innerHTML = targetEncounters.map(enc => {
+                const methodsStr = (enc.methods || []).join(', ') || 'Wild';
+                const minL = enc.min_level || 1;
+                const maxL = enc.max_level || 1;
+                const lvlStr = minL === maxL ? `Lv. ${minL}` : `Lv. ${minL}-${maxL}`;
+                const chanceVal = enc.chance || 0;
+                const chanceBadge = chanceVal > 0 ? `<span class="text-[10px] font-mono font-bold text-emerald-400">${chanceVal}%</span>` : '';
+
+                return `
+                    <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 text-xs">
+                        <div>
+                            <div class="font-bold text-slate-200">${enc.location || 'Unknown Area'}</div>
+                            <div class="text-[10px] text-slate-400">${methodsStr}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono text-amber-400 font-semibold">${lvlStr}</div>
+                            ${chanceBadge}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            encountersContainer.innerHTML = `<div class="text-slate-500 text-xs italic p-2">No wild encounters listed for "${chosenGame}".</div>`;
+        }
+    }
+
+    // F. Render Base Stats (Gen 1 merged Special)
     const rawStats = activeTargetData.stats || {};
     const statsContainer = document.getElementById('target-stats-container');
     const bstBadge = document.getElementById('target-bst-badge');
@@ -1026,30 +1172,19 @@ function updateTargetGenView() {
         if (bstBadge) bstBadge.innerText = `BST ${calculatedBst}`;
     }
 
-    let emptyMsg = document.getElementById('moves-empty-notice');
-    if (visibleCount === 0) {
-        if (!emptyMsg && movesContainer) {
-            emptyMsg = document.createElement('div');
-            emptyMsg.id = 'moves-empty-notice';
-            emptyMsg.className = 'text-xs text-slate-500 italic py-2 text-center';
-            emptyMsg.innerText = 'No moves learned in this game.';
-            movesContainer.appendChild(emptyMsg);
-        } else if (emptyMsg) {
-            emptyMsg.style.display = 'block';
-        }
-    } else if (emptyMsg) {
-        emptyMsg.style.display = 'none';
-    }
-
     if (typeof calculateCatchOdds === 'function') {
         calculateCatchOdds();
     }
 
-    // Inside your dropdown change handler:
-    const currentGen = document.getElementById('target-gen-select')?.value || "generation-iii";
-    updateTargetEVDisplay(currentGen);
-}
+    if (typeof updateTargetEVDisplay === 'function') {
+        updateTargetEVDisplay(chosenGame);
+    }
 
+    // Persist chosen version to backend and localStorage
+    localStorage.setItem('selected_game_version', chosenGame);
+    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+    fetch(`${endpoint}?action=set_game_version&version=${encodeURIComponent(chosenGame)}`).catch(() => {});
+}
 window.addEventListener('DOMContentLoaded', () => {
             const genSelect = document.getElementById('target-gen-select');
             if (genSelect) {

@@ -24,10 +24,42 @@ SHINY_HUNT_FILE = os.path.join(BASE_DIR, "shiny_hunt.json")
 STATE_FILE = os.path.join(BASE_DIR, "stream_state.json")
 EV_CACHE_FILE = os.path.join(BASE_DIR, "ev_yields.json")
 IGNORED_CACHE_FILE = os.path.join(BASE_DIR, "deselected_pokemon.json")
+SELECTED_VERSION_FILE = os.path.join(BASE_DIR, "selected_version.txt")
+
+def get_current_game_version():
+    if os.path.exists(SELECTED_VERSION_FILE):
+        try:
+            with open(SELECTED_VERSION_FILE, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    return "modern"
+
+def set_current_game_version(version):
+    try:
+        with open(SELECTED_VERSION_FILE, "w", encoding="utf-8") as f:
+            f.write(str(version).strip().lower())
+    except Exception as e:
+        print(f"[VERSION SAVE ERROR]: {e}")
 
 
 TARGET_CACHE_DIR = "target_cache"
 os.makedirs(TARGET_CACHE_DIR, exist_ok=True)
+
+
+def load_pokemon():
+    data = {}
+    if os.path.exists(CATCH_TARGETS_DATA):
+        with open(CATCH_TARGETS_DATA, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if "," in line:
+                    parts = line.rsplit(",", 1)
+                    try:
+                        data[parts[0].strip()] = int(parts[1].strip())
+                    except ValueError:
+                        continue
+    return data
 
 
 
@@ -268,13 +300,12 @@ def _http_get_json(url):
     with urllib.request.urlopen(req, timeout=10) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
-
 def fetch_complete_pokemon_info(name):
     base_slug = str(name).lower().strip().replace(" ", "-").replace("'", "").replace(".", "").replace(":", "")
     endpoint_slug = resolve_pokemon_endpoint_slug(base_slug)
-    
+
     os.makedirs(TARGET_CACHE_DIR, exist_ok=True)
-    
+
     cache_path_base = os.path.join(TARGET_CACHE_DIR, f"{base_slug}.json")
     cache_path_endpoint = os.path.join(TARGET_CACHE_DIR, f"{endpoint_slug}.json")
 
@@ -297,9 +328,14 @@ def fetch_complete_pokemon_info(name):
         if not p_data:
             print(f"[ERROR] No data returned for endpoint: {endpoint_slug}")
             return None
-        
+
         species_url = p_data.get("species", {}).get("url")
         s_data = _http_get_json(species_url) if species_url else {}
+
+        # Encounters sub-resource
+        encounters_url = p_data.get(
+            "location_area_encounters") or f"https://pokeapi.co/api/v2/pokemon/{endpoint_slug}/encounters"
+        raw_encounters = _http_get_json(encounters_url) or []
     except Exception as e:
         print(f"[NETWORK ERROR] Failed for {endpoint_slug}: {e}")
         return None
@@ -350,43 +386,156 @@ def fetch_complete_pokemon_info(name):
     tm_moves = sorted(list(set(tm_moves)))
     level_moves.sort(key=lambda x: (x.get("level", 0), str(x.get("move", ""))))
 
+    # Encounters (grouped by version slug, then location)
+    encounters = {}
+    if isinstance(raw_encounters, list):
+        for area_entry in raw_encounters:
+            area_name = area_entry.get("location_area", {}).get("name", "").replace("-", " ").title()
+            for v_detail in area_entry.get("version_details", []):
+                v_name = v_detail.get("version", {}).get("name", "").lower()
+                if not v_name:
+                    continue
+
+                if v_name not in encounters:
+                    encounters[v_name] = []
+
+                methods = set()
+                min_lvl = 100
+                max_lvl = 0
+                total_chance = 0
+
+                for enc in v_detail.get("encounter_details", []):
+                    m_slug = enc.get("method", {}).get("name", "").replace("-", " ")
+                    if m_slug:
+                        methods.add(m_slug)
+                    min_lvl = min(min_lvl, enc.get("min_level", 1))
+                    max_lvl = max(max_lvl, enc.get("max_level", 1))
+                    total_chance += enc.get("chance", 0)
+
+                encounters[v_name].append({
+                    "location": area_name,
+                    "methods": sorted(list(methods)),
+                    "min_level": min_lvl if min_lvl <= 100 else 1,
+                    "max_level": max_lvl if max_lvl >= 1 else 1,
+                    "chance": total_chance
+                })
+
     # Sprites
     p_id = int(p_data.get("id", 1) or 1)
     sprites_raw = p_data.get("sprites", {}) or {}
     versions = sprites_raw.get("versions", {}) or {}
-    
+
     gen_sprites = {
-        "gen-1": versions.get("generation-i", {}).get("red-blue", {}).get("front_default") or versions.get("generation-i", {}).get("yellow", {}).get("front_default"),
-        "gen-2": versions.get("generation-ii", {}).get("crystal", {}).get("front_default") or versions.get("generation-ii", {}).get("gold", {}).get("front_default"),
-        "gen-3": versions.get("generation-iii", {}).get("emerald", {}).get("front_default") or versions.get("generation-iii", {}).get("ruby-sapphire", {}).get("front_default"),
-        "gen-4": versions.get("generation-iv", {}).get("platinum", {}).get("front_default") or versions.get("generation-iv", {}).get("diamond-pearl", {}).get("front_default"),
+        "gen-1": versions.get("generation-i", {}).get("red-blue", {}).get("front_default") or versions.get(
+            "generation-i", {}).get("yellow", {}).get("front_default"),
+        "gen-2": versions.get("generation-ii", {}).get("crystal", {}).get("front_default") or versions.get(
+            "generation-ii", {}).get("gold", {}).get("front_default"),
+        "gen-3": versions.get("generation-iii", {}).get("emerald", {}).get("front_default") or versions.get(
+            "generation-iii", {}).get("ruby-sapphire", {}).get("front_default"),
+        "gen-4": versions.get("generation-iv", {}).get("platinum", {}).get("front_default") or versions.get(
+            "generation-iv", {}).get("diamond-pearl", {}).get("front_default"),
         "gen-5": versions.get("generation-v", {}).get("black-white", {}).get("front_default"),
         "gen-6": versions.get("generation-vi", {}).get("x-y", {}).get("front_default"),
         "gen-7": versions.get("generation-vii", {}).get("ultra-sun-ultra-moon", {}).get("front_default"),
-        "modern": sprites_raw.get("other", {}).get("showdown", {}).get("front_default") or sprites_raw.get("front_default")
+        "modern": sprites_raw.get("other", {}).get("showdown", {}).get("front_default") or sprites_raw.get(
+            "front_default")
+    }
+
+    # Evolution Chain (Safe parse & format)
+    fallback_name = p_data.get("name", "Unknown").replace("-", " ").title()
+    evolutions = [s_data.get("name", fallback_name).replace("-", " ").title()]
+    try:
+        evo_url = s_data.get("evolution_chain", {}).get("url") if isinstance(s_data, dict) else None
+        if evo_url:
+            if "GLOBAL_EVO_CACHE" in globals() and evo_url in GLOBAL_EVO_CACHE:
+                evolutions = GLOBAL_EVO_CACHE[evo_url]
+            else:
+                c_data = _http_get_json(evo_url)
+                chain_list = []
+
+                def parse_chain(node):
+                    sp_name = node.get("species", {}).get("name", "").replace("-", " ").title()
+                    triggers = []
+
+                    for detail in node.get("evolution_details", []):
+                        min_lvl = detail.get("min_level")
+                        item = detail.get("item")
+                        move = detail.get("known_move")
+                        happy = detail.get("min_happiness")
+                        trig_raw = detail.get("trigger", {})
+                        trig_name = trig_raw.get("name", "").replace("-", " ") if isinstance(trig_raw, dict) else ""
+
+                        if min_lvl:
+                            triggers.append(f"Lv. {min_lvl}")
+                        elif item and isinstance(item, dict):
+                            triggers.append(f"Use {item.get('name', '').replace('-', ' ').title()}")
+                        elif move and isinstance(move, dict):
+                            triggers.append(f"Knows {move.get('name', '').replace('-', ' ').title()}")
+                        elif happy:
+                            triggers.append(f"Happiness >= {happy}")
+                        elif trig_name:
+                            triggers.append(trig_name.title())
+
+                    trig_str = f" ({', '.join(triggers)})" if triggers else ""
+                    chain_list.append(f"{sp_name}{trig_str}")
+
+                    for next_node in node.get("evolves_to", []):
+                        parse_chain(next_node)
+
+                parse_chain(c_data.get("chain", {}))
+                if chain_list:
+                    evolutions = chain_list
+                if "GLOBAL_EVO_CACHE" in globals():
+                    GLOBAL_EVO_CACHE[evo_url] = evolutions
+    except Exception as e:
+        print(f"[EVO ERROR] {fallback_name}: {e}")
+
+    # Sprites
+    p_id = int(p_data.get("id", 1) or 1)
+    sprites_raw = p_data.get("sprites", {}) or {}
+    versions = sprites_raw.get("versions", {}) or {}
+
+    gen_sprites = {
+        "gen-1": versions.get("generation-i", {}).get("red-blue", {}).get("front_default") or versions.get(
+            "generation-i", {}).get("yellow", {}).get("front_default"),
+        "gen-2": versions.get("generation-ii", {}).get("crystal", {}).get("front_default") or versions.get(
+            "generation-ii", {}).get("gold", {}).get("front_default"),
+        "gen-3": versions.get("generation-iii", {}).get("emerald", {}).get("front_default") or versions.get(
+            "generation-iii", {}).get("ruby-sapphire", {}).get("front_default"),
+        "gen-4": versions.get("generation-iv", {}).get("platinum", {}).get("front_default") or versions.get(
+            "generation-iv", {}).get("diamond-pearl", {}).get("front_default"),
+        "gen-5": versions.get("generation-v", {}).get("black-white", {}).get("front_default"),
+        "gen-6": versions.get("generation-vi", {}).get("x-y", {}).get("front_default"),
+        "gen-7": versions.get("generation-vii", {}).get("ultra-sun-ultra-moon", {}).get("front_default"),
+        "modern": sprites_raw.get("other", {}).get("showdown", {}).get("front_default") or sprites_raw.get(
+            "front_default")
     }
 
     result = {
-        "name": s_data.get("name", base_slug).replace("-", " ").title() if isinstance(s_data, dict) else base_slug.title(),
+        "name": s_data.get("name", base_slug).replace("-", " ").title() if isinstance(s_data,
+                                                                                      dict) else base_slug.title(),
         "slug": base_slug,
         "endpoint_slug": endpoint_slug,
         "id": p_id,
-        "sprite": gen_sprites["modern"] or sprites_raw.get("front_default") or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png",
-        "sprites": gen_sprites,
-        "types": types,
-        "bst": bst,
-        "stats": stats,
-        "ev_yield": ev_yield,
-        "weaknesses": list(weaknesses) if isinstance(weaknesses, (set, tuple)) else (weaknesses or []),
-        "resistances": list(resistances) if isinstance(resistances, (set, tuple)) else (resistances or []),
-        "immunities": list(immunities) if isinstance(immunities, (set, tuple)) else (immunities or []),
-        "catch_rate": s_data.get("capture_rate", 45) if isinstance(s_data, dict) else 45,
-        "growth_rate": s_data.get("growth_rate", {}).get("name", "Unknown").title() if isinstance(s_data, dict) else "Medium",
-        "level_moves": level_moves,
-        "tm_moves": tm_moves,
-    }
+            "sprite": gen_sprites["modern"] or sprites_raw.get(
+                "front_default") or f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png",
+            "sprites": gen_sprites,
+            "types": types,
+            "bst": bst,
+            "stats": stats,
+            "ev_yield": ev_yield,
+            "weaknesses": list(weaknesses) if isinstance(weaknesses, (set, tuple)) else (weaknesses or []),
+            "resistances": list(resistances) if isinstance(resistances, (set, tuple)) else (resistances or []),
+            "immunities": list(immunities) if isinstance(immunities, (set, tuple)) else (immunities or []),
+            "catch_rate": s_data.get("capture_rate", 45) if isinstance(s_data, dict) else 45,
+            "growth_rate": s_data.get("growth_rate", {}).get("name", "Unknown").title() if isinstance(s_data,dict) else "Medium",
+            "evolutions": evolutions,
+            "level_moves": level_moves,
+            "tm_moves": tm_moves,
+            "encounters": encounters,
+        }
 
-    # Save to disk
+        # Save to disk
     for save_path in {cache_path_base, cache_path_endpoint}:
         try:
             with open(save_path, "w", encoding="utf-8") as f:
@@ -396,3 +545,30 @@ def fetch_complete_pokemon_info(name):
             print(f"[CACHE WRITE FAILED] {save_path}: {e}")
 
     return result
+
+
+def load_active_target(default_pokemon="golem"):
+  if os.path.exists(ACTIVE_TARGET_FILE):
+    try:
+      with open(ACTIVE_TARGET_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+      # Check if cached data is missing 'vg' in level_moves
+      needs_rebuild = False
+      if data and "level_moves" in data and len(data["level_moves"]) > 0:
+        if "vg" not in data["level_moves"][0]:
+          needs_rebuild = True
+
+      if needs_rebuild and data.get("slug"):
+        print(
+            f"[Sync] Upgrading target '{data['slug']}' with version group"
+            " tags..."
+        )
+        return fetch_complete_pokemon_info(data["slug"])
+
+      return data
+    except Exception as e:
+      print(f"[Warn] Failed reading active target: {e}")
+
+  # If no file or empty, fetch default initial Pokémon
+  return fetch_complete_pokemon_info(default_pokemon)

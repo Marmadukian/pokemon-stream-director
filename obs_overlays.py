@@ -1,5 +1,6 @@
 from utils import *
 
+
 def handle_obs_catch_rate(params):
     state = load_catch_state()
     
@@ -340,34 +341,137 @@ def handle_pokemon_stream(params=None):
 </html>""", ("Content-Type", "text/html")
 
 
-
 def handle_obs_target_overlay(params=None):
     target = load_active_target()
     if not target:
         content = '<div style="color: #94a3b8; font-family: sans-serif; font-weight: bold;">No target selected.</div>'
     else:
         stats_rows = "".join([
-            f"""<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:14px;">
+            f"""<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:13px;">
                 <span style="color:#94a3b8; text-transform:uppercase;">{k}</span>
                 <span style="font-weight:bold; color:#fff;">{v}</span>
             </div>""" for k, v in target.get("stats", {}).items()
         ])
-        weaknesses_str = ", ".join([f"{k.title()} ({v}x)" for k, v in target.get("weaknesses", {}).items()]) or "None"
-        evos_str = " | ".join(target.get("evolutions", [])) or "None"
+
+        # Weaknesses, Resistances, Immunities
+        def format_matchups(data):
+            if isinstance(data, dict):
+                entries = [f"{k.title()}{f' ({v}x)' if v != 1 else ''}" for k, v in data.items()]
+            elif isinstance(data, (list, set, tuple)):
+                entries = [str(x).title() for x in data if x]
+            else:
+                entries = []
+            return ", ".join(entries) or "None"
+
+        weaknesses_str = format_matchups(target.get("weaknesses", {}))
+        resistances_str = format_matchups(target.get("resistances", {}))
+        immunities_str = format_matchups(target.get("immunities", {}))
+
+        # Evolutions
+        raw_evos = target.get("evolutions", [])
+        evos_str = " ➔ ".join(raw_evos) if raw_evos else "None"
+
+        # --- Parse Selected Version Directly in Overlay ---
+        raw_ver = get_current_game_version() if "get_current_game_version" in globals() else ""
+        if isinstance(raw_ver, (list, tuple)):
+            raw_ver = raw_ver[0] if raw_ver else "red-blue"
+
+        # Strip accidental stringified representations like "['red-blue']"
+        target_selected_version = (
+            str(raw_ver or target.get("selected_gen") or "red-blue")
+            .strip("[]'\" ")
+            .lower()
+        )
+
+        all_target_encounters = target.get("encounters", {}) or {}
+
+        # Fallback to target_cache if active target object didn't have encounters loaded
+        if not all_target_encounters:
+            t_slug = target.get("slug") or str(target.get("name", "")).lower().replace(" ", "-")
+            cache_dir = getattr(handlers, "TARGET_CACHE_DIR", "target_cache") if "handlers" in globals() else "target_cache"
+            c_file = os.path.join(cache_dir, f"{t_slug}.json")
+            if os.path.exists(c_file):
+                try:
+                    with open(c_file, "r", encoding="utf-8") as f:
+                        cached_data = json.load(f)
+                        all_target_encounters = cached_data.get("encounters", {}) or {}
+                except Exception:
+                    pass
+
+        raw_version_encounters = []
+        if target_selected_version == "modern":
+            for v_list in all_target_encounters.values():
+                if isinstance(v_list, list):
+                    raw_version_encounters.extend(v_list)
+        else:
+            if target_selected_version in all_target_encounters:
+                raw_version_encounters.extend(all_target_encounters[target_selected_version])
+
+            sub_versions = target_selected_version.split("-")
+            for sub_v in sub_versions:
+                if sub_v in all_target_encounters:
+                    raw_version_encounters.extend(all_target_encounters[sub_v])
+
+            # If selected version yields 0 encounters (e.g., Pikachu in Yellow), fallback across versions
+            if not raw_version_encounters:
+                for v_list in all_target_encounters.values():
+                    if isinstance(v_list, list):
+                        raw_version_encounters.extend(v_list)
+
+        # Deduplicate identical spawns (same location, levels, methods)
+        dedup_encounters = {}
+        for enc in raw_version_encounters:
+            loc = enc.get("location", "Unknown Area")
+            min_l = enc.get("min_level", 1)
+            max_l = enc.get("max_level", 1)
+            methods_tuple = tuple(sorted(enc.get("methods", [])))
+            dedup_key = (loc, min_l, max_l, methods_tuple)
+
+            if dedup_key not in dedup_encounters:
+                dedup_encounters[dedup_key] = dict(enc)
+            else:
+                if enc.get("chance", 0) > dedup_encounters[dedup_key].get("chance", 0):
+                    dedup_encounters[dedup_key]["chance"] = enc.get("chance", 0)
+
+        target_version_encounters = list(dedup_encounters.values())
+
+        if target_version_encounters:
+            top_enc = max(target_version_encounters, key=lambda x: x.get("chance", 0), default={})
+            loc = top_enc.get("location", "Unknown Area")
+            min_l = top_enc.get("min_level", 1)
+            max_l = top_enc.get("max_level", 1)
+            lvl_str = f"Lv. {min_l}" if min_l == max_l else f"Lv. {min_l}-{max_l}"
+            chance_val = top_enc.get("chance", 0)
+            chance_str = f" ({chance_val}%)" if chance_val > 0 else ""
+            current_location = f"{loc} [{lvl_str}]{chance_str}"
+        elif "load_active_route" in globals() and load_active_route():
+            current_location = load_active_route().get("name", "None Listed")
+        else:
+            current_location = "None Listed"
+
+        # Types Badges
+        types = target.get("types", [])
+        types_html = "".join([
+            f'<span style="background:#334155; color:#cbd5e1; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:4px;">{t.upper()}</span>'
+            for t in types
+        ])
 
         content = f"""
-        <div style="display:flex; gap:16px; background:rgba(15,23,42,0.85); border:2px solid #334155; padding:16px; border-radius:12px; color:#fff; width:340px; box-shadow:0 8px 16px rgba(0,0,0,0.5);">
-            <div style="flex-shrink:0; text-align:center;">
-                <img src="{target.get('sprite', '')}" style="width:84px; height:84px; background:#1e293b; border-radius:8px;" />
-                <div style="font-weight:bold; font-size:18px; margin-top:4px;">{target['name']}</div>
-                <div style="font-size:12px; color:#f59e0b; font-weight:bold;">BST {target['bst']}</div>
+        <div style="display:flex; gap:16px; background:rgba(15,23,42,0.92); border:2px solid #334155; padding:16px; border-radius:12px; color:#fff; width:390px; box-shadow:0 8px 16px rgba(0,0,0,0.5);">
+            <div style="flex-shrink:0; text-align:center; width:95px;">
+                <img src="{target.get('sprite', '')}" style="width:84px; height:84px; background:#1e293b; border-radius:8px; object-fit:contain;" />
+                <div style="font-weight:bold; font-size:16px; margin-top:4px; word-break:break-word;">{target.get('name', 'Unknown')}</div>
+                <div style="font-size:11px; color:#f59e0b; font-weight:bold; margin-bottom:4px;">BST {target.get('bst', 0)}</div>
+                <div>{types_html}</div>
             </div>
-            <div style="flex-grow:1;">
+            <div style="flex-grow:1; min-width:0;">
                 {stats_rows}
-                <div style="margin-top:8px; padding-top:8px; border-top:1px solid #334155; font-size:12px;">
+                <div style="margin-top:6px; padding-top:6px; border-top:1px solid #334155; font-size:11px; line-height:1.4;">
                     <div style="color:#f87171; font-weight:bold;">Weak: <span style="color:#cbd5e1; font-weight:normal;">{weaknesses_str}</span></div>
-                    <div style="color:#34d399; font-weight:bold; margin-top:2px;">Catch Rate: <span style="color:#cbd5e1; font-weight:normal;">{target.get('catch_rate', 0)}</span></div>
-                    <div style="color:#38bdf8; font-weight:bold; margin-top:2px;">Evo: <span style="color:#cbd5e1; font-weight:normal;">{evos_str}</span></div>
+                    <div style="color:#60a5fa; font-weight:bold; margin-top:1px;">Resist: <span style="color:#cbd5e1; font-weight:normal;">{resistances_str}</span></div>
+                    <div style="color:#a78bfa; font-weight:bold; margin-top:1px;">Immune: <span style="color:#cbd5e1; font-weight:normal;">{immunities_str}</span></div>
+                    <div style="color:#38bdf8; font-weight:bold; margin-top:3px;">Evo: <span style="color:#cbd5e1; font-weight:normal;">{evos_str}</span></div>
+                    <div style="color:#34d399; font-weight:bold; margin-top:3px;">Encounter: <span style="color:#fcd34d; font-weight:normal;">{current_location}</span></div>
                 </div>
             </div>
         </div>
@@ -378,14 +482,21 @@ def handle_obs_target_overlay(params=None):
 <head>
     <meta charset="utf-8">
     <meta http-equiv="refresh" content="2">
-    <style>body {{ margin:0; padding:16px; font-family:'Segoe UI', sans-serif; background:transparent; }}</style>
+    <style>
+        body {{
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }}
+    </style>
 </head>
 <body>
     {content}
 </body>
 </html>"""
     return html, ("Content-Type", "text/html")
-
 
 def handle_obs_team_overlay(params=None):
     team = load_team()[:6]

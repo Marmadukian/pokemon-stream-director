@@ -18,8 +18,6 @@ with open(JS_FILE_PATH, "r", encoding="utf-8") as f:
 
 
 
-
-
 # In-memory session cache for shared evolution chains
 
 def generate_ev_widget(ev_state, target, is_remote=False):
@@ -130,6 +128,81 @@ def load_active_route():
         except Exception:
             pass
     return {}
+
+
+def generate_tools_dropdown_widget():
+    """Returns an HTML widget with actual RNG, seed-dependent, and mechanic-specific
+
+    calculators used by challenge runners and dex collectors.
+    """
+    tools = [
+        # --- Route & Encounter Calculators ---
+        {
+            "name": "Gen 3 Feebas Tile Seed Finder",
+            "url": "https://mkwrs.com/feebas/",
+        },
+        {
+            "name": "Gen 4 Route 222 / Great Marsh Seed Calc",
+            "url": "https://www.smogon.com/ingame/rng/dpp_rng_part4",
+        },
+        {
+            "name": "Gen 2 / HGSS Headbutt Tree Calculator",
+            "url": "https://pokerng.forumcommunity.net/?t=56453272",
+        },
+        {
+            "name": "Gen 4 Honey Tree Predictor (Trainer ID)",
+            "url": "https://www.dragonflycave.com/sinnoh/honey-trees",
+        },
+        # --- Math, Mechanics & Rates ---
+        {
+            "name": "Cave of Dragonflies Comprehensive Catch Calc",
+            "url": "https://www.dragonflycave.com/calculators/gen-iii-iv-catch-rate",
+        },
+        {
+            "name": "Gen 1–9 Wild Encounter Odds & Slots (Glitch City)",
+            "url": "https://glitchcity.wiki/wiki/Wild_Pok%C3%A9mon_data",
+        },
+        {
+            "name": "Exp / Growth Curve Exact Calc (Dragonfly Cave)",
+            "url": "https://www.dragonflycave.com/mechanics/experience",
+        },
+        {
+            "name": "Gen 3/4 Safari Zone Catch/Flee Rate Calculator",
+            "url": "https://www.dragonflycave.com/mechanics/safari-zone",
+        },
+        # --- Collection, Tracking & RNG ---
+        {
+            "name": "PokéOS Origin Mark & Living Dex Tracker",
+            "url": "https://pokeos.com/",
+        },
+        {
+            "name": "Pokéarth (Exact Serebii Wild Tables by Map)",
+            "url": "https://www.serebii.net/pokearth/",
+        },
+        {
+            "name": "Smogon In-Game RNG Mechanics Compendium",
+            "url": "https://www.smogon.com/ingame/rng/",
+        },
+    ]
+
+    options_html = "".join(
+        [f'<option value="{t["url"]}">{t["name"]}</option>' for t in tools]
+    )
+
+    html = f"""
+    <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3">
+        <div class="flex items-center justify-between gap-2">
+            <span class="font-bold text-amber-400 uppercase text-[10px] tracking-wider whitespace-nowrap">🛠️ Runner Tools:</span>
+            <select 
+                onchange="if(this.value){{ window.open(this.value, '_blank'); this.selectedIndex = 0; }}" 
+                class="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+                <option value="">-- Seed & Tile Calculators ↗ --</option>
+                {options_html}
+            </select>
+        </div>
+    </div>
+    """
+    return html
 
 
 def load_all_pokemon_names():
@@ -362,31 +435,6 @@ def save_team(team):
     with open(TEAM_FILE, "w", encoding="utf-8") as f:
         json.dump(team, f, indent=2)
 
-def load_active_target(default_pokemon="golem"):
-  if os.path.exists(ACTIVE_TARGET_FILE):
-    try:
-      with open(ACTIVE_TARGET_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-      # Check if cached data is missing 'vg' in level_moves
-      needs_rebuild = False
-      if data and "level_moves" in data and len(data["level_moves"]) > 0:
-        if "vg" not in data["level_moves"][0]:
-          needs_rebuild = True
-
-      if needs_rebuild and data.get("slug"):
-        print(
-            f"[Sync] Upgrading target '{data['slug']}' with version group"
-            " tags..."
-        )
-        return fetch_complete_pokemon_info(data["slug"])
-
-      return data
-    except Exception as e:
-      print(f"[Warn] Failed reading active target: {e}")
-
-  # If no file or empty, fetch default initial Pokémon
-  return fetch_complete_pokemon_info(default_pokemon)
 
 
 def save_active_target(data):
@@ -457,34 +505,48 @@ def fetch_and_build_target_dict(pokemon_name_or_id):
         try:
             evo_url = s_raw.get("evolution_chain", {}).get("url")
             if evo_url:
-                e_req = urllib.request.Request(evo_url, headers=headers)
+                req_headers = headers if headers else {"User-Agent": "PokeApp/1.0"}
+                e_req = urllib.request.Request(evo_url, headers=req_headers)
                 with urllib.request.urlopen(e_req) as resp:
                     e_raw = json.loads(resp.read().decode('utf-8'))
+
+                chain_list = []
 
                 def parse_chain(node):
                     name = node.get("species", {}).get("name", "").title()
                     triggers = []
+
                     for detail in node.get("evolution_details", []):
-                        trig = detail.get("trigger", {}).get("name", "").replace("-", " ")
-                        if detail.get("min_level"):
-                            triggers.append(f"Lv. {detail['min_level']}")
-                        elif detail.get("item"):
-                            triggers.append(f"Use {detail['item']['name'].replace('-', ' ').title()}")
-                        elif detail.get("known_move"):
-                            triggers.append(f"Knows {detail['known_move']['name'].replace('-', ' ').title()}")
-                        elif detail.get("min_happiness"):
-                            triggers.append(f"Happiness >= {detail['min_happiness']}")
-                        else:
-                            triggers.append(trig.title())
+                        min_lvl = detail.get("min_level")
+                        item = detail.get("item")
+                        move = detail.get("known_move")
+                        happy = detail.get("min_happiness")
+                        trig_raw = detail.get("trigger", {})
+                        trig_name = trig_raw.get("name", "").replace("-", " ") if isinstance(trig_raw, dict) else ""
+
+                        if min_lvl:
+                            triggers.append(f"Lv. {min_lvl}")
+                        elif item and isinstance(item, dict):
+                            triggers.append(f"Use {item.get('name', '').replace('-', ' ').title()}")
+                        elif move and isinstance(move, dict):
+                            triggers.append(f"Knows {move.get('name', '').replace('-', ' ').title()}")
+                        elif happy:
+                            triggers.append(f"Happiness >= {happy}")
+                        elif trig_name:
+                            triggers.append(trig_name.title())
 
                     trig_str = f" ({', '.join(triggers)})" if triggers else ""
-                    evolutions.append(f"{name}{trig_str}")
+                    chain_list.append(f"{name}{trig_str}")
+
                     for next_node in node.get("evolves_to", []):
                         parse_chain(next_node)
 
-                evolutions = []
                 parse_chain(e_raw.get("chain", {}))
-        except Exception:
+                if chain_list:
+                    evolutions = chain_list
+
+        except Exception as e:
+            print(f"[EVO CHAIN ERROR] {p.get('name')}: {e}")
             evolutions = [p.get("name", "").title()]
 
         target_data = {
@@ -728,6 +790,11 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
                 "sprite": f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{p_id}.png"
             })
             save_team(team)
+
+    elif action == "set_game_version":
+        ver = params.get("version", "modern")
+        set_current_game_version(ver)
+        # Return 200 OK or empty JSON
 
     elif action == "team_remove":
         idx = int(params.get("index", [-1])[0])
@@ -993,6 +1060,7 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
 
 
 # --- Router Endpoints ---
+# --- Router Endpoints ---
 def handle_dashboard(params):
     action = params.get("action", [""])[0] if isinstance(params, dict) else ""
 
@@ -1030,7 +1098,6 @@ def handle_dashboard(params):
     state = load_catch_state()
     deselected_pokemon = load_deselected_pokemon()
 
-	
     area_list = load_all_location_areas()
     js_location_array = json.dumps(area_list)
     active_target_json = json.dumps(target if target else {})
@@ -1048,21 +1115,21 @@ def handle_dashboard(params):
 
     # --- Party Pills ---
     team_pills = (
-        "".join([
-            f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
+            "".join([
+                f"""<div class="flex items-center justify-between bg-slate-700/60 border border-slate-600 rounded-lg px-3 py-2">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-400">#{i+1}</span>
+                    <span class="text-xs font-bold text-slate-400">#{i + 1}</span>
                     <span class="font-semibold text-sm">{m['name']}</span>
                     {f'<span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">Active 6</span>' if i < 6 else ''}
                 </div>
                 <a href="/?action=team_remove&index={i}" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</a>
             </div>"""
-            for i, m in enumerate(team)
-        ])
-        or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
+                for i, m in enumerate(team)
+            ])
+            or '<div class="text-slate-500 text-sm italic">Party is empty.</div>'
     )
 
-    	# --- Shiny Hunting Card ---
+    # --- Shiny Hunting Card ---
     shiny_card = f"""
     <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
@@ -1091,28 +1158,28 @@ def handle_dashboard(params):
 
     # Generate EV Card using the freshly modified EV State
     ev_card_html = generate_ev_widget(ev_state, target, is_remote=False)
-    
+
     # --- Catch Targets Pills ---
     counter_pills = (
-        "".join([
-            f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
+            "".join([
+                f"""<a href="/?action=dec_counter&name={name}" class="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 rounded-lg p-2.5 transition">
             <span class="font-bold text-slate-200 text-sm">{name}</span>
             <span class="bg-indigo-600 text-white font-mono px-2.5 py-0.5 rounded-full text-xs font-bold">{count}</span>
         </a>"""
-            for name, count in counters.items()
-        ])
-        or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
+                for name, count in counters.items()
+            ])
+            or '<div class="text-slate-500 text-sm italic">No catch targets configured.</div>'
     )
 
-    active_gen_slug = target.get("selected_gen", "generation-ix")
-    modern_target_evs = target.get("ev_yield", {})
-    past_target_evs = target.get("past_ev_yields", {})
-    target_slug = target.get("name", "").lower().strip()
+    active_gen_slug = target.get("selected_gen", "generation-ix") if target else "generation-ix"
+    modern_target_evs = target.get("ev_yield", {}) if target else {}
+    past_target_evs = target.get("past_ev_yields", {}) if target else {}
+    target_slug = target.get("name", "").lower().strip() if target else ""
 
     resolved_target_evs = resolve_ev_yield_for_version(
-        target_slug, 
-        modern_target_evs, 
-        past_target_evs, 
+        target_slug,
+        modern_target_evs,
+        past_target_evs,
         active_gen_slug
     )
 
@@ -1152,6 +1219,69 @@ def handle_dashboard(params):
         </div>"""
             for m in target.get("level_moves", [])
         ])
+
+        # --- Selected Version Encounters for Target Pokémon (Server-Side Dedup) ---
+        target_selected_version = str(target.get("selected_gen") or "yellow").lower().strip()
+        all_target_encounters = target.get("encounters", {})
+
+        # 1. Collect encounters matching direct version or sub-versions (e.g. 'red-blue' -> 'red', 'blue')
+        raw_version_encounters = []
+        if target_selected_version == "modern":
+            for v_list in all_target_encounters.values():
+                if isinstance(v_list, list):
+                    raw_version_encounters.extend(v_list)
+        else:
+            if target_selected_version in all_target_encounters:
+                raw_version_encounters.extend(all_target_encounters[target_selected_version])
+
+            sub_versions = target_selected_version.split("-")
+            for sub_v in sub_versions:
+                if sub_v in all_target_encounters:
+                    raw_version_encounters.extend(all_target_encounters[sub_v])
+
+        # 2. Deduplicate identical spawns (same location, levels, methods)
+        dedup_encounters = {}
+        for enc in raw_version_encounters:
+            loc = enc.get("location", "Unknown Area")
+            min_l = enc.get("min_level", 1)
+            max_l = enc.get("max_level", 1)
+            methods_tuple = tuple(sorted(enc.get("methods", [])))
+            dedup_key = (loc, min_l, max_l, methods_tuple)
+
+            if dedup_key not in dedup_encounters:
+                dedup_encounters[dedup_key] = dict(enc)
+            else:
+                # Keep highest encounter chance across paired versions
+                if enc.get("chance", 0) > dedup_encounters[dedup_key].get("chance", 0):
+                    dedup_encounters[dedup_key]["chance"] = enc.get("chance", 0)
+
+        target_version_encounters = list(dedup_encounters.values())
+
+        if target_version_encounters:
+            enc_rows = []
+            for enc in target_version_encounters:
+                methods_str = ", ".join(enc.get("methods", [])) or "Wild"
+                min_l = enc.get("min_level", 1)
+                max_l = enc.get("max_level", 1)
+                lvl_str = f"Lv. {min_l}" if min_l == max_l else f"Lv. {min_l}-{max_l}"
+                chance_val = enc.get("chance", 0)
+                chance_badge = f'<span class="text-[10px] font-mono font-bold text-emerald-400">{chance_val}%</span>' if chance_val > 0 else ""
+
+                enc_rows.append(f"""
+                        <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 text-xs">
+                            <div>
+                                <div class="font-bold text-slate-200">{enc.get('location', 'Unknown Area')}</div>
+                                <div class="text-[10px] text-slate-400">{methods_str}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono text-amber-400 font-semibold">{lvl_str}</div>
+                                {chance_badge}
+                            </div>
+                        </div>
+                        """)
+            target_encounters_html = "".join(enc_rows)
+        else:
+            target_encounters_html = f'<div class="text-slate-500 text-xs italic p-2">No wild encounters listed for version "{target_selected_version}".</div>'
 
         target_view = f"""
         <div class="space-y-4">
@@ -1224,13 +1354,12 @@ def handle_dashboard(params):
                     <div class="text-[10px] text-slate-400 uppercase font-semibold">Base EXP</div>
                     <div class="text-sm font-mono font-bold text-sky-400">{target.get('base_experience', 0)}</div>
                 </div>
-		<div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
-		    <div class="text-[10px] text-slate-400 uppercase font-semibold">EV Yield</div>
-		    <div id="target-ev-yield-display" class="text-xs font-mono font-bold text-amber-400 truncate">
-		        {ev_yield_str}
-		    </div>
-		</div>
-	    </div>
+                <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                    <div class="text-[10px] text-slate-400 uppercase font-semibold">EV Yield</div>
+                    <div id="target-ev-yield-display" class="text-xs font-mono font-bold text-amber-400 truncate">
+                        {ev_yield_str}
+                    </div>
+                </div>
             </div>
 
             <!-- EXP Grind Calculator Row -->
@@ -1240,7 +1369,7 @@ def handle_dashboard(params):
                     <span>EXP Grind Calc</span>
                     <span class="text-amber-400 font-mono font-bold capitalize">{growth_rate_slug.replace('-', ' ')}</span>
                 </div>
-                
+
                 <div class="flex items-center gap-2 text-slate-300 font-medium">
                     <span>Lvl</span>
                     <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-center text-white font-mono font-bold focus:outline-none focus:border-amber-400" />
@@ -1263,50 +1392,61 @@ def handle_dashboard(params):
                 </div>
             </div>
 
-	<!-- Catch Calculator Widget -->
-<div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
-    <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-        <span>Live Catch Odds</span>
-        <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">{state.get('odds', '--%')}</span>
-    </div>
-    
-    <div class="grid grid-cols-2 gap-2">
-        <div class="space-y-1">
-            <div class="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Target HP</span>
-                <span id="catch-hp-display" class="text-amber-400 font-mono">{state.get('hp', '100')}%</span>
+            <!-- Catch Calculator Widget -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
+                <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                    <span>Live Catch Odds</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">{state.get('odds', '--%')}</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                            <span>Target HP</span>
+                            <span id="catch-hp-display" class="text-amber-400 font-mono">{state.get('hp', '100')}%</span>
+                        </div>
+                        <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-bold">
+                            <span>Target Level</span>
+                            <span id="catch-lvl-display" class="text-indigo-400 font-mono">{state.get('lvl', '50')}</span>
+                        </div>
+                        <input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 text-center font-mono font-bold focus:outline-none focus:border-indigo-400 h-6" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
+                        <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
+                            <option value="1" {"selected" if str(state.get('status')) == '1' else ""}>None</option>
+                            <option value="2.5" {"selected" if str(state.get('status')) == '2.5' else ""}>Sleep / Freeze</option>
+                            <option value="1.5" {"selected" if str(state.get('status')) == '1.5' else ""}>Paralyze / Poison / Burn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
+                        <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
+                            <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
+                            <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
+                            <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
+                            <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
-        </div>
-        <div class="space-y-1">
-            <div class="flex justify-between text-[10px] text-slate-500 font-bold">
-                <span>Target Level</span>
-                <span id="catch-lvl-display" class="text-indigo-400 font-mono">{state.get('lvl', '50')}</span>
+
+            <!-- Target Wild Encounters -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <h4 class="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Wild Encounters</h4>
+                    <span id="target-encounters-version-badge" class="text-[10px] font-mono font-bold text-amber-400 uppercase">{target_selected_version}</span>
+                </div>
+                <div id="target-encounters-list" class="space-y-1.5 bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 max-h-48 overflow-y-auto">
+                    {target_encounters_html}
+                </div>
             </div>
-            <input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 text-center font-mono font-bold focus:outline-none focus:border-indigo-400 h-6" />
-        </div>
-    </div>
-    
-    <div class="grid grid-cols-2 gap-2">
-        <div>
-            <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
-            <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
-                <option value="1" {"selected" if str(state.get('status')) == '1' else ""}>None</option>
-                <option value="2.5" {"selected" if str(state.get('status')) == '2.5' else ""}>Sleep / Freeze</option>
-                <option value="1.5" {"selected" if str(state.get('status')) == '1.5' else ""}>Paralyze / Poison / Burn</option>
-            </select>
-        </div>
-        <div>
-            <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
-            <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
-                <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
-                <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
-                <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
-                <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
-            </select>
-        </div>
-    </div>
-</div>
 
             <!-- Base Stats Container -->
             <div>
@@ -1343,7 +1483,7 @@ def handle_dashboard(params):
         </div>
         """
 
-	# --- Col 2: Route Encounters View ---
+    # --- Col 2: Route Encounters View ---
     route_view = '<div class="text-slate-500 text-sm italic py-8 text-center">Search and select a Route to load wild encounter tables.</div>'
     if active_route:
         games = {}
@@ -1352,6 +1492,7 @@ def handle_dashboard(params):
             p_slug = p.get("slug", p_name.lower().replace(" ", "-"))
             modern_evs = p.get("ev_yield", {})
             past_evs = p.get("past_ev_yields", {})
+            raw_evos = p.get("evolutions", [])
 
             for d in p.get("details", []):
                 ver = d.get("version", "Other").title()
@@ -1367,6 +1508,7 @@ def handle_dashboard(params):
                     games[ver][p_name] = {
                         "slug": p_slug,
                         "ev_yield": version_evs,
+                        "evolutions": raw_evos,
                         "methods": set(),
                         "levels": [],
                         "total_chance": 0,
@@ -1405,6 +1547,38 @@ def handle_dashboard(params):
                 chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
                 p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
 
+                # Evolution data attribute for JS filtering
+                # Evolution data attribute for JS filtering
+                evos_data = data.get("evolutions", [])
+                if not evos_data:
+                    cache_dir = getattr(handlers, "TARGET_CACHE_DIR",
+                                        "target_cache") if "handlers" in globals() else "target_cache"
+                    # Try species slug or resolved endpoint slug
+                    slug_candidates = [p_slug]
+                    if "handlers" in globals() and hasattr(handlers, "resolve_pokemon_endpoint_slug"):
+                        slug_candidates.append(handlers.resolve_pokemon_endpoint_slug(p_slug))
+
+                    for s in slug_candidates:
+                        c_path = os.path.join(cache_dir, f"{s}.json")
+                        if os.path.exists(c_path):
+                            try:
+                                with open(c_path, "r", encoding="utf-8") as f:
+                                    c_json = json.load(f)
+                                    evos_data = c_json.get("evolutions", [])
+                                    if evos_data:
+                                        break
+                            except Exception:
+                                pass
+
+                # Fallback to in-memory collection if disk file didn't have it
+                if not evos_data:
+                    all_pk = getattr(handlers, "all_pkmn_collection", {}) if "handlers" in globals() else globals().get(
+                        "all_pkmn_collection", {})
+                    if isinstance(all_pk, dict) and p_slug in all_pk:
+                        evos_data = all_pk[p_slug].get("evolutions", [])
+
+                evos_json_attr = json.dumps(evos_data).replace('"', '&quot;')
+
                 # Safely evaluate EV button
                 ev_btn_html = ""
                 try:
@@ -1423,11 +1597,10 @@ def handle_dashboard(params):
 
                 chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
 
-                # Determine if this species should be checked by default
-                is_checked = "checked" if p_name not in deselected_pokemon else ""
+                is_checked = "checked" if "deselected_pokemon" not in globals() or p_name not in deselected_pokemon else ""
 
                 poke_rows.append(f"""
-                    <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
+                    <div class="route-row flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition" data-evolutions="{evos_json_attr}">
                         <div class="flex items-center gap-2.5">
                             <input 
                                 type="checkbox" 
@@ -1468,8 +1641,15 @@ def handle_dashboard(params):
             </div>
             """)
 
+        tools_dropdown_html = generate_tools_dropdown_widget() if "generate_tools_dropdown_widget" in globals() else ""
+
         route_view = f"""
         <div class="space-y-3">
+            <!-- Runner Tools Dropdown Container -->
+            <div class="mb-1">
+                {tools_dropdown_html}
+            </div>
+
             <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
                 <div class="text-xs uppercase font-bold text-emerald-400">Current Location</div>
                 <div class="text-lg font-black text-white">{active_route['name']}</div>
@@ -1478,7 +1658,7 @@ def handle_dashboard(params):
 
             <!-- Track All Route Pokemon Button -->
             <button 
-                onclick="trackAllRoutePokemon()" 
+                onclick="trackAllRoutePokemon(event)" 
                 class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-emerald-200 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
                 <span>➕</span>
                 <span>Click here to add all Pokémon on the route to tracking</span>
@@ -1549,7 +1729,7 @@ def handle_dashboard(params):
 
     <!-- 3-Column Responsive Grid -->
     <main class="max-w-[1600px] mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
+
         <!-- Col 1: Active Target Pokémon (4 Cols) -->
         <section class="lg:col-span-4 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
             <h2 class="text-sm font-black text-white uppercase tracking-wider mb-3 flex items-center justify-between">
@@ -1584,7 +1764,7 @@ def handle_dashboard(params):
                     <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 font-bold text-[11px] py-1.5 rounded-lg transition">Set Target Batches</button>
                 </form>
             </div>
-            
+
             {shiny_card}
             {ev_card_html}
 
@@ -1599,7 +1779,7 @@ def handle_dashboard(params):
                 </div>
             </div>
 
-	    <!-- Bulbapedia Walkthrough Task Loader -->
+        <!-- Bulbapedia Walkthrough Task Loader -->
 <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3 mb-3">
     <div class="flex justify-between items-center">
         <span class="text-[10px] uppercase font-bold text-slate-400">Bulbapedia Walkthrough</span>
@@ -1670,142 +1850,419 @@ def handle_dashboard(params):
     </main>
 </body>
 </html>"""
-    return html, ("Content-Type", "text/html")#
-
+    return html, ("Content-Type", "text/html")
 
 
 
 # --- OBS Views ---
 
 
-def load_pokemon():
-    data = {}
-    if os.path.exists(CATCH_TARGETS_DATA):
-        with open(CATCH_TARGETS_DATA, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if "," in line:
-                    parts = line.rsplit(",", 1)
-                    try:
-                        data[parts[0].strip()] = int(parts[1].strip())
-                    except ValueError:
-                        continue
-    return data
 
+def handle_pokemon_remote(params=None):
+    action = params.get("action", [""])[0] if isinstance(params, dict) and isinstance(params.get("action"), list) else (params.get("action", "") if isinstance(params, dict) else "")
+    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) and isinstance(params.get("task_nav"), list) else (params.get("task_nav", "") if isinstance(params, dict) else "")
+    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) and isinstance(params.get("set_tasks"), list) else (params.get("set_tasks", "") if isinstance(params, dict) else "")
 
+    if "handle_common_action" in globals():
+        handle_common_action(action, params, set_tasks_raw, task_nav)
 
-def handle_pokemon_remote(params):
-    action = params.get("action", [""])[0] if isinstance(params, dict) else ""
+    # 1. Load Data State
+    pkmn_data = all_pkmn_collection if "all_pkmn_collection" in globals() and all_pkmn_collection else (load_all_pokemon_names() if "load_all_pokemon_names" in globals() else [])
+    if isinstance(pkmn_data, dict):
+        js_pokemon_array = json.dumps(list(pkmn_data.keys()))
+    else:
+        js_pokemon_array = json.dumps(pkmn_data or [])
 
-    task_nav = params.get("task_nav", [""])[0] if isinstance(params, dict) else ""
-    set_tasks_raw = params.get("set_tasks", [""])[0] if isinstance(params, dict) else ""
+    team = load_team() if "load_team" in globals() else []
+    target = load_active_target() if "load_active_target" in globals() else {}
+    active_route = load_active_route() if "load_active_route" in globals() else {}
+    tasks_state = load_tasks_state() if "load_tasks_state" in globals() else {}
+    counters = load_pokemon_counters() if "load_pokemon_counters" in globals() else {}
+    hunt = load_shiny_hunt() if "load_shiny_hunt" in globals() else {}
+    ev_state = load_ev_state() if "load_ev_state" in globals() else {}
+    state = load_catch_state() if "load_catch_state" in globals() else {}
+    deselected_pokemon = load_deselected_pokemon() if "load_deselected_pokemon" in globals() else []
 
-    
-    handle_common_action(action, params, set_tasks_raw, task_nav)
-
-    # --- Load Session State AFTER Actions Execute ---
-    tasks_state = load_tasks_state()
-    counters = load_pokemon_counters()
-    hunt = load_shiny_hunt()
-    target = load_active_target()
-    ev_state = load_ev_state()
-    state = load_catch_state()
-    route_data = load_active_route()
-
-    area_list = load_all_location_areas()
+    area_list = load_all_location_areas() if "load_all_location_areas" in globals() else []
     js_location_array = json.dumps(area_list)
+    active_target_json = json.dumps(target if target else {})
 
-    task_progress = f"Task {tasks_state['index'] + 1} of {len(tasks_state['tasks'])}" if tasks_state.get("tasks") else "No Tasks Set"
-    active_task_name = (
+    # 2. Task Strings
+    active_task = (
         tasks_state["tasks"][tasks_state["index"]]
-        if (tasks_state.get("tasks") and 0 <= tasks_state["index"] < len(tasks_state["tasks"]))
-        else "All clear / None active"
+        if (tasks_state.get("tasks") and 0 <= tasks_state.get("index", 0) < len(tasks_state["tasks"]))
+        else "No active task"
+    )
+    task_count_str = (
+        f"{tasks_state.get('index', 0) + 1} / {len(tasks_state['tasks'])}"
+        if tasks_state.get("tasks") else "0 / 0"
     )
 
-    buttons_html = "".join([
-        f"""<div style="display: flex; justify-content: space-between; align-items: center; background: #1f2937; color: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; border: 1px solid #374151;">
-            <div>
-                <div style="font-size: 1.05rem;">{name}</div>
-                <div style="font-size: 0.75rem; color: #9ca3af; font-family: monospace;">{count} remaining</div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <a href="/remote?action=dec_counter&name={quote_plus(name)}" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #374151; color: #fff; text-decoration: none; border-radius: 6px; font-size: 1.1rem; border: 1px solid #4b5563;">-</a>
-                <span style="font-family: monospace; font-size: 1.1rem; min-width: 24px; text-align: center; color: #34d399;">{count}</span>
-                <a href="/remote?action=inc_counter&name={quote_plus(name)}" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #059669; color: #fff; text-decoration: none; border-radius: 6px; font-size: 1.1rem;">+</a>
-            </div>
-        </div>"""
-        for name, count in counters.items()
-    ]) or '<div style="color: #6b7280; font-style: italic; margin-bottom: 16px;">No catch targets left!</div>'
-
-    ev_card_html = generate_ev_widget(ev_state, target, is_remote=True)
-
-    mobile_target_card = ""
-    if target:
-        types_badges = "".join([
-            f'<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">{t}</span>'
-            for t in target.get("types", [])
+    # 3. Party Pills
+    team_pills = (
+        "".join([
+            f"""<div class="flex items-center justify-between bg-slate-800/80 border border-slate-700/80 rounded-xl px-4 py-3 text-base">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-slate-400 text-lg">#{i + 1}</span>
+                    <span class="font-bold text-white text-lg">{m.get('name', 'Unknown')}</span>
+                    {f'<span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">Active 6</span>' if i < 6 else ''}
+                </div>
+                <a href="/remote?action=team_remove&index={i}" class="text-rose-400 hover:text-rose-300 font-extrabold text-lg px-3 py-2">✕</a>
+            </div>"""
+            for i, m in enumerate(team)
         ])
-        weakness_badges = "".join([
-            f'<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">{k.title()} {v}x</span>'
-            for k, v in target.get("weaknesses", {}).items()
-        ]) or '<span class="text-xs text-slate-500">None</span>'
+        or '<div class="text-slate-500 text-base italic py-3 text-center">Party is empty.</div>'
+    )
 
-        moves_preview = "".join([
-            f"""<div class="flex justify-between text-xs py-0.5 border-b border-slate-800 last:border-none">
-                <span class="text-slate-300">{m['move']}</span>
+    # 4. Shiny Hunt Card
+    shiny_card = f"""
+    <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3.5">
+        <div class="flex items-center justify-between">
+            <h3 class="text-base uppercase font-black text-amber-400 flex items-center gap-2 tracking-wide">
+                <span>✨ Shiny Hunt</span>
+            </h3>
+            <a href="/obs/shiny" target="_blank" class="text-sm font-bold text-amber-400/80 hover:underline">OBS Overlay ↗</a>
+        </div>
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-center">
+            <div class="text-sm text-slate-300 font-bold">{hunt.get('target', 'None')} <span class="text-slate-600 mx-1">•</span> <span class="text-slate-400 text-xs">{hunt.get('method', 'Encounters')}</span></div>
+            <div id="shiny-count" class="text-5xl font-black font-mono text-amber-300 my-2">{hunt.get('count', 0)}</div>
+            <div class="flex gap-2 justify-center mt-3">
+                <button type="button" onclick="fetch('/remote?action=shiny_dec').then(() => {{ const el = document.getElementById('shiny-count'); if (el) el.innerText = Math.max(0, parseInt(el.innerText || '0') - 1); }});" class="h-12 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-base rounded-xl transition active:scale-95">-1</button>
+                <button type="button" onclick="fetch('/remote?action=shiny_inc').then(() => {{ const el = document.getElementById('shiny-count'); if (el) el.innerText = parseInt(el.innerText || '0') + 1; }});" class="h-12 px-7 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base rounded-xl transition active:scale-95">+1 Encounter</button>
+                <button type="button" onclick="if (confirm('Reset counter to 0?')) {{ fetch('/remote?action=shiny_reset').then(() => {{ const el = document.getElementById('shiny-count'); if (el) el.innerText = '0'; }}); }}" class="h-12 px-4 bg-rose-950/50 hover:bg-rose-900 text-rose-300 font-black text-sm rounded-xl border border-rose-800/40 transition active:scale-95">Reset</button>
+            </div>
+        </div>
+        <form action="/remote" method="GET" class="flex gap-2">
+            <input type="hidden" name="action" value="set_shiny_target" />
+            <input name="name" placeholder="Target..." class="w-1/2 bg-slate-800 text-sm border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-400" />
+            <input name="method" placeholder="Method..." class="w-1/2 bg-slate-800 text-sm border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-400" />
+            <button type="submit" class="bg-slate-800 hover:bg-slate-700 font-bold text-sm px-4 rounded-xl transition text-slate-200">Set</button>
+        </form>
+    </div>
+    """
+
+    # 5. EV Card
+    ev_card_html = generate_ev_widget(ev_state, target, is_remote=True) if "generate_ev_widget" in globals() else ""
+
+    # 6. Catch Targets Pills
+    counter_pills = (
+        "".join([
+            f"""<a href="/remote?action=dec_counter&name={quote_plus(name) if 'quote_plus' in globals() else name}" class="flex items-center justify-between bg-slate-800/70 hover:bg-slate-800 border border-slate-700/70 rounded-xl p-3 text-base transition">
+                <span class="font-bold text-slate-100 text-base">{name}</span>
+                <span class="bg-indigo-600 text-white font-mono px-3 py-1 rounded-full text-sm font-black">{count}</span>
+            </a>"""
+            for name, count in counters.items()
+        ])
+        or '<div class="text-slate-500 text-base italic py-3 text-center">No catch targets configured.</div>'
+    )
+
+    # 7. EV Yield Label Resolution
+    active_gen_slug = target.get("selected_gen", "generation-ix") if target else "generation-ix"
+    modern_target_evs = target.get("ev_yield", {}) if target else {}
+    past_target_evs = target.get("past_ev_yields", {}) if target else {}
+    target_slug = target.get("name", "").lower().strip() if target else ""
+
+    if "resolve_ev_yield_for_version" in globals():
+        resolved_target_evs = resolve_ev_yield_for_version(target_slug, modern_target_evs, past_target_evs, active_gen_slug)
+    else:
+        resolved_target_evs = modern_target_evs
+
+    STAT_DISPLAY_MAP = {
+        "hp": "HP",
+        "attack": "Atk",
+        "defense": "Def",
+        "special-attack": "Sp. Atk",
+        "special-defense": "Sp. Def",
+        "speed": "Speed"
+    }
+
+    if resolved_target_evs:
+        ev_yield_str = ", ".join([
+            f"{v} {STAT_DISPLAY_MAP.get(k.lower(), k.replace('special-', 'Sp. ').title())}"
+            for k, v in resolved_target_evs.items() if v > 0
+        ])
+    else:
+        ev_yield_str = "None"
+
+    # 8. Target View
+    target_view = '<div class="text-slate-500 text-base italic py-8 text-center">Search and inspect a Pokémon to load stats.</div>'
+    if target:
+        growth_rate_slug = target.get("growth_rate", "medium-fast").lower()
+        default_sprite = target.get("sprite", "")
+
+        evos_list = "".join([
+            f'<li class="text-sm font-semibold text-slate-200 py-0.5">{evo}</li>'
+            for evo in target.get("evolutions", [])
+        ])
+
+        moves_list = "".join([
+            f"""<div class="target-move-row flex justify-between text-sm py-1.5 border-b border-slate-700/40" data-vg="{m.get('vg', 'all')}" data-move="{m.get('move', '')}">
+                <span class="text-slate-200 font-medium">{m['move']} <span class="text-xs text-slate-500">({m.get('vg', '')})</span></span>
                 <span class="font-mono text-amber-400 font-bold">Lv. {m['level']}</span>
             </div>"""
-            for m in target.get("level_moves", [])[:5]
+            for m in target.get("level_moves", [])
         ])
 
-        mobile_target_card = f"""
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] uppercase font-bold tracking-wider text-amber-400">Active Target</span>
-                <span class="text-xs font-mono text-slate-400">#{target.get('id', 0)}</span>
-            </div>
+        target_selected_version = str(
+            (get_current_game_version() if "get_current_game_version" in globals() else "")
+            or target.get("selected_gen")
+            or "yellow"
+        ).strip("[]'\" ").lower()
 
-            <div class="flex items-center gap-3">
-                <img src="{target.get('sprite', '')}" class="w-14 h-14 bg-slate-950 rounded-xl p-1 border border-slate-800 object-contain" />
-                <div class="flex-1">
-                    <h3 class="text-lg font-black text-white leading-tight">{target.get('name', 'Unknown')}</h3>
-                    <div class="flex flex-wrap gap-1 mt-1">
-                        {types_badges}
+        all_target_encounters = target.get("encounters", {}) or {}
+
+        raw_version_encounters = []
+        if target_selected_version == "modern":
+            for v_list in all_target_encounters.values():
+                if isinstance(v_list, list):
+                    raw_version_encounters.extend(v_list)
+        else:
+            if target_selected_version in all_target_encounters:
+                raw_version_encounters.extend(all_target_encounters[target_selected_version])
+            sub_versions = target_selected_version.split("-")
+            for sub_v in sub_versions:
+                if sub_v in all_target_encounters:
+                    raw_version_encounters.extend(all_target_encounters[sub_v])
+
+        dedup_encounters = {}
+        for enc in raw_version_encounters:
+            loc = enc.get("location", "Unknown Area")
+            min_l = enc.get("min_level", 1)
+            max_l = enc.get("max_level", 1)
+            methods_tuple = tuple(sorted(enc.get("methods", [])))
+            dedup_key = (loc, min_l, max_l, methods_tuple)
+            if dedup_key not in dedup_encounters:
+                dedup_encounters[dedup_key] = dict(enc)
+            else:
+                if enc.get("chance", 0) > dedup_encounters[dedup_key].get("chance", 0):
+                    dedup_encounters[dedup_key]["chance"] = enc.get("chance", 0)
+
+        target_version_encounters = list(dedup_encounters.values())
+
+        if target_version_encounters:
+            enc_rows = []
+            for enc in target_version_encounters:
+                methods_str = ", ".join(enc.get("methods", [])) or "Wild"
+                min_l = enc.get("min_level", 1)
+                max_l = enc.get("max_level", 1)
+                lvl_str = f"Lv. {min_l}" if min_l == max_l else f"Lv. {min_l}-{max_l}"
+                chance_val = enc.get("chance", 0)
+                chance_badge = f'<span class="text-xs font-mono font-black text-emerald-400">{chance_val}%</span>' if chance_val > 0 else ""
+                enc_rows.append(f"""
+                    <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 text-sm">
+                        <div>
+                            <div class="font-bold text-slate-100 text-sm">{enc.get('location', 'Unknown Area')}</div>
+                            <div class="text-xs text-slate-400 font-medium">{methods_str}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono text-amber-400 font-bold text-sm">{lvl_str}</div>
+                            {chance_badge}
+                        </div>
+                    </div>
+                """)
+            target_encounters_html = "".join(enc_rows)
+        else:
+            target_encounters_html = f'<div class="text-slate-500 text-sm italic p-3 text-center">No wild encounters listed for version "{target_selected_version}".</div>'
+
+        target_view = f"""
+        <div class="space-y-4">
+            <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 space-y-3.5">
+                <div class="flex items-center gap-3.5">
+                    <img id="target-sprite-img" src="{default_sprite}" class="w-20 h-20 bg-slate-800 rounded-xl p-1.5 border border-slate-700 object-contain image-render-pixelated" />
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-2xl font-black text-white">{target['name']}</h3>
+                            <span class="text-slate-400 text-sm font-mono font-bold">#{target['id']}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 mt-1.5" id="target-type-badges"></div>
                     </div>
                 </div>
-                <div class="text-right bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                    <div class="text-[9px] uppercase font-bold text-slate-400">Catch Rate</div>
-                    <div class="text-sm font-black font-mono text-emerald-400">{target.get('catch_rate', 0)}</div>
+
+                <div class="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-800">
+                    <span class="font-extrabold text-slate-300 uppercase text-xs tracking-wider">Inspect Game:</span>
+                    <select id="target-gen-select" onchange="updateTargetGenView()" class="w-56 bg-slate-950 border border-slate-700 text-amber-400 font-black rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
+                        <option value="modern">Modern / All</option>
+                        <optgroup label="Generation I">
+                            <option value="red-blue">Red / Blue</option>
+                            <option value="yellow">Yellow</option>
+                        </optgroup>
+                        <optgroup label="Generation II">
+                            <option value="gold-silver">Gold / Silver</option>
+                            <option value="crystal">Crystal</option>
+                        </optgroup>
+                        <optgroup label="Generation III">
+                            <option value="ruby-sapphire">Ruby / Sapphire</option>
+                            <option value="emerald">Emerald</option>
+                            <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                            <option value="colosseum">Colosseum / XD</option>
+                        </optgroup>
+                        <optgroup label="Generation IV">
+                            <option value="diamond-pearl">Diamond / Pearl</option>
+                            <option value="platinum">Platinum</option>
+                            <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                        </optgroup>
+                        <optgroup label="Generation V">
+                            <option value="black-white">Black / White</option>
+                            <option value="black-2-white-2">Black 2 / White 2</option>
+                        </optgroup>
+                        <optgroup label="Generation VI">
+                            <option value="x-y">X / Y</option>
+                            <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
+                        </optgroup>
+                        <optgroup label="Generation VII">
+                            <option value="sun-moon">Sun / Moon</option>
+                            <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
+                            <option value="lets-go-pikachu-lets-go-eevee">Let's Go Pikachu / Eevee</option>
+                        </optgroup>
+                        <optgroup label="Generation VIII">
+                            <option value="sword-shield">Sword / Shield</option>
+                            <option value="brilliant-diamond-and-shining-pearl">BD / SP</option>
+                            <option value="legends-arceus">Legends: Arceus</option>
+                        </optgroup>
+                        <optgroup label="Generation IX">
+                            <option value="scarlet-violet">Scarlet / Violet</option>
+                        </optgroup>
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-slate-950/60 rounded-xl p-2.5 space-y-1 border border-slate-800/60">
-                <div class="text-[10px] font-bold uppercase text-rose-400">Weaknesses:</div>
-                <div class="flex flex-wrap gap-1">
-                    {weakness_badges}
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 uppercase font-black">Catch Rate</div>
+                    <div class="text-base font-mono font-black text-emerald-400 mt-0.5">{target.get('catch_rate', 0)}</div>
+                </div>
+                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 uppercase font-black">Base EXP</div>
+                    <div class="text-base font-mono font-black text-sky-400 mt-0.5">{target.get('base_experience', 0)}</div>
+                </div>
+                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 uppercase font-black">EV Yield</div>
+                    <div id="target-ev-yield-display" class="text-xs font-mono font-black text-amber-400 truncate mt-0.5">
+                        {ev_yield_str}
+                    </div>
                 </div>
             </div>
 
-            <details class="group bg-slate-950/40 rounded-xl border border-slate-800/60">
-                <summary class="flex justify-between items-center p-2.5 cursor-pointer text-xs font-bold text-slate-300 select-none">
-                    <span>Level-Up Moves ({len(target.get('level_moves', []))})</span>
-                    <span class="text-slate-500 group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <div class="p-2.5 pt-0 max-h-40 overflow-y-auto space-y-1">
-                    {moves_preview or '<span class="text-xs text-slate-500 italic">No moves recorded.</span>'}
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm space-y-3">
+                <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
+                <div class="flex items-center justify-between text-slate-300 font-extrabold uppercase text-xs tracking-wider">
+                    <span>EXP Grind Calc</span>
+                    <span class="text-amber-400 font-mono font-black capitalize text-sm">{growth_rate_slug.replace('-', ' ')}</span>
                 </div>
-            </details>
+                <div class="flex items-center gap-2 text-slate-200 font-bold text-base">
+                    <span>Lvl</span>
+                    <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
+                    <span>to</span>
+                    <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
+                    <span class="text-slate-500 font-black">=&gt;</span>
+                    <span id="exp-output" class="font-mono font-black text-amber-400 text-sm ml-auto">46,656 EXP</span>
+                </div>
+                <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-800/80 text-slate-300">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-extrabold uppercase text-slate-400">Avg EXP/Kill:</span>
+                        <input id="exp-per-kill" type="number" min="1" value="120" oninput="calcExpGap()" class="w-16 h-9 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-amber-300 font-mono font-black text-sm focus:outline-none focus:border-amber-400" />
+                    </div>
+                    <div class="text-right font-mono text-xs">
+                        <span id="grind-battles" class="text-slate-200 font-bold">389 kills</span>
+                        <span class="text-slate-600 mx-1">•</span>
+                        <span id="grind-time" class="text-emerald-400 font-black">~1h 37m</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm space-y-3.5">
+                <div class="flex items-center justify-between text-slate-300 font-black uppercase text-xs tracking-wider">
+                    <span>Live Catch Odds</span>
+                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-base">{state.get('odds', '--%')}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs text-slate-400 font-bold">
+                            <span>Target HP</span>
+                            <span id="catch-hp-display" class="text-amber-400 font-mono font-black text-sm">{state.get('hp', '100')}%</span>
+                        </div>
+                        <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" class="w-full h-3 bg-slate-800 rounded-lg accent-emerald-500 cursor-pointer" />
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs text-slate-400 font-bold">
+                            <span>Target Level</span>
+                            <span id="catch-lvl-display" class="text-indigo-400 font-mono font-black text-sm">{state.get('lvl', '50')}</span>
+                        </div>
+                        <input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" class="w-full h-10 bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-2.5 text-center font-mono font-black text-base focus:outline-none focus:border-indigo-400" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <div class="text-xs text-slate-400 font-black uppercase mb-1">STATUS</div>
+                        <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full h-11 bg-slate-950 border border-slate-700 text-slate-200 font-bold rounded-xl px-3 text-sm focus:outline-none focus:border-amber-400">
+                            <option value="1" {"selected" if str(state.get('status')) == '1' else ""}>None</option>
+                            <option value="2.5" {"selected" if str(state.get('status')) == '2.5' else ""}>Sleep / Freeze</option>
+                            <option value="1.5" {"selected" if str(state.get('status')) == '1.5' else ""}>Paralyze / Poison / Burn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-black uppercase mb-1">BALL</div>
+                        <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full h-11 bg-slate-950 border border-slate-700 text-slate-200 font-bold rounded-xl px-3 text-sm focus:outline-none focus:border-emerald-400">
+                            <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
+                            <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
+                            <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
+                            <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-xs uppercase font-black text-slate-400 tracking-wider">Wild Encounters</h4>
+                    <span id="target-encounters-version-badge" class="text-xs font-mono font-black text-amber-400 uppercase">{target_selected_version}</span>
+                </div>
+                <div id="target-encounters-list" class="space-y-2 bg-slate-900/40 p-3 rounded-2xl border border-slate-800 max-h-56 overflow-y-auto">
+                    {target_encounters_html}
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-xs uppercase font-black text-slate-400 tracking-wider">Base Stats</h4>
+                    <span id="target-bst-badge" class="text-xs font-black px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-300">BST {target['bst']}</span>
+                </div>
+                <div id="target-stats-container" class="space-y-2 bg-slate-900/40 p-3.5 rounded-2xl border border-slate-800"></div>
+            </div>
+
+            <div>
+                <h4 class="text-xs uppercase font-black text-slate-400 tracking-wider mb-2">Matchups</h4>
+                <div class="space-y-2.5 bg-slate-900/40 p-3 rounded-2xl border border-slate-800 text-sm">
+                    <div><span class="text-xs font-black text-rose-400 uppercase tracking-wide">Weaknesses:</span> <div id="target-weakness-tags" class="flex flex-wrap gap-1.5 mt-1.5"></div></div>
+                    <div><span class="text-xs font-black text-emerald-400 uppercase tracking-wide">Resistances:</span> <div id="target-resistance-tags" class="flex flex-wrap gap-1.5 mt-1.5"></div></div>
+                    <div><span class="text-xs font-black text-purple-400 uppercase tracking-wide">Immunities:</span> <div id="target-immunity-tags" class="flex flex-wrap gap-1.5 mt-1.5"></div></div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs uppercase font-black text-slate-400 tracking-wider mb-2">Evolutions</h4>
+                <ul class="bg-slate-900/40 p-3 rounded-2xl border border-slate-800 space-y-1.5">{evos_list}</ul>
+            </div>
+
+            <div>
+                <h4 class="text-xs uppercase font-black text-slate-400 tracking-wider mb-2">Level-Up Moves</h4>
+                <div class="bg-slate-900/40 p-3 rounded-2xl border border-slate-800 max-h-56 overflow-y-auto space-y-1" id="moves-container">
+                    {moves_list or '<span class="text-sm text-slate-500 italic">No level-up moves listed.</span>'}
+                </div>
+            </div>
         </div>
         """
 
-    route_section_html = '<div class="text-slate-500 text-xs italic py-4 text-center">Search and select a Route to load wild encounter tables.</div>'
+    # 9. Route View
+    route_view = '<div class="text-slate-500 text-base italic py-8 text-center">Search and select a Route to load wild encounter tables.</div>'
     if active_route:
         games = {}
         for p in active_route.get("pokemon", []):
             p_name = p.get("name", "Unknown")
-            p_slug = p.get("slug", p_name.lower())
+            p_slug = p.get("slug", p_name.lower().replace(" ", "-"))
             modern_evs = p.get("ev_yield", {})
             past_evs = p.get("past_ev_yields", {})
+            raw_evos = p.get("evolutions", [])
 
             for d in p.get("details", []):
                 ver = d.get("version", "Other").title()
@@ -1813,22 +2270,26 @@ def handle_pokemon_remote(params):
                     games[ver] = {}
 
                 if p_name not in games[ver]:
-                    version_evs = resolve_ev_yield_for_version(p_slug, modern_evs, past_evs, ver)
+                    if "resolve_ev_yield_for_version" in globals():
+                        version_evs = resolve_ev_yield_for_version(p_slug, modern_evs, past_evs, ver)
+                    else:
+                        version_evs = modern_evs
+
                     games[ver][p_name] = {
                         "slug": p_slug,
                         "ev_yield": version_evs,
+                        "evolutions": raw_evos,
                         "methods": set(),
                         "levels": [],
                         "total_chance": 0,
                     }
 
                 if d.get("method"):
-                    games[ver][p_name]["methods"].add(d["method"].title())
+                    games[ver][p_name]["methods"].add(str(d["method"]).title())
                 if d.get("level"):
                     games[ver][p_name]["levels"].append(str(d["level"]))
                 games[ver][p_name]["total_chance"] += d.get("chance", 0)
 
-        # Selected version dropdown
         game_options = ['<option value="ALL">All Versions</option>']
         game_sections = []
 
@@ -1856,7 +2317,32 @@ def handle_pokemon_remote(params):
                 chance_str = f"{min(100, total_chance)}%" if total_chance > 0 else ""
                 p_slug = data.get("slug", p_name.lower().replace(" ", "-"))
 
-                # Safely evaluate EV button
+                evos_data = data.get("evolutions", [])
+                if not evos_data:
+                    cache_dir = getattr(handlers, "TARGET_CACHE_DIR", "target_cache") if "handlers" in globals() else "target_cache"
+                    slug_candidates = [p_slug]
+                    if "handlers" in globals() and hasattr(handlers, "resolve_pokemon_endpoint_slug"):
+                        slug_candidates.append(handlers.resolve_pokemon_endpoint_slug(p_slug))
+
+                    for s in slug_candidates:
+                        c_path = os.path.join(cache_dir, f"{s}.json")
+                        if os.path.exists(c_path):
+                            try:
+                                with open(c_path, "r", encoding="utf-8") as f:
+                                    c_json = json.load(f)
+                                    evos_data = c_json.get("evolutions", [])
+                                    if evos_data:
+                                        break
+                            except Exception:
+                                pass
+
+                if not evos_data:
+                    all_pk = getattr(handlers, "all_pkmn_collection", {}) if "handlers" in globals() else globals().get("all_pkmn_collection", {})
+                    if isinstance(all_pk, dict) and p_slug in all_pk:
+                        evos_data = all_pk[p_slug].get("evolutions", [])
+
+                evos_json_attr = json.dumps(evos_data).replace('"', '&quot;')
+
                 ev_btn_html = ""
                 try:
                     evs = data.get("ev_yield")
@@ -1868,329 +2354,315 @@ def handle_pokemon_remote(params):
                             stat_label = STAT_SHORT_MAP.get(stat_clean, stat_clean[:3].upper())
                             btn_text = f"+{top_amt} {stat_label}"
                             ev_link = f"/remote?action=ev_adjust&stat={stat_clean}&amt={top_amt}"
-                            ev_btn_html = f'<a href="{ev_link}" class="text-[10px] bg-rose-600 hover:bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition whitespace-nowrap">{btn_text}</a>'
+                            ev_btn_html = f'<a href="{ev_link}" class="h-9 flex items-center text-xs bg-rose-600 hover:bg-rose-500 text-white font-black px-2.5 py-1 rounded-xl active:scale-95 transition whitespace-nowrap shadow-sm">{btn_text}</a>'
                 except Exception:
                     ev_btn_html = ""
 
-                chance_badge = f'<div class="text-[10px] font-mono font-bold text-emerald-400">{chance_str}</div>' if chance_str else ''
+                chance_badge = f'<div class="text-xs font-mono font-black text-emerald-400">{chance_str}</div>' if chance_str else ''
+                is_checked = "checked" if "deselected_pokemon" not in globals() or p_name not in deselected_pokemon else ""
 
                 poke_rows.append(f"""
-                <div class="flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 hover:border-slate-700 transition">
-                    <div>
-                        <div class="font-bold text-white text-xs">{p_name}</div>
-                        <div class="text-[10px] text-slate-400">{methods_str}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="text-right">
-                            <div class="text-[11px] font-mono text-amber-400 font-semibold">{levels_str}</div>
-                            {chance_badge}
+                    <div class="route-row flex justify-between items-center bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 hover:border-slate-700 transition" data-evolutions="{evos_json_attr}">
+                        <div class="flex items-center gap-3">
+                            <input 
+                                type="checkbox" 
+                                class="route-poke-checkbox w-6 h-6 rounded-lg bg-slate-900 border-slate-700 text-indigo-500 focus:ring-0 cursor-pointer" 
+                                data-poke-name="{p_name}" 
+                                onchange="onPokemonCheckboxChange(this)"
+                                {is_checked}
+                            />
+                            <div>
+                                <div class="poke-name font-bold text-white text-base leading-snug" data-poke-name="{p_name}">{p_name}</div>
+                                <div class="text-xs text-slate-400 font-medium">{methods_str}</div>
+                            </div>
                         </div>
-                        <div class="flex gap-1 ml-1">
-                            <a href="/remote?action=set_target&name={p_slug}" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded active:scale-95 transition">Target</a>
-                            {ev_btn_html}
-                            <a href="/remote?action=team_add&name={p_slug}" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Party</a>
-                            <a href="/remote?action=inc_counter&name={quote_plus(p_name)}" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded active:scale-95 transition">+ Track</a>
+                        <div class="flex items-center gap-2">
+                            <div class="text-right mr-1">
+                                <div class="text-xs font-mono text-amber-400 font-bold">{levels_str}</div>
+                                {chance_badge}
+                            </div>
+                            <div class="flex gap-1.5">
+                                <a href="/remote?action=set_target&name={p_slug}" class="h-9 flex items-center text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-2.5 py-1 rounded-xl active:scale-95 transition shadow-sm">Target</a>
+                                {ev_btn_html}
+                                <a href="/remote?action=team_add&name={p_slug}" class="h-9 flex items-center text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-black px-2.5 py-1 rounded-xl active:scale-95 transition shadow-sm">+ Party</a>
+                                <a href="/remote?action=inc_counter&name={quote_plus(p_name) if 'quote_plus' in globals() else p_name}" class="h-9 flex items-center text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-black px-2.5 py-1 rounded-xl active:scale-95 transition shadow-sm">+ Track</a>
+                            </div>
                         </div>
                     </div>
-                </div>
                 """)
 
             game_sections.append(f"""
-            <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-2" data-version="{ver_slug}">
-                <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-950/50 px-2 py-1 rounded border border-indigo-900/50 flex justify-between">
+            <div class="game-version-card bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-2" data-version="{ver_slug}">
+                <div class="text-xs font-black uppercase tracking-wider text-indigo-300 bg-indigo-950/50 px-3 py-1.5 rounded-xl border border-indigo-900/50 flex justify-between items-center">
                     <span>{ver_name}</span>
-                    <span class="text-indigo-400 text-[10px]">{len(species_dict)} species</span>
+                    <span class="text-indigo-400 font-bold">{len(species_dict)} species</span>
                 </div>
-                <div class="space-y-1">
+                <div class="space-y-1.5">
                     {''.join(poke_rows)}
                 </div>
             </div>
             """)
 
-        select_html = f"""
-        <div class="mb-3 space-y-1.5">
-            <div class="flex justify-between items-center">
-                <label class="text-[11px] text-slate-400 font-semibold block">Filter by Version:</label>
-                <span class="text-[10px] text-amber-400/90 italic font-mono">⚠️ Route list uses modern EVs</span>
+        tools_dropdown_html = generate_tools_dropdown_widget() if "generate_tools_dropdown_widget" in globals() else ""
+
+        route_view = f"""
+        <div class="space-y-3.5">
+            <div class="mb-1">
+                {tools_dropdown_html}
             </div>
-            <select id="game-filter-select" onchange="filterGameVersion()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                {''.join(game_options)}
-            </select>
+
+            <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-4">
+                <div class="text-xs uppercase font-black text-emerald-400 tracking-wider">Current Location</div>
+                <div class="text-xl font-black text-white mt-0.5">{active_route['name']}</div>
+                <div class="text-xs text-slate-300 mt-1 font-medium">{active_route['total_species']} species across all versions</div>
+            </div>
+
+            <button 
+                onclick="trackAllRoutePokemon(event)" 
+                class="w-full h-12 bg-emerald-600/25 hover:bg-emerald-600/35 active:bg-emerald-600/45 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 font-black py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors shadow-sm">
+                <span class="text-base">➕</span>
+                <span>Track All Route Pokémon</span>
+            </button>
+
+            <div class="ev-warning text-xs">⚠️ Warning: On route list, only modern EVs are used</div>
+
+            <div class="flex items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+                <span class="font-extrabold text-slate-300 uppercase text-xs tracking-wider whitespace-nowrap">Filter Game:</span>
+                <select id="game-filter-select" onchange="filterGameVersion()" class="w-full h-10 bg-slate-950 border border-slate-700 text-amber-400 font-black rounded-xl px-3 text-sm focus:outline-none focus:border-amber-400">
+                    {''.join(game_options)}
+                </select>
+            </div>
+
+            <div class="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
+                {"".join(game_sections) or '<div class="text-slate-500 text-sm italic py-4 text-center">No encounter tables for this sub-area.</div>'}
+            </div>
         </div>
         """
 
-        route_section_html = f"""
-        <div class="space-y-3">
-            <div class="relative">
-                <input type="text" id="location-input" oninput="filterLocations()" placeholder="Search routes or locations..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
-                <div id="location-results" class="absolute z-20 left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden hidden max-h-60 overflow-y-auto"></div>
-            </div>
-            {select_html}
-            <div id="route-game-sections" class="space-y-2">
-                {''.join(game_sections)}
-            </div>
-        </div>
-        """
-
-    # Format JSON arrays for instant client-side dropdown filtering
-    locations_json = json.dumps([
-        {
-            "name": (loc.get("name") or loc.get("slug", "")).replace("-", " ").title() if isinstance(loc, dict) else str(loc).replace("-", " ").title(),
-            "slug": (loc.get("slug") or loc.get("name", "")) if isinstance(loc, dict) else str(loc)
-        }
-        for loc in all_location_areas
-    ])
-
-    pkmn_json = json.dumps([
-        {
-            "name": (p.get("name") or p.get("slug", "")).replace("-", " ").title() if isinstance(p, dict) else str(p).replace("-", " ").title(),
-            "slug": (p.get("slug") or p.get("name", "")) if isinstance(p, dict) else str(p).lower().replace(" ", "-")
-        }
-        for p in all_pkmn_collection
-    ])
-
-    active_target_json = json.dumps(target if target else {})
-
-    return (
-        f"""<!DOCTYPE html>
-<html>
+    # 10. Assemble Mobile Template with Toggle Controls
+    html = f"""<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Catch Tracker Remote</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stream Mobile Remote</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; padding: 16px; margin: 0; -webkit-tap-highlight-color: transparent; }}
-        h3 {{ margin-top: 0; }}
-        textarea, input[type="text"] {{ width: 100%; height: 44px; box-sizing: border-box; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; font-family: inherit; font-size: 1rem; }}
-        textarea {{ height: 60px; }}
-        button {{ width: 100%; padding: 12px; background: #10b981; color: #fff; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; }}
-        button:active {{ opacity: 0.9; transform: scale(0.99); }}
-        .card {{ background: #1e1e1e; padding: 14px; border-radius: 10px; margin-top: 20px; }}
-        .nav-btn {{ flex: 1; padding: 16px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; text-decoration: none; text-align: center; color: #fff; background: #374151; }}
-        .nav-btn:active {{ background: #4b5563; }}
-        .shiny-btn {{ display: block; width: 100%; padding: 22px; font-size: 1.4rem; font-weight: 900; text-align: center; color: #0f172a; background: #f59e0b; border-radius: 12px; text-decoration: none; box-sizing: border-box; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); }}
-        .shiny-btn:active {{ background: #d97706; transform: scale(0.98); }}
-    </style>
     <script>
         const activeTargetData = {active_target_json};
-	const pokemonNames = {pkmn_json};
-        const locationAreas = {locations_json};
+        const pokemonNames = {js_pokemon_array};
+        const locationAreas = {js_location_array};
 
+        {SHARED_POKEMON_JS if "SHARED_POKEMON_JS" in globals() else ""}
 
-        {SHARED_POKEMON_JS}
-
-            </script>
+        window.addEventListener('DOMContentLoaded', () => {{
+            if (typeof updateTargetGenView === 'function') updateTargetGenView();
+            if (typeof calcExpGap === 'function') calcExpGap();
+            initSectionToggles();
+        }});
+    </script>
+    <style>
+        .ev-warning {{
+            font-family: monospace;
+            font-size: 11px;
+            color: #fbbf24;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+            display: block;
+        }}
+        .toggle-btn-off {{
+            opacity: 0.35 !important;
+            border-color: #334155 !important;
+            color: #64748b !important;
+            background: #0f172a !important;
+        }}
+    </style>
 </head>
-<body class="p-3 md:p-6 pb-36 bg-[#121212] text-[#e0e0e0] font-sans antialiased min-h-screen selection:bg-indigo-500 selection:text-white" style="padding-bottom: calc(9rem + env(safe-area-inset-bottom));">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-20">
 
-    <!-- Responsive Grid Wrapper (1 col portrait, 2 cols landscape/desktop) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl mx-auto items-start [media(orientation:landscape)]:grid-cols-2">
-        
-        <!-- COLUMN 1: Target Search -> Target Card -> Counters -> Shiny -> EV -> Catch Odds -->
-        <div class="space-y-4 flex flex-col">
+    <!-- Sticky Header: Search Inputs -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-3 space-y-2.5">
+        <div class="relative">
+            <input id="search-input" oninput="filterPokemon()" onkeyup="filterPokemon()" type="text" placeholder="Search Pokémon..." class="w-full h-11 bg-slate-800 border border-slate-700 rounded-xl px-4 text-base text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 font-medium" autocomplete="off" />
+            <div id="search-results" style="display: none;" class="absolute left-0 right-0 mt-1.5 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto z-50"></div>
+        </div>
+        <div class="relative">
+            <input id="location-input" oninput="filterLocations()" onkeyup="filterLocations()" type="text" placeholder="Search Route / Area..." class="w-full h-11 bg-slate-800 border border-slate-700 rounded-xl px-4 text-base text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 font-medium" autocomplete="off" />
+            <div id="location-results" style="display: none;" class="absolute left-0 right-0 mt-1.5 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto z-50"></div>
+        </div>
+    </header>
 
-            <!-- Search 1: Target Pokémon Search -->
-            <div class="card" style="border: 1px solid #f59e0b; margin-top: 0;">
-                <h3 style="color: #fbbf24; margin-bottom: 8px;">Search Pokémon Target</h3>
-                <input 
-                    type="text" 
-                    id="pkmn-search-input" 
-                    oninput="liveFilterPokemon()" 
-                    placeholder="Search Pokémon (e.g. gengar, pikachu)..." 
-                    autocomplete="off" 
-                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400"
-                />
-                <div id="pkmn-live-results" class="bg-slate-900/95 border border-amber-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;">
-                    <div class="flex justify-between items-center text-[10px] font-bold text-amber-300 uppercase tracking-wider">
-                        <span id="pkmn-results-count">0 matching Pokémon</span>
-                        <button type="button" onclick="document.getElementById('pkmn-live-results').style.display='none';" class="text-slate-500 hover:text-white text-xs">✕</button>
-                    </div>
-                    <div id="pkmn-results-list" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
-                </div>
+    <!-- Sticky Section Toggles Bar -->
+    <div class="sticky top-[108px] z-30 bg-slate-950/95 backdrop-blur border-b border-slate-800/80 px-3 py-2 overflow-x-auto">
+        <div class="flex items-center gap-2 text-xs font-black whitespace-nowrap min-w-max">
+            <button id="btn-sec-target" onclick="toggleSec('sec-target')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-amber-400 transition flex items-center">Scanner</button>
+            <button id="btn-sec-route" onclick="toggleSec('sec-route')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400 transition flex items-center">Route</button>
+            <button id="btn-sec-counters" onclick="toggleSec('sec-counters')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-indigo-400 transition flex items-center">Counters</button>
+            <button id="btn-sec-shiny" onclick="toggleSec('sec-shiny')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-amber-300 transition flex items-center">Shiny</button>
+            <button id="btn-sec-ev" onclick="toggleSec('sec-ev')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-rose-400 transition flex items-center">EVs</button>
+            <button id="btn-sec-party" onclick="toggleSec('sec-party')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-purple-400 transition flex items-center">Party</button>
+            <button id="btn-sec-tasks" onclick="toggleSec('sec-tasks')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sky-400 transition flex items-center">Tasks</button>
+            <button id="btn-sec-note" onclick="toggleSec('sec-note')" class="h-9 px-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 transition flex items-center">Note</button>
+        </div>
+    </div>
+
+    <!-- Stacked Sections Container -->
+    <main class="p-3 max-w-xl mx-auto space-y-4">
+
+        <!-- 1. Active Target Pokémon Scanner -->
+        <section id="sec-target" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg space-y-3.5">
+            <h2 class="text-sm font-black text-white uppercase tracking-wider flex items-center justify-between">
+                <span>Active Target Scanner</span>
+                <span class="text-xs font-mono text-slate-400 font-bold">OBS Linked</span>
+            </h2>
+            {target_view}
+        </section>
+
+        <!-- 2. Route Encounters Table -->
+        <section id="sec-route" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg space-y-3.5">
+            <h2 class="text-sm font-black text-white uppercase tracking-wider flex items-center justify-between">
+                <span>Route Encounters</span>
+                <span class="text-xs font-mono text-emerald-400 font-bold">Wild Spawns</span>
+            </h2>
+            {route_view}
+        </section>
+
+        <!-- 3. Catch Targets Quick Taps -->
+        <section id="sec-counters" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg space-y-3">
+            <h3 class="text-sm uppercase font-black text-slate-300 tracking-wide">Catch Targets (-1)</h3>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+                {counter_pills}
             </div>
-       
-            {mobile_target_card}
+            <form action="/remote" method="GET" class="space-y-2 pt-1">
+                <input type="hidden" name="action" value="set_counters" />
+                <input name="counter_list" placeholder="caterpie 3, rattata 2" class="w-full h-11 bg-slate-800 text-sm border border-slate-700 rounded-xl px-3.5 text-white font-medium" />
+                <button type="submit" class="w-full h-11 bg-slate-800 hover:bg-slate-700 font-black text-xs py-2 rounded-xl transition">Set Target Batches</button>
+            </form>
+        </section>
 
-            <!-- Active Counters -->
-            <div class="card" style="margin-top: 0;">
-                <h3 style="margin-bottom: 8px;">Active Tracking Counters</h3>
-                <div>
-                    {buttons_html}
-                </div>
-            </div>
+        <!-- 4. Shiny Hunting -->
+        <section id="sec-shiny">
+            {shiny_card}
+        </section>
 
-            <!-- Shiny Hunt Section -->
-            <div class="card" style="border: 2px solid #f59e0b; background: #18150f; margin-top: 0;">
-                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                    <div style="font-size: 0.85rem; color: #fbbf24; text-transform: uppercase; font-weight: bold;">✨ {hunt.get('target', 'None')}</div>
-                    <div style="font-size: 0.75rem; color: #92400e;">{hunt.get('method', 'Encounters')}</div>
-                </div>
-                <div style="font-size: 2.5rem; font-weight: 900; font-family: monospace; color: #fef3c7; text-align: center; margin: 4px 0 14px 0;">{hunt.get('count', 0)}</div>
-                <a href="/remote?shiny_action=inc" class="shiny-btn">+1 SEEN / RESET</a>
-                <div style="display: flex; gap: 8px; margin-top: 10px;">
-                    <a href="/remote?shiny_action=dec" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #292524;">-1 Undo</a>
-                    <a href="/remote?shiny_action=reset" onclick="return confirm('Reset shiny hunt counter?');" class="nav-btn" style="padding: 10px; font-size: 0.9rem; background: #450a0a; color: #fca5a5;">Reset 0</a>
-                </div>
-            </div>
-
+        <!-- 5. EV Widget -->
+        <section id="sec-ev">
             {ev_card_html}
+        </section>
 
-            <!-- Catch Calculator Widget -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs space-y-3">
-                <div class="flex items-center justify-between text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                    <span>Live Catch Odds</span>
-                    <span id="catch-odds-display" class="text-emerald-400 font-mono font-black text-sm">{state.get('odds', '--%')}</span>
-                </div>
-                
-                <div class="space-y-1">
-                    <div class="flex justify-between text-[10px] text-slate-500 font-bold">
-                        <span>Target HP</span>
-                        <span id="catch-hp-display" class="text-amber-400 font-mono">{state.get('hp', '100')}%</span>
-                    </div>
-                    <input type="range" id="catch-hp-slider" min="1" max="100" value="{state.get('hp', '100')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-full accent-emerald-500" />
-                </div>
+        <!-- 6. Party Queue -->
+        <section id="sec-party" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm uppercase font-black text-slate-300 tracking-wide">Party Queue ({len(team)})</h3>
+                <a href="/obs/team" target="_blank" class="text-xs font-bold text-indigo-400 hover:underline">OBS View ↗</a>
+            </div>
+            <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {team_pills}
+            </div>
+        </section>
 
-                <div class="flex justify-between items-center bg-slate-950/60 border border-slate-800/80 rounded-lg p-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Target Lvl</span>
-                    <input type="number" id="catch-lvl-input" min="1" max="100" value="{state.get('lvl', '50')}" oninput="calculateCatchOdds()" onchange="calculateCatchOdds()" class="w-16 bg-slate-900 border border-slate-700 text-white rounded px-2 py-0.5 text-center font-mono font-bold text-xs focus:outline-none focus:border-indigo-400" />
+        <!-- 7. Bulbapedia Walkthrough & Task Queue -->
+        <section id="sec-tasks" class="space-y-3.5">
+            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs uppercase font-black text-slate-400 tracking-wide">Bulbapedia Walkthrough</span>
+                    <span class="text-xs font-mono text-indigo-400 font-black">TASK LOADER</span>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 gap-2.5">
                     <div>
-                        <div class="text-[10px] text-slate-500 font-bold mb-1">STATUS</div>
-                        <select id="catch-status-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-amber-400">
-                            <option value="1" {"selected" if state.get('status') == '1' else ""}>None</option>
-                            <option value="2.5" {"selected" if state.get('status') == '2.5' else ""}>Sleep / Freeze</option>
-                            <option value="1.5" {"selected" if state.get('status') == '1.5' else ""}>Paralyze / Poison / Burn</option>
+                        <label class="text-xs text-slate-300 font-extrabold uppercase block mb-1">1. Select Game:</label>
+                        <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full h-11 bg-slate-950/80 border border-slate-800 text-slate-200 font-bold rounded-xl px-3 text-sm focus:outline-none focus:border-indigo-500">
+                            <option value="">-- Choose Game --</option>
+                            <option value="red-blue">Red / Blue</option>
+                            <option value="yellow">Yellow</option>
+                            <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
+                            <option value="ruby-sapphire">Ruby / Sapphire</option>
+                            <option value="emerald">Emerald</option>
+                            <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                            <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
+                            <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                            <option value="black-white">Black / White</option>
+                            <option value="black-2-white-2">Black 2 / White 2</option>
+                            <option value="x-y">X / Y</option>
+                            <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
+                            <option value="sun-moon">Sun / Moon</option>
+                            <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
                         </select>
                     </div>
                     <div>
-                        <div class="text-[10px] text-slate-500 font-bold mb-1">BALL</div>
-                        <select id="catch-ball-select" onchange="calculateCatchOdds()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded px-2 py-1 focus:outline-none focus:border-emerald-400">
-                            <option value="poke" {"selected" if state.get('ball') == 'poke' else ""}>Poké Ball</option>
-                            <option value="great" {"selected" if state.get('ball') == 'great' else ""}>Great Ball</option>
-                            <option value="ultra" {"selected" if state.get('ball') == 'ultra' else ""}>Ultra Ball</option>
-                            <option value="master" {"selected" if state.get('ball') == 'master' else ""}>Master Ball</option>
+                        <label class="text-xs text-slate-300 font-extrabold uppercase block mb-1">2. Select Chapter / Part:</label>
+                        <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full h-11 bg-slate-950/80 border border-slate-800 text-slate-200 font-bold rounded-xl px-3 text-sm focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+                            <option value="">-- Select Game First --</option>
                         </select>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- COLUMN 2: Route Search -> Route Info -> Tasks -> Forms -->
-        <div class="space-y-4 flex flex-col">
-
-		<!-- Search 2: Route Location Search -->
-		<div class="card" style="border: 1px solid #6366f1; margin-top: 0;">
-		    <h3 style="color: #a5b4fc; margin-bottom: 8px;">Search Route / Location</h3>
-		    <input 
-		        type="text" 
-		        id="location-input" 
-		        oninput="filterLocations()" 
-		        placeholder="Search route (e.g. kanto-route-1, viridian)..." 
-		        autocomplete="off" 
-		        class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
-		    />
-		    <div id="location-results" class="bg-slate-900/95 border border-indigo-500/40 rounded-xl p-3 space-y-2 mt-2" style="display: none;"></div>
-		</div>
-            
-            <!-- Route Encounters Table -->
-            <div style="margin-top: 0;">
-                {route_section_html}
-            </div>
-
-            <!-- Stream Tasks -->
-            <div class="card" style="border: 2px solid #3b82f6; margin-top: 0;">
-	        <div id="task-progress-display" style="font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">{task_progress}</div>
-	        <div id="task-name-display" style="font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 14px;">{active_task_name}</div>
-	        <div style="display: flex; gap: 10px;">
-	            <button type="button" onclick="navigateTask('prev')" class="nav-btn" style="cursor: pointer;">◀ Back</button>
-	            <button type="button" onclick="navigateTask('next')" class="nav-btn" style="background: #2563eb; cursor: pointer;">Forward ▶</button>
-	        </div>
-	    </div>
-
-            <!-- Task Management -->
-			    <div class="card space-y-2.5" style="border: 1px solid #6366f1;">
-    <div class="flex justify-between items-center">
-        <h3 style="color: #a5b4fc;" class="text-xs font-bold uppercase tracking-wider">Bulbapedia Walkthrough Task Loader</h3>
-        <span class="text-[10px] text-indigo-400 font-mono">?action=set_tasks</span>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <!-- 1. Game Selection Dropdown -->
-        <div>
-            <label class="text-[11px] text-slate-400 font-semibold mb-1 block">1. Select Game:</label>
-            <select id="walkthrough-game-select" onchange="onWalkthroughGameChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-400">
-                <option value="">-- Choose Game --</option>
-                <option value="red-blue">Red / Blue</option>
-                <option value="yellow">Yellow</option>
-                <option value="gold-silver-crystal">Gold / Silver / Crystal</option>
-                <option value="ruby-sapphire">Ruby / Sapphire</option>
-                <option value="emerald">Emerald</option>
-                <option value="firered-leafgreen">FireRed / LeafGreen</option>
-                <option value="diamond-pearl-platinum">Diamond / Pearl / Platinum</option>
-                <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
-                <option value="black-white">Black / White</option>
-                <option value="black-2-white-2">Black 2 / White 2</option>
-                <option value="x-y">X / Y</option>
-                <option value="omega-ruby-alpha-sapphire">Omega Ruby / Alpha Sapphire</option>
-                <option value="sun-moon">Sun / Moon</option>
-                <option value="ultra-sun-ultra-moon">Ultra Sun / Ultra Moon</option>
-            </select>
-        </div>
-
-        <!-- 2. Chapter / Part Dropdown -->
-        <div>
-            <label class="text-[11px] text-slate-400 font-semibold mb-1 block">2. Select Chapter / Part:</label>
-            <select id="walkthrough-part-select" onchange="loadSelectedPartTasks()" disabled class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-400 disabled:opacity-50">
-                <option value="">-- Select Game First --</option>
-            </select>
-        </div>
-    </div>
-</div>
-            <div class="card" style="margin-top: 0;">
-                <h3>Set Task Queue</h3>
-                <form action="/remote" method="GET">
-                    <textarea name="set_tasks" placeholder="Task one, Task two, Task three"></textarea>
-                    <button type="submit" style="background: #0ea5e9;">Load Tasks</button>
+            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="task-progress-display" class="text-xs uppercase font-black text-slate-400">{task_count_str}</span>
+                    <span class="text-xs font-mono text-emerald-400 font-black">CURRENT TASK</span>
+                </div>
+                <div id="task-name-display" class="text-sm font-black text-white mb-2 bg-slate-950/80 p-3 rounded-xl border border-slate-800">{active_task}</div>
+                <div class="flex gap-2.5">
+                    <button type="button" onclick="navigateTask('prev')" class="flex-1 h-12 bg-slate-800 hover:bg-slate-700 text-center text-sm font-black rounded-xl transition active:scale-95 text-slate-200">◀ Prev</button>
+                    <button type="button" onclick="navigateTask('next')" class="flex-1 h-12 bg-indigo-600 hover:bg-indigo-500 text-center text-sm font-black rounded-xl transition active:scale-95 text-white">Next ▶</button>
+                </div>
+                <form action="/remote" method="GET" class="space-y-2 pt-1">
+                    <input type="hidden" name="action" value="set_tasks" />
+                    <input name="tasks" placeholder="Task 1, Task 2, Task 3..." class="w-full h-11 bg-slate-800 text-sm border border-slate-700 rounded-xl px-3 text-white font-medium" />
+                    <button type="submit" class="w-full h-11 bg-slate-800 hover:bg-slate-700 font-black text-xs py-2 rounded-xl transition">Update Tasks</button>
                 </form>
             </div>
+        </section>
 
+        <!-- 8. Video Note -->
+        <section id="sec-note" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg space-y-2.5">
+            <h3 class="text-sm uppercase font-black text-slate-300 tracking-wide">Video Message Note</h3>
+            <form action="/videomessage" method="GET" class="space-y-2">
+                <textarea name="notes" placeholder="Update video note..." class="w-full bg-slate-800 text-sm border border-slate-700 rounded-xl p-3 text-white h-20 font-medium"></textarea>
+                <button type="submit" class="w-full h-11 bg-indigo-600 hover:bg-indigo-500 font-black text-xs py-2 rounded-xl transition">Overwrite Note</button>
+            </form>
+        </section>
 
-            <!-- Bulk Counters -->
-            <div class="card" style="margin-top: 0;">
-                <h3>Set / Reset Catch Targets</h3>
-                <form action="/remote" method="GET">
-                    <input type="hidden" name="action" value="set_counters" />
-                    <textarea name="counter_list" placeholder="caterpie 3, rattata 2, pikachu 1"></textarea>
-                    <button type="submit">Save Targets</button>
-                </form>
-            </div>
+    </main>
 
-            <!-- Video Message -->
-            <div class="card" style="margin-top: 0;">
-                <h3>Video Message</h3>
-                <form action="/videomessage" method="GET">
-                    <textarea name="notes" placeholder="Enter stream note..."></textarea>
-                    <button type="submit" style="background: #6366f1;">Update Video Message</button>
-                </form>
-            </div>
-        </div>
+    <!-- Client-side Section Toggle Logic -->
+    <script>
+        const remoteSections = [
+            'sec-target', 'sec-route', 'sec-counters', 'sec-shiny',
+            'sec-ev', 'sec-party', 'sec-tasks', 'sec-note'
+        ];
 
-    </div>
+        function applySecDisplay(secId, visible) {{
+            const el = document.getElementById(secId);
+            const btn = document.getElementById('btn-' + secId);
+            if (el) el.style.display = visible ? '' : 'none';
+            if (btn) {{
+                if (visible) btn.classList.remove('toggle-btn-off');
+                else btn.classList.add('toggle-btn-off');
+            }}
+        }}
 
-    <!-- Floating Quick Reload Button -->
-    <button onclick="window.location.href=window.location.pathname;" class="fixed bottom-6 right-6 z-[99] bg-slate-800 hover:bg-slate-700 text-slate-200 p-3.5 rounded-full shadow-2xl border border-slate-600 transition-all active:scale-90 flex items-center justify-center cursor-pointer" aria-label="Refresh Page">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-    </button>
+        function toggleSec(secId) {{
+            const current = localStorage.getItem('mobile_show_' + secId) !== 'false';
+            const next = !current;
+            localStorage.setItem('mobile_show_' + secId, next);
+            applySecDisplay(secId, next);
+        }}
+
+        function initSectionToggles() {{
+            remoteSections.forEach(secId => {{
+                const saved = localStorage.getItem('mobile_show_' + secId);
+                const isVisible = saved !== 'false';
+                applySecDisplay(secId, isVisible);
+            }});
+        }}
+    </script>
 </body>
-</html>""",
-        ("Content-Type", "text/html"),
-    )
-
+</html>"""
+    return html, ("Content-Type", "text/html")
 
 
 

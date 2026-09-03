@@ -12,3 +12,7 @@ current_task.txt
 stream_state.json
 ev_yields.json
 /target_cache
+/target_cache_backup
+/.idea
+StartPokemonServer.bat
+selected_version.txt
