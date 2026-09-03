@@ -142,6 +142,7 @@ def handle_obs_hub(params):
     
     return html, ("Content-Type", "text/html")
 
+
 def handle_obs_exp(params):
     state = load_exp_state()
 
@@ -157,25 +158,10 @@ def handle_obs_exp(params):
 <html>
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="refresh" content="1">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        setInterval(() => {{
-            fetch(window.location.pathname + '?t=' + Date.now())
-                .then(res => res.text())
-                .then(html => {{
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const newRoot = doc.getElementById('exp-overlay-root');
-                    const curRoot = document.getElementById('exp-overlay-root');
-                    if (newRoot && curRoot && newRoot.innerHTML !== curRoot.innerHTML) {{
-                        curRoot.innerHTML = newRoot.innerHTML;
-                    }}
-                }})
-                .catch(() => {{}});
-        }}, 1000);
-    </script>
 </head>
-<body class="bg-transparent font-sans overflow-hidden p-4">
+<body class="bg-transparent font-sans overflow-hidden p-4 select-none">
     <div id="exp-overlay-root" class="bg-slate-900/90 border-2 border-slate-700/80 rounded-xl p-3 inline-block shadow-2xl backdrop-blur-sm min-w-[260px]">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-slate-800 pb-1 mb-2">
@@ -204,7 +190,7 @@ def handle_obs_exp(params):
     </div>
 </body>
 </html>"""
-	
+
     return html, ("Content-Type", "text/html")
 
 

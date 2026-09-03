@@ -61,6 +61,37 @@ def load_pokemon():
                         continue
     return data
 
+def load_shiny_hunt():
+  if os.path.exists(SHINY_HUNT_FILE):
+    try:
+      with open(SHINY_HUNT_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+    except Exception:
+      pass
+  return {"target": "None", "count": 0, "method": "Random Encounters"}
+
+def save_shiny_hunt(data):
+  with open(SHINY_HUNT_FILE, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+
+
+
+
+def load_team():
+    if os.path.exists(TEAM_FILE):
+        try:
+            with open(TEAM_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+def save_team(team):
+    with open(TEAM_FILE, "w", encoding="utf-8") as f:
+        json.dump(team, f, indent=2)
+
+
+
 
 
 def calculate_matchups(types, gen="modern"):

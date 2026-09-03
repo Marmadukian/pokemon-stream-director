@@ -803,6 +803,8 @@ function getExpForLevel(growthRate, lvl) {
     }
 }
 
+let syncExpTimer = null;
+
 function calcExpGap() {
     const rateElem = document.getElementById('target-growth-rate');
     const rate = rateElem ? rateElem.value : 'medium-fast';
@@ -816,26 +818,48 @@ function calcExpGap() {
 
     if (!outElem) return;
 
+    let needed = 0;
+    let kills = 0;
+    let hours = 0;
+    let mins = 0;
+
     if (toLvl <= fromLvl) {
         outElem.innerText = "0 EXP";
         if (battlesElem) battlesElem.innerText = "0 kills";
         if (timeElem) timeElem.innerText = "~0m";
-        return;
+    } else {
+        const expFrom = getExpForLevel(rate, fromLvl);
+        const expTo = getExpForLevel(rate, toLvl);
+        needed = Math.max(0, expTo - expFrom);
+
+        outElem.innerText = needed.toLocaleString() + " EXP";
+
+        kills = Math.ceil(needed / Math.max(1, expPerKill));
+        const totalSeconds = kills * 15;
+        hours = Math.floor(totalSeconds / 3600);
+        mins = Math.ceil((totalSeconds % 3600) / 60);
+
+        if (battlesElem) battlesElem.innerText = kills.toLocaleString() + " kills";
+        if (timeElem) timeElem.innerText = (hours > 0) ? `~${hours}h ${mins}m` : `~${mins}m`;
     }
 
-    const expFrom = getExpForLevel(rate, fromLvl);
-    const expTo = getExpForLevel(rate, toLvl);
-    const needed = Math.max(0, expTo - expFrom);
+    // Debounce the fetch by 250ms so typing multiple digits doesn't spam the server
+    clearTimeout(syncExpTimer);
+    syncExpTimer = setTimeout(() => {
+        const query = new URLSearchParams({
+            action: 'sync_exp',
+            growth_rate: rate,
+            from: fromLvl.toString(),
+            to: toLvl.toString(),
+            exp: outElem.innerText,
+            per_kill: expPerKill.toString(),
+            kills: battlesElem ? battlesElem.innerText : `${kills.toLocaleString()} kills`,
+            time: timeElem ? timeElem.innerText : (hours > 0 ? `~${hours}h ${mins}m` : `~${mins}m`),
+            t: Date.now()
+        });
 
-    outElem.innerText = needed.toLocaleString() + " EXP";
-
-    const kills = Math.ceil(needed / Math.max(1, expPerKill));
-    const totalSeconds = kills * 15;
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.ceil((totalSeconds % 3600) / 60);
-
-    if (battlesElem) battlesElem.innerText = kills.toLocaleString() + " kills";
-    if (timeElem) timeElem.innerText = (hours > 0) ? `~${hours}h ${mins}m` : `~${mins}m`;
+        fetch(`/?${query.toString()}`).catch(() => {});
+    }, 250);
 }
 
 function syncCatchState(hp, lvl, status, ball, odds) {

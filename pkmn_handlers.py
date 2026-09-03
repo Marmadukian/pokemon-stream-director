@@ -409,33 +409,6 @@ def parse_location_encounters_by_game(location_area_data):
 
 # --- Persistence Helpers ---
 
-def load_shiny_hunt():
-  if os.path.exists(SHINY_HUNT_FILE):
-    try:
-      with open(SHINY_HUNT_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-    except Exception:
-      pass
-  return {"target": "None", "count": 0, "method": "Random Encounters"}
-
-def save_shiny_hunt(data):
-  with open(SHINY_HUNT_FILE, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2)
-
-def load_team():
-    if os.path.exists(TEAM_FILE):
-        try:
-            with open(TEAM_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-def save_team(team):
-    with open(TEAM_FILE, "w", encoding="utf-8") as f:
-        json.dump(team, f, indent=2)
-
-
 
 def save_active_target(data):
   with open(ACTIVE_TARGET_FILE, "w", encoding="utf-8") as f:
@@ -2178,33 +2151,31 @@ def handle_pokemon_remote(params=None):
                 </div>
             </div>
 
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm space-y-3">
-                <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
-                <div class="flex items-center justify-between text-slate-300 font-extrabold uppercase text-xs tracking-wider">
-                    <span>EXP Grind Calc</span>
-                    <span class="text-amber-400 font-mono font-black capitalize text-sm">{growth_rate_slug.replace('-', ' ')}</span>
+           <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm space-y-3">
+            <input type="hidden" id="target-growth-rate" value="{growth_rate_slug}" />
+            <div class="flex items-center justify-between text-slate-300 font-extrabold uppercase text-xs tracking-wider">
+                <span>EXP Grind Calc</span>
+                <span class="text-amber-400 font-mono font-black capitalize text-sm">{growth_rate_slug.replace('-', ' ')}</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-200 font-bold text-base">
+                <span>Lvl</span>
+                <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
+                <span>to</span>
+                <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
+                <span class="text-slate-500 font-black">=&gt;</span>
+                <span id="exp-output" class="font-mono font-black text-amber-400 text-sm ml-auto">46,656 EXP</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-800/80 text-slate-300">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-extrabold uppercase text-slate-400">Avg EXP/Kill:</span>
+                    <input id="exp-per-kill" type="number" min="1" value="120" oninput="calcExpGap()" class="w-16 h-9 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-amber-300 font-mono font-black text-sm focus:outline-none focus:border-amber-400" />
                 </div>
-                <div class="flex items-center gap-2 text-slate-200 font-bold text-base">
-                    <span>Lvl</span>
-                    <input id="exp-from" type="number" min="1" max="99" value="1" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
-                    <span>to</span>
-                    <input id="exp-to" type="number" min="2" max="100" value="36" oninput="calcExpGap()" class="w-16 h-10 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-white font-mono font-black text-base focus:outline-none focus:border-amber-400" />
-                    <span class="text-slate-500 font-black">=&gt;</span>
-                    <span id="exp-output" class="font-mono font-black text-amber-400 text-sm ml-auto">46,656 EXP</span>
-                </div>
-                <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-800/80 text-slate-300">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-extrabold uppercase text-slate-400">Avg EXP/Kill:</span>
-                        <input id="exp-per-kill" type="number" min="1" value="120" oninput="calcExpGap()" class="w-16 h-9 bg-slate-950 border border-slate-700 rounded-xl px-2 text-center text-amber-300 font-mono font-black text-sm focus:outline-none focus:border-amber-400" />
-                    </div>
-                    <div class="text-right font-mono text-xs">
-                        <span id="grind-battles" class="text-slate-200 font-bold">389 kills</span>
-                        <span class="text-slate-600 mx-1">•</span>
-                        <span id="grind-time" class="text-emerald-400 font-black">~1h 37m</span>
-                    </div>
+                <div class="text-right font-mono text-xs">
+                    <span id="grind-battles" class="text-slate-200 font-bold">389 kills</span>
+                    <span class="text-slate-600 mx-1">•</span>
+                    <span id="grind-time" class="text-emerald-400 font-black">~1h 37m</span>
                 </div>
             </div>
-
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm space-y-3.5">
                 <div class="flex items-center justify-between text-slate-300 font-black uppercase text-xs tracking-wider">
                     <span>Live Catch Odds</span>
