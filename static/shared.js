@@ -448,33 +448,28 @@ function syncCatchState(hp, lvl, status, ball, odds) {
 
 
 // 3. Load Selected Walkthrough Chapter into Server & DOM (In-Place)
-async function loadSelectedPartTasks() {
+function loadSelectedPartTasks() {
     const gameSelect = document.getElementById('walkthrough-game-select');
     const partSelect = document.getElementById('walkthrough-part-select');
-    
-    const chosenGame = gameSelect ? gameSelect.value : '';
-    const chosenPart = partSelect ? partSelect.value : '';
-    
-    if (!chosenGame || !chosenPart || !walkthroughData[chosenGame]) return;
+    if (!gameSelect || !partSelect) return;
 
-    const rawTaskList = walkthroughData[chosenGame][chosenPart];
-    if (!rawTaskList) return;
+    const game = gameSelect.value;
+    const part = partSelect.value;
+    if (!game || !part || !walkthroughData[game] || !walkthroughData[game][part]) return;
 
-    const encodedTasks = encodeURIComponent(rawTaskList).replace(/%20/g, '+');
-    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+    localStorage.setItem('selected_pokemon_part', part);
 
-    try {
-        const res = await fetch(`${endpoint}?set_tasks=${encodedTasks}`);
-        if (res.ok) {
-            const text = (await res.text()).trim();
-            // Guard against full HTML page dumps
-            if (text.includes('|') && !text.startsWith('<')) {
-                const [prog, name] = text.split('|');
-                updateTaskCardUI(prog, name);
-            }
-        }
-    } catch (err) {
-        console.error("Set tasks failed:", err);
+    // Grab the string directly from your object
+    const taskString = walkthroughData[game][part];
+    if (!taskString || typeof taskString !== 'string') return;
+
+    // Populate the input and submit the form
+    const input = document.querySelector('input[name="tasks"]');
+    if (input) {
+        input.value = taskString;
+        input.form.submit();
+    } else {
+        window.location.href = `/?action=set_tasks&tasks=${encodeURIComponent(taskString)}`;
     }
 }
 

@@ -7,8 +7,19 @@ from datetime import datetime
 from urllib.parse import quote_plus, unquote_plus
 import pokebase as pb
 from constants import *
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOCAL_APP = os.environ.get('LOCALAPPDATA')
+if not LOCAL_APP:
+    LOCAL_APP = os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
+
+BASE_DIR = os.path.join(LOCAL_APP, 'PokemonHuntingTool')
+TARGET_CACHE_DIR = os.path.join(BASE_DIR, 'target_cache')
+
+# Create the folder
+os.makedirs(TARGET_CACHE_DIR, exist_ok=True)
+
 
 # File storage locations
 TEAM_FILE = os.path.join(BASE_DIR, "team_list.json")
@@ -43,8 +54,6 @@ def set_current_game_version(version):
         print(f"[VERSION SAVE ERROR]: {e}")
 
 
-TARGET_CACHE_DIR = "target_cache"
-os.makedirs(TARGET_CACHE_DIR, exist_ok=True)
 
 
 def load_pokemon():
