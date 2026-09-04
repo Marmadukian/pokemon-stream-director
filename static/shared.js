@@ -26,6 +26,100 @@ const vgToGenMap = {
     'scarlet-violet': 'gen-9'
 };
 
+const MASTER_GAME_OPTIONS = [
+    { value: "modern", label: "Modern / All Games" },
+    { value: "red-blue", label: "Red / Blue" },
+    { value: "yellow", label: "Yellow" },
+    { value: "gold-silver", label: "Gold / Silver" },
+    { value: "crystal", label: "Crystal" },
+    { value: "ruby-sapphire", label: "Ruby / Sapphire" },
+    { value: "emerald", label: "Emerald" },
+    { value: "firered-leafgreen", label: "FireRed / LeafGreen" },
+    { value: "colosseum", label: "Colosseum / XD" },
+    { value: "diamond-pearl", label: "Diamond / Pearl" },
+    { value: "platinum", label: "Platinum" },
+    { value: "heartgold-soulsilver", label: "HeartGold / SoulSilver" },
+    { value: "black-white", label: "Black / White" },
+    { value: "black-2-white-2", label: "Black 2 / White 2" },
+    { value: "x-y", label: "X / Y" },
+    { value: "omega-ruby-alpha-sapphire", label: "OR / AS" },
+    { value: "sun-moon", label: "Sun / Moon" },
+    { value: "ultra-sun-ultra-moon", label: "US / UM" },
+    { value: "lets-go-pikachu-lets-go-eevee", label: "Let's Go Pikachu / Eevee" },
+    { value: "sword-shield", label: "Sword / Shield" },
+    { value: "brilliant-diamond-and-shining-pearl", label: "BD / SP" },
+    { value: "legends-arceus", label: "Legends: Arceus" },
+    { value: "scarlet-violet", label: "Scarlet / Violet" }
+];
+
+/**
+ * Helper to populate a select element safely while avoiding duplicate options.
+ */
+function fillSelectOptions(selectEl, optionsList, defaultPrefixOption = null) {
+    if (!selectEl) return;
+
+    // Save current selection if one was already active
+    const previousVal = selectEl.value;
+    selectEl.innerHTML = '';
+
+    if (defaultPrefixOption) {
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = defaultPrefixOption.value;
+        defaultOpt.textContent = defaultPrefixOption.label;
+        selectEl.appendChild(defaultOpt);
+    }
+
+    optionsList.forEach(optData => {
+        const opt = document.createElement('option');
+        opt.value = optData.value;
+        opt.textContent = optData.label;
+        selectEl.appendChild(opt);
+    });
+
+    if (previousVal) {
+        selectEl.value = previousVal;
+    }
+}
+
+/**
+ * Populates walkthrough-game-select, game-filter-select, and target-gen-select.
+ * Binds their change events directly to the central version coordinator.
+ */
+function populateAllVersionDropdowns() {
+    // 1. Walkthrough Game Select
+    const walkthroughSelect = document.getElementById('walkthrough-game-select');
+    fillSelectOptions(
+        walkthroughSelect,
+        MASTER_GAME_OPTIONS,
+        { value: "", label: "-- Choose Walkthrough Game --" }
+    );
+    if (walkthroughSelect) {
+        walkthroughSelect.onchange = onWalkthroughGameChange;
+    }
+
+    // 2. Game / Route Filter Select (Supports "ALL")
+    const routeFilterSelect = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
+    fillSelectOptions(
+        routeFilterSelect,
+        MASTER_GAME_OPTIONS,
+        { value: "ALL", label: "-- All Versions --" }
+    );
+    if (routeFilterSelect) {
+        routeFilterSelect.onchange = () => filterGameVersion();
+    }
+
+    // 3. Target Inspector Gen Select
+    const targetGenSelect = document.getElementById('target-gen-select');
+    fillSelectOptions(targetGenSelect, MASTER_GAME_OPTIONS);
+    if (targetGenSelect) {
+        targetGenSelect.onchange = () => {
+            if (typeof setGlobalGameVersion === 'function') {
+                setGlobalGameVersion(targetGenSelect.value);
+            }
+        };
+    }
+}
+
 const BASE_TYPE_CHART = {
     normal:   { rock: 0.5, ghost: 0, steel: 0.5 },
     fire:     { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
@@ -46,22 +140,41 @@ const BASE_TYPE_CHART = {
     dark:     { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
     fairy:    { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 }
 };
-
 const VERSION_TO_GEN_JS = {
-            "red": "generation-i", "blue": "generation-i", "yellow": "generation-i",
-            "gold": "generation-ii", "silver": "generation-ii", "crystal": "generation-ii",
-            "ruby": "generation-iii", "sapphire": "generation-iii", "emerald": "generation-iii",
-            "firered": "generation-iii", "leafgreen": "generation-iii", "colosseum": "generation-iii", "xd": "generation-iii",
-            "diamond": "generation-iv", "pearl": "generation-iv", "platinum": "generation-iv",
-            "heartgold": "generation-iv", "soulsilver": "generation-iv",
-            "black": "generation-v", "white": "generation-v", "black-2": "generation-v", "white-2": "generation-v",
-            "x": "generation-vi", "y": "generation-vi", "omega-ruby": "generation-vi", "alpha-sapphire": "generation-vi",
-            "sun": "generation-vii", "moon": "generation-vii", "ultra-sun": "generation-vii", "ultra-moon": "generation-vii",
-            "lets-go-pikachu": "generation-vii", "lets-go-eevee": "generation-vii",
-            "sword": "generation-viii", "shield": "generation-viii", "brilliant-diamond": "generation-viii", "shining-pearl": "generation-viii", "legends-arceus": "generation-viii",
-            "scarlet": "generation-ix", "violet": "generation-ix"
-        };
+    // Individual versions
+    "red": "generation-i", "blue": "generation-i", "yellow": "generation-i",
+    "gold": "generation-ii", "silver": "generation-ii", "crystal": "generation-ii",
+    "ruby": "generation-iii", "sapphire": "generation-iii", "emerald": "generation-iii",
+    "firered": "generation-iii", "leafgreen": "generation-iii", "colosseum": "generation-iii", "xd": "generation-iii",
+    "diamond": "generation-iv", "pearl": "generation-iv", "platinum": "generation-iv",
+    "heartgold": "generation-iv", "soulsilver": "generation-iv",
+    "black": "generation-v", "white": "generation-v", "black-2": "generation-v", "white-2": "generation-v",
+    "x": "generation-vi", "y": "generation-vi", "omega-ruby": "generation-vi", "alpha-sapphire": "generation-vi",
+    "sun": "generation-vii", "moon": "generation-vii", "ultra-sun": "generation-vii", "ultra-moon": "generation-vii",
+    "lets-go-pikachu": "generation-vii", "lets-go-eevee": "generation-vii",
+    "sword": "generation-viii", "shield": "generation-viii", "brilliant-diamond": "generation-viii", "shining-pearl": "generation-viii", "legends-arceus": "generation-viii",
+    "scarlet": "generation-ix", "violet": "generation-ix",
 
+    // MASTER_GAME_OPTIONS group keys
+    "red-blue": "generation-i",
+    "gold-silver": "generation-ii",
+    "gold-silver-crystal": "generation-ii",
+    "ruby-sapphire": "generation-iii",
+    "firered-leafgreen": "generation-iii",
+    "diamond-pearl": "generation-iv",
+    "diamond-pearl-platinum": "generation-iv",
+    "heartgold-soulsilver": "generation-iv",
+    "black-white": "generation-v",
+    "black-2-white-2": "generation-v",
+    "omega-ruby-alpha-sapphire": "generation-vi",
+    "sun-moon": "generation-vii",
+    "ultra-sun-ultra-moon": "generation-vii",
+    "lets-go-pikachu-lets-go-eevee": "generation-vii",
+    "sword-shield": "generation-viii",
+    "brilliant-diamond-and-shining-pearl": "generation-viii",
+    "scarlet-violet": "generation-ix",
+    "modern": "generation-ix"
+};
         const HISTORICAL_EV_OVERRIDES = {
             "roselia": { "generation-iii": "1 Sp. Atk" },
             "feebas": { "generation-iii": "1 Speed" },
@@ -229,6 +342,56 @@ const walkthroughData = {
   }
 };
 
+walkthroughData["gold-silver"] = walkthroughData["gold-silver-crystal"];
+walkthroughData["crystal"] = walkthroughData["gold-silver-crystal"];
+walkthroughData["diamond-pearl"] = walkthroughData["diamond-pearl-platinum"];
+walkthroughData["platinum"] = walkthroughData["diamond-pearl-platinum"];
+
+const VERSION_STORAGE_KEY = 'marmamon_active_version';
+
+function setGlobalGameVersion(newGame, skipBackendSync = false) {
+    if (!newGame) return;
+    const cleanGame = newGame.toLowerCase().trim();
+
+    // 1. Sync all select inputs across modules
+    const selectors = [
+        '#target-gen-select',
+        '#walkthrough-game-select',
+        '#global-game-select',
+        '#game-filter-select',
+        '#route-version-filter'
+    ];
+    selectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el && el.value.toLowerCase() !== cleanGame) {
+            el.value = cleanGame;
+        }
+    });
+
+    // 2. Persist to central storage
+    localStorage.setItem(VERSION_STORAGE_KEY, cleanGame);
+
+    // 3. Persist to Python backend
+    if (!skipBackendSync) {
+        const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
+        fetch(`${endpoint}?action=set_game_version&version=${encodeURIComponent(cleanGame)}`)
+            .catch(() => {});
+    }
+
+    // 4. Update all downstream views
+    if (typeof syncWalkthroughParts === 'function') syncWalkthroughParts(cleanGame);
+    if (typeof updateTargetGenView === 'function') updateTargetGenView(cleanGame);
+    if (typeof filterGameVersion === 'function') filterGameVersion(cleanGame);
+}
+
+/**
+ * Call on page boot to align UI with Python backend / localStorage
+ */
+function initGlobalVersion(backendVersion) {
+    const saved = backendVersion || localStorage.getItem(VERSION_STORAGE_KEY) || 'modern';
+    setGlobalGameVersion(saved, true);
+}
+
 // Updates local storage / track state when manually unchecked
 function onPokemonCheckboxChange(checkbox) {
     const rawName = checkbox.getAttribute('data-poke-name') || '';
@@ -372,19 +535,21 @@ function syncExpState() {
 // 2. Bulbapedia Game Selection -> Populate Part Dropdown
 function onWalkthroughGameChange() {
     const gameSelect = document.getElementById('walkthrough-game-select');
-    const partSelect = document.getElementById('walkthrough-part-select');
-    if (!gameSelect || !partSelect) return;
+    if (!gameSelect) return;
+    setGlobalGameVersion(gameSelect.value);
+}
 
-    const chosenGame = gameSelect.value;
+// Extracted so any game-change event can populate the parts list cleanly
+function syncWalkthroughParts(chosenGame) {
+    const partSelect = document.getElementById('walkthrough-part-select');
+    if (!partSelect) return;
+
     partSelect.innerHTML = '<option value="">-- Choose Chapter Part --</option>';
 
-    if (!chosenGame || !walkthroughData[chosenGame]) {
+    if (!chosenGame || typeof walkthroughData === 'undefined' || !walkthroughData[chosenGame]) {
         partSelect.disabled = true;
         return;
     }
-
-    // Persist game version preference
-    localStorage.setItem('selected_pokemon_version', chosenGame);
 
     const parts = walkthroughData[chosenGame];
     Object.keys(parts).forEach(partTitle => {
@@ -618,29 +783,176 @@ function filterPokemon() {
 }
 
 // --- 1. Version Filter & Persistence ---
-function filterGameVersion() {
+function filterGameVersion(forcedGame) {
     const select = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
-    if (!select) return;
-    const chosen = select.value.trim();
+    const chosenRaw = (forcedGame || (select ? select.value : null) || localStorage.getItem(VERSION_STORAGE_KEY) || 'ALL').trim();
+    const chosenLower = chosenRaw.toLowerCase();
 
-    // Persist selected version
-    localStorage.setItem('selected_pokemon_version', chosen);
+    // 1. Sync global state if triggered directly from an onchange event
+    if (!forcedGame && typeof setGlobalGameVersion === 'function' && chosenRaw !== 'ALL') {
+        setGlobalGameVersion(chosenLower);
+        return;
+    }
 
+    // 2. Break down grouped version keys (e.g. "red-blue" -> ["red", "blue"])
+    // Handles compound names like "firered-leafgreen" or "black-2-white-2"
+    let allowedVersions = [chosenLower];
+    if (chosenLower.includes('-')) {
+        allowedVersions = chosenLower.split('-');
+        // Re-combine hyphenated pairs (e.g. "omega-ruby-alpha-sapphire" -> "omega-ruby", "alpha-sapphire")
+        if (chosenLower === 'firered-leafgreen') allowedVersions = ['firered', 'leafgreen'];
+        else if (chosenLower === 'heartgold-soulsilver') allowedVersions = ['heartgold', 'soulsilver'];
+        else if (chosenLower === 'black-white') allowedVersions = ['black', 'white'];
+        else if (chosenLower === 'black-2-white-2') allowedVersions = ['black-2', 'white-2'];
+        else if (chosenLower === 'omega-ruby-alpha-sapphire') allowedVersions = ['omega-ruby', 'alpha-sapphire'];
+        else if (chosenLower === 'ultra-sun-ultra-moon') allowedVersions = ['ultra-sun', 'ultra-moon'];
+        else if (chosenLower === 'lets-go-pikachu-lets-go-eevee') allowedVersions = ['lets-go-pikachu', 'lets-go-eevee'];
+        else if (chosenLower === 'brilliant-diamond-and-shining-pearl') allowedVersions = ['brilliant-diamond', 'shining-pearl'];
+        else if (chosenLower === 'colosseum') allowedVersions = ['colosseum', 'xd'];
+    }
+
+    // 3. Filter cards
     const cards = document.querySelectorAll('.game-version-card');
     cards.forEach(card => {
-        const cardVer = (card.getAttribute('data-version') || '').trim();
-        if (chosen === 'ALL' || cardVer.toLowerCase() === chosen.toLowerCase()) {
+        const cardVer = (card.getAttribute('data-version') || '').trim().toLowerCase();
+
+        const isMatch = (chosenRaw === 'ALL' || chosenLower === 'modern') ||
+                        (cardVer === chosenLower) ||
+                        allowedVersions.includes(cardVer);
+
+        if (isMatch) {
             card.style.setProperty('display', 'block', 'important');
         } else {
             card.style.setProperty('display', 'none', 'important');
         }
     });
 
-    if (chosen !== 'ALL' && typeof updateTargetEVDisplay === 'function') {
-        updateTargetEVDisplay(chosen);
+    // 4. Update EV yield display if defined
+    if (chosenRaw !== 'ALL' && typeof updateTargetEVDisplay === 'function') {
+        updateTargetEVDisplay(chosenLower);
     }
 }
 
+/**
+ * Call this whenever a route's encounter cards are rendered.
+ * It hides or disables versions that have zero encounter data for the current route.
+ */
+function syncRouteFilterDropdownWithDOM() {
+    const filterSelect = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
+    if (!filterSelect) return;
+
+    // 1. Gather every unique data-version currently rendered on the page
+    const renderedCards = document.querySelectorAll('.game-version-card');
+    const presentVersions = new Set();
+    renderedCards.forEach(card => {
+        const v = (card.getAttribute('data-version') || '').trim().toLowerCase();
+        if (v) presentVersions.add(v);
+    });
+
+    // 2. Loop through the dropdown options and toggle visibility
+    Array.from(filterSelect.options).forEach(opt => {
+        const val = opt.value.toLowerCase();
+        if (val === 'all' || val === 'modern' || val === '') {
+            opt.style.display = 'block';
+            return;
+        }
+
+        // Check if this option (or any of its split versions) exists in the rendered cards
+        const parts = val.split('-');
+        const isPresent = presentVersions.has(val) || parts.some(p => presentVersions.has(p));
+
+        if (isPresent) {
+            opt.style.display = 'block';
+            opt.disabled = false;
+        } else {
+            opt.style.display = 'none';
+            opt.disabled = true;
+        }
+    });
+
+    // 3. If currently selected option is now hidden, fallback to "ALL"
+    if (filterSelect.selectedOptions[0] && filterSelect.selectedOptions[0].disabled) {
+        filterSelect.value = 'ALL';
+        filterGameVersion('ALL');
+    }
+}
+
+function syncPokemonFilterDropdownWithData() {
+    const targetSelect = document.getElementById('target-gen-select');
+    if (!targetSelect) return;
+
+    // 1. Gather all versions represented in moves or encounters
+    const validVersions = new Set();
+
+    // From rendered move rows (data-vg attribute)
+    const moveRows = document.querySelectorAll('.target-move-row');
+    moveRows.forEach(row => {
+        let vg = (row.getAttribute('data-vg') || '').toLowerCase().trim().replace(/_/g, '-');
+        if (vg) validVersions.add(vg);
+    });
+
+    // Also check activeTargetData.encounters if available in memory
+    if (typeof activeTargetData !== 'undefined' && activeTargetData && activeTargetData.encounters) {
+        Object.keys(activeTargetData.encounters).forEach(k => {
+            validVersions.add(k.toLowerCase().trim());
+        });
+    }
+
+    // If no moves or encounters found (empty page or minimal data), do nothing
+    if (validVersions.size === 0) return;
+
+    // 2. Filter target-gen-select options
+    Array.from(targetSelect.options).forEach(opt => {
+        const val = opt.value.toLowerCase().trim();
+
+        // Always allow modern/default
+        if (val === 'modern' || val === '') {
+            opt.style.display = 'block';
+            opt.disabled = false;
+            return;
+        }
+
+        // Check exact match or compound splits (e.g. red-blue -> red, blue)
+        const parts = val.split('-');
+        const isPresent = validVersions.has(val) || parts.some(p => validVersions.has(p));
+
+        if (isPresent) {
+            opt.style.display = 'block';
+            opt.disabled = false;
+        } else {
+            opt.style.display = 'none';
+            opt.disabled = true;
+        }
+    });
+
+    // 3. If currently selected option got pruned, fallback to 'modern'
+    if (targetSelect.selectedOptions[0] && targetSelect.selectedOptions[0].disabled) {
+        targetSelect.value = 'modern';
+        if (typeof updateTargetGenView === 'function') {
+            updateTargetGenView('modern');
+        }
+    }
+}
+
+function updateRouteDropdownForArea(areaSlug) {
+    const filterSelect = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
+    if (!filterSelect || !window.locationAreas) return;
+
+    const area = window.locationAreas.find(a => a.slug === areaSlug);
+    const validVersions = new Set(area ? (area.versions || []) : []);
+
+    Array.from(filterSelect.options).forEach(opt => {
+        const val = opt.value.toLowerCase();
+        if (val === 'all' || val === 'modern' || val === '') {
+            opt.style.display = 'block';
+            return;
+        }
+
+        const isMatch = validVersions.has(val) || val.split('-').some(v => validVersions.has(v));
+        opt.style.display = isMatch ? 'block' : 'none';
+        opt.disabled = !isMatch;
+    });
+}
 // Restore saved version filter on load
 document.addEventListener('DOMContentLoaded', () => {
     const select = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
@@ -959,11 +1271,12 @@ function calculateCatchOdds() {
             syncCatchState(hpPct, lvl, statusVal, ball, oddsStr);
         }
 // 7. Target View Renderer & Game/Gen Switcher
-function updateTargetGenView() {
+function updateTargetGenView(forcedGame) {
     if (typeof activeTargetData === 'undefined' || !activeTargetData || !activeTargetData.id) return;
 
+    // Use passed game, or read select, or read central storage
     const select = document.getElementById('target-gen-select');
-    const chosenGame = select ? select.value : 'modern';
+    const chosenGame = (forcedGame || (select ? select.value : null) || localStorage.getItem(VERSION_STORAGE_KEY) || 'modern').toLowerCase().trim();
     const chosenGen = (typeof vgToGenMap !== 'undefined' && vgToGenMap[chosenGame]) ? vgToGenMap[chosenGame] : 'gen-modern';
     const targetId = activeTargetData.id;
 
@@ -973,7 +1286,7 @@ function updateTargetGenView() {
         img.src = getSpriteForGen(targetId, chosenGen);
     }
 
-    // B. Resolve Active Types
+    // B. Resolve Active Types (Historical overrides)
     let activeTypes = [...(activeTargetData.types || [])];
     const pastTypesMap = activeTargetData.past_types || {};
     if (chosenGen === 'gen-1' && pastTypesMap['generation-i']) {
@@ -1050,7 +1363,7 @@ function updateTargetGenView() {
 
         let isMatch = (chosenGame === 'modern') ||
                       (chosenGame === 'colosseum' && (rowVg === 'colosseum' || rowVg === 'xd')) ||
-                      (chosenGame === 'brilliant-diamond-and-shining-pearl' && (rowVg === 'brilliant-diamond-and-shining-pearl' || rowVg === 'brilliant-diamond-shining-pearl')) ||
+                      (chosenGame === 'brilliant-diamond-and-shining-pearl' && rowVg === 'brilliant-diamond-and-shining-pearl') ||
                       (rowVg === chosenGame);
 
         if (isMatch) {
@@ -1081,7 +1394,7 @@ function updateTargetGenView() {
         emptyMsg.style.display = 'none';
     }
 
-    // E. Dynamic Wild Encounters List for Chosen Game (Deduplicated)
+    // E. Dynamic Wild Encounters List (Deduplicated)
     const encountersContainer = document.querySelector('#target-encounters-list') || document.querySelector('#target-encounters-container');
     const encountersBadge = document.querySelector('#target-encounters-version-badge');
     if (encountersBadge) encountersBadge.innerText = chosenGame;
@@ -1098,16 +1411,14 @@ function updateTargetGenView() {
             if (allEncounters[chosenGame]) {
                 rawMatches.push(...allEncounters[chosenGame]);
             }
-            // Check paired sub-versions (e.g., 'red-blue' -> 'red', 'blue')
-            const subVersions = chosenGame.split('-');
-            subVersions.forEach(v => {
+            // Check paired sub-versions (e.g. 'red-blue' -> 'red', 'blue')
+            chosenGame.split('-').forEach(v => {
                 if (allEncounters[v]) {
                     rawMatches.push(...allEncounters[v]);
                 }
             });
         }
 
-        // Deduplicate paired version tables (merges identical spots, takes best rate)
         const dedupMap = new Map();
         rawMatches.forEach(enc => {
             const loc = enc.location || 'Unknown Area';
@@ -1119,7 +1430,6 @@ function updateTargetGenView() {
             if (!dedupMap.has(dedupKey)) {
                 dedupMap.set(dedupKey, { ...enc });
             } else {
-                // If versions differ in rate (e.g. 15% in Red, 10% in Blue), display the max
                 const existing = dedupMap.get(dedupKey);
                 if ((enc.chance || 0) > (existing.chance || 0)) {
                     existing.chance = enc.chance;
@@ -1156,7 +1466,7 @@ function updateTargetGenView() {
         }
     }
 
-    // F. Render Base Stats (Gen 1 merged Special)
+    // F. Render Base Stats (Gen 1 Special split/merge handled)
     const rawStats = activeTargetData.stats || {};
     const statsContainer = document.getElementById('target-stats-container');
     const bstBadge = document.getElementById('target-bst-badge');
@@ -1203,11 +1513,6 @@ function updateTargetGenView() {
     if (typeof updateTargetEVDisplay === 'function') {
         updateTargetEVDisplay(chosenGame);
     }
-
-    // Persist chosen version to backend and localStorage
-    localStorage.setItem('selected_game_version', chosenGame);
-    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
-    fetch(`${endpoint}?action=set_game_version&version=${encodeURIComponent(chosenGame)}`).catch(() => {});
 }
 window.addEventListener('DOMContentLoaded', () => {
             const genSelect = document.getElementById('target-gen-select');

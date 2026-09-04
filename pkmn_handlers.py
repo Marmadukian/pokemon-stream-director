@@ -207,7 +207,7 @@ def generate_tools_dropdown_widget():
 
 def load_all_pokemon_names():
     global all_pkmn_collection
-    
+
     # 1. Load from local cache if exists
     if os.path.exists(PKMN_NAMES_CACHE):
         try:
@@ -226,9 +226,9 @@ def load_all_pokemon_names():
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             csv_text = response.read().decode('utf-8')
-        
+
         reader = csv.DictReader(io.StringIO(csv_text))
-        
+
         # 1. Group species count by evolution_chain_id
         chain_counts = {}
         species_entries = []
@@ -247,7 +247,7 @@ def load_all_pokemon_names():
         # Save to local cache file
         with open(PKMN_NAMES_CACHE, "w", encoding="utf-8") as f:
             json.dump(all_pkmn_collection, f, indent=2)
-            
+
         print(f"[POKEMON] Successfully built & cached {len(all_pkmn_collection)} species in 1 request.")
 
     except Exception as e:
@@ -417,7 +417,7 @@ def fetch_and_build_target_dict(pokemon_name_or_id):
     try:
         slug = str(pokemon_name_or_id).lower().strip()
         headers = {"User-Agent": "Mozilla/5.0"}
-        
+
         # 1. Fetch Main Pokemon JSON
         req = urllib.request.Request(f"https://pokeapi.co/api/v2/pokemon/{slug}", headers=headers)
         with urllib.request.urlopen(req) as resp:
@@ -767,7 +767,6 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
     elif action == "set_game_version":
         ver = params.get("version", "modern")
         set_current_game_version(ver)
-        # Return 200 OK or empty JSON
 
     elif action == "team_remove":
         idx = int(params.get("index", [-1])[0])
@@ -1632,6 +1631,10 @@ def handle_dashboard(params):
             if (typeof updateTargetGenView === 'function') updateTargetGenView();
             if (typeof calcExpGap === 'function') calcExpGap();
             initDashboardSectionToggles();
+            populateAllVersionDropdowns();
+            initGlobalVersion("{{ current_game_version }}");
+            syncRouteFilterDropdownWithDOM();
+            syncPokemonFilterDropdownWithData();
         }});
     </script>
     <style>
@@ -1839,6 +1842,8 @@ def handle_dashboard(params):
                 applyDashSecDisplay(secId, isVisible);
             }});
         }}
+        syncRouteFilterDropdownWithDOM();
+        syncPokemonFilterDropdownWithData();
     </script>
 </body>
 </html>"""
@@ -2448,6 +2453,10 @@ def handle_pokemon_remote(params=None):
             if (typeof updateTargetGenView === 'function') updateTargetGenView();
             if (typeof calcExpGap === 'function') calcExpGap();
             initSectionToggles();
+            populateAllVersionDropdowns();
+            initGlobalVersion("{{ current_game_version }}");
+            syncPokemonFilterDropdownWithData();
+            syncRouteFilterDropdownWithDOM();
         }});
     </script>
     <style>
