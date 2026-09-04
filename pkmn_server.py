@@ -21,84 +21,123 @@ def get_local_ip():
         return ip
     except Exception:
         return "127.0.0.1"
+STAT_MAP = {
+    "1": "hp",
+    "2": "attack",
+    "3": "defense",
+    "4": "special-attack",
+    "5": "special-defense",
+    "6": "speed"
+}
 
-def _run_ev_cache_loop():
-    import os
-    import time
-    global LOCAL_EV_YIELDS
+POKEMON_CSV_URL = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv"
+STATS_CSV_URL = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_stats.csv"
 
-    print("[DEX CACHE] Starting background National Dex prefetcher...")
+CURRENT_VERSION = "v1.0.0"
+REPO_OWNER = "Marmadukian"
+REPO_NAME = "pokemon-stream-director"
+
+def parse_semver(tag: str) -> tuple[int, ...]:
+    """Strips non-digits (like 'v') and parses major, minor, patch."""
+    numbers = re.findall(r"\d+", tag)
+    return tuple(map(int, numbers)) if numbers else (0,)
+
+def check_for_updates() -> dict:
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/latest"
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": f"{REPO_NAME}-UpdateCheck"}  # GitHub API requires a User-Agent
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=3) as response:
+            if response.status != 200:
+                return {"update_available": False}
+
+            data = json.loads(response.read().decode("utf-8"))
+            latest_tag = data.get("tag_name", "")
+            release_url = data.get("html_url", "")
+
+            # Compares tuples, e.g. (1, 1, 0) > (1, 0, 0)
+            if parse_semver(latest_tag) > parse_semver(CURRENT_VERSION):
+                return {
+                    "update_available": True,
+                    "latest_version": latest_tag,
+                    "release_url": release_url,
+                }
+
+    except Exception:
+        # Fails silently so offline play or rate-limits never stall the server
+        pass
+
+    return {"update_available": False}
+
+
+
+def _run_bulk_ev_sync():
+    print("[DEX CACHE] Starting bulk National Dex download from PokéAPI GitHub...")
 
     cache_dir = getattr(handlers, "TARGET_CACHE_DIR", "target_cache")
     os.makedirs(cache_dir, exist_ok=True)
 
-    # 1. Get all names locally if already loaded in memory, otherwise range 1..1025
-    species_list = []
-    pkmn_evos = getattr(handlers, "all_pkmn_collection", None) or getattr(handlers, "load_all_pokemon_names", lambda: {})()
-    if isinstance(pkmn_evos, dict) and pkmn_evos:
-        species_list = list(pkmn_evos.keys())
-    else:
-        species_list = [str(i) for i in range(1, 1026)]
+    try:
+        # 1. Fetch pokemon.csv (ID -> Slug mapping)
+        print("[DEX CACHE] Downloading pokemon list...")
+        req = urllib.request.Request(POKEMON_CSV_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            pokemon_csv_text = resp.read().decode("utf-8")
 
-    total = len(species_list)
-    dirty_count = 0
+        # 2. Fetch pokemon_stats.csv (EV effort values per stat)
+        print("[DEX CACHE] Downloading EV stats...")
+        req = urllib.request.Request(STATS_CSV_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            stats_csv_text = resp.read().decode("utf-8")
 
-    for idx, item in enumerate(species_list, 1):
-        slug = str(item).lower().strip().replace(" ", "-")
-        endpoint_slug = getattr(handlers, "resolve_pokemon_endpoint_slug", lambda x: x)(slug)
+        # 3. Parse pokemon identifiers
+        # id -> slug
+        id_to_slug = {}
+        reader = csv.DictReader(io.StringIO(pokemon_csv_text))
+        for row in reader:
+            pk_id = row.get("id")
+            slug = row.get("identifier")
+            if pk_id and slug:
+                id_to_slug[pk_id] = slug.lower().strip()
 
-        target_file = os.path.join(cache_dir, f"{slug}.json")
-        endpoint_file = os.path.join(cache_dir, f"{endpoint_slug}.json")
+        # 4. Parse effort yields grouped by pokemon_id
+        # pokemon_id -> { "attack": 2, ... }
+        ev_by_id = {}
+        reader = csv.DictReader(io.StringIO(stats_csv_text))
+        for row in reader:
+            pk_id = row.get("pokemon_id")
+            stat_id = row.get("stat_id")
+            effort = int(row.get("effort", 0))
 
-        # Check either file path
-        found_file = target_file if os.path.exists(target_file) else (endpoint_file if os.path.exists(endpoint_file) else None)
+            if effort > 0 and stat_id in STAT_MAP:
+                stat_name = STAT_MAP[stat_id]
+                if pk_id not in ev_by_id:
+                    ev_by_id[pk_id] = {}
+                ev_by_id[pk_id][stat_name] = effort
 
-        # 1. FAST CHECK: If either target file exists, read EVs instantly (0 network calls)
-        if found_file:
-            if slug not in handlers.LOCAL_EV_YIELDS:
-                try:
-                    import json
-                    with open(found_file, "r", encoding="utf-8") as f:
-                        cached_data = json.load(f)
-                        if "ev_yield" in cached_data and cached_data["ev_yield"]:
-                            handlers.LOCAL_EV_YIELDS[slug] = cached_data["ev_yield"]
-                            dirty_count += 1
-                except Exception:
-                    pass
-            continue
+        # 5. Populate LOCAL_EV_YIELDS in memory
+        updated_count = 0
+        for pk_id, ev_dict in ev_by_id.items():
+            slug = id_to_slug.get(pk_id)
+            if slug:
+                handlers.LOCAL_EV_YIELDS[slug] = ev_dict
+                updated_count += 1
 
-        # 2. MISS: Only hit PokéAPI if neither file exists
-        try:
-            print(f"[DEX CACHE] [{idx}/{total}] Downloading & baking {slug.title()}...")
-            data = handlers.fetch_complete_pokemon_info(slug)
+        # 6. Commit to disk through your existing save handler
+        if hasattr(handlers, "save_local_ev_yields"):
+            handlers.save_local_ev_yields(handlers.LOCAL_EV_YIELDS)
 
-            if data and "ev_yield" in data:
-                handlers.LOCAL_EV_YIELDS[slug] = data["ev_yield"]
-                dirty_count += 1
+        print(f"[DEX CACHE] Successfully bulk-loaded {updated_count} EV yields in seconds.")
 
-            time.sleep(0.6)
-
-            if dirty_count >= 10:
-                handlers.save_local_ev_yields(handlers.LOCAL_EV_YIELDS)
-                dirty_count = 0
-
-        except Exception as e:
-            err_str = str(e).lower()
-            if "429" in err_str or "too many requests" in err_str:
-                print(f"[DEX CACHE] Hit 429 rate limit at {slug}. Pausing 60s...")
-                time.sleep(60)
-            else:
-                print(f"[DEX CACHE ERROR] {slug}: {e}")
-                time.sleep(1.0)
-
-    if dirty_count > 0:
-        handlers.save_local_ev_yields(handlers.LOCAL_EV_YIELDS)
-
-    print("[DEX CACHE] Finished National Dex check.")
+    except Exception as e:
+        print(f"[DEX CACHE ERROR] Bulk sync failed: {e}")
 
 def start_ev_cache_worker():
-    """Starts the EV cache worker in a daemon thread so it runs in the background."""
-    worker = threading.Thread(target=_run_ev_cache_loop, daemon=True)
+    """Starts the bulk EV loader in a daemon thread so it runs in the background."""
+    worker = threading.Thread(target=_run_bulk_ev_sync, daemon=True)
     worker.start()
 
 
@@ -171,6 +210,8 @@ if __name__ == "__main__":
     handlers.init()
     handlers.LOCAL_EV_YIELDS = handlers.load_local_ev_yields()
     
+    result = check_for_updates()
+
     start_ev_cache_worker()
 
     ip = get_local_ip()
@@ -179,6 +220,10 @@ if __name__ == "__main__":
     print(f"PKMN Backend tool Running on http://{ip}:{PORT}")
     print("Active Endpoints:")
     for endpoint in handlers.ROUTES.keys():
-        print(f"  - {endpoint}")
+        print(f"  - http://{ip}:{PORT}{endpoint}")
     print("=====================================================")
+    if result.get("update_available"):
+        print(f"*****\n********\n*********\n************Update available: {result['latest_version']} -> {result['release_url']}")
+    else:
+        print("Server up to date.")
     server.serve_forever()

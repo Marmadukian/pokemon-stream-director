@@ -790,21 +790,13 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
             if route_data:
                 save_active_route(route_data)
 
-    elif action == "set_tasks" or set_tasks_raw:
+    elif action == "set_tasks":
         raw = set_tasks_raw if set_tasks_raw else params.get("tasks", [""])[0]
         parsed = [t.strip() for t in unquote_plus(raw).split(",") if t.strip()]
         if parsed:
             save_tasks_state({"tasks": parsed, "index": 0})
-        
-        if set_tasks_raw:
-            t_state = load_tasks_state()
-            tasks = t_state.get("tasks", [])
-            total = len(tasks)
-            active_name = tasks[0] if tasks else "None"
-            progress_str = f"TASK 1 OF {total}" if total > 0 else "0 TASKS"
-            return f"{progress_str}|{active_name}"
 
-    elif action == "task_nav" or task_nav:
+    elif action == "task_nav":
         direction = task_nav if task_nav else params.get("step", [""])[0]
         t_state = load_tasks_state()
         if t_state.get("tasks"):
@@ -813,14 +805,6 @@ def handle_common_action(action, params, self=None, set_tasks_raw=None, task_nav
             elif direction == "prev":
                 t_state["index"] = max(t_state["index"] - 1, 0)
             save_tasks_state(t_state)
-        
-        if task_nav:
-            idx = t_state.get("index", 0)
-            tasks = t_state.get("tasks", [])
-            total = len(tasks)
-            active_name = tasks[idx] if (tasks and 0 <= idx < total) else "None"
-            progress_str = f"TASK {idx + 1} OF {total}" if total > 0 else "0 TASKS"
-            return f"{progress_str}|{active_name}"
 
     elif action == "dec_counter":
         p_name = unquote_plus(params.get("name", [""])[0])
@@ -1802,8 +1786,8 @@ def handle_dashboard(params):
                 </div>
                 <div id="task-name-display" class="text-sm font-bold text-white mb-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">{active_task}</div>
                 <div class="flex gap-2 mb-3">
-                    <button type="button" onclick="navigateTask('prev')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-center text-xs font-bold rounded-lg transition active:scale-95 text-slate-200">◀ Prev</button>
-                    <button type="button" onclick="navigateTask('next')" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-center text-xs font-bold rounded-lg transition active:scale-95 text-white">Next ▶</button>
+                    <button type="button" onclick="navigateTask('prev')" class="flex-1 h-12 bg-slate-800 hover:bg-slate-700 text-center text-sm font-black rounded-xl transition active:scale-95 text-slate-200">◀ Prev</button>
+                    <button type="button" onclick="navigateTask('next')" class="flex-1 h-12 bg-indigo-600 hover:bg-indigo-500 text-center text-sm font-black rounded-xl transition active:scale-95 text-white">Next ▶</button>
                 </div>
                 <form action="/" method="GET" class="space-y-1.5">
                     <input type="hidden" name="action" value="set_tasks" />

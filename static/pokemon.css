@@ -1,0 +1,157 @@
+/* =========================================================
+   1. BASE VARIABLES & DEFAULTS
+   ========================================================= */
+:root {
+  --bg-card: rgba(15, 23, 42, 0.92);
+  --border-card: rgba(255, 255, 255, 0.15);
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-muted: rgba(59, 130, 246, 0.15);
+  --warn-bg: rgba(0, 0, 0, 0.6);
+  --warn-border: #f59e0b;
+  --warn-text: #fbbf24;
+  --btn-off-bg: #0f172a;
+  --btn-off-border: #334155;
+  --btn-off-text: #64748b;
+}
+
+/* =========================================================
+   2. CARTRIDGE PALETTES (GEN 1 - 10)
+   ========================================================= */
+/* Gen 1 */
+[data-game="red"]             { --accent: #dc2626; --border-card: rgba(239, 68, 68, 0.35);  --accent-muted: rgba(220, 38, 38, 0.2); }
+[data-game="blue"]            { --accent: #2563eb; --border-card: rgba(59, 130, 246, 0.35); --accent-muted: rgba(37, 99, 235, 0.2); }
+[data-game="yellow"]          { --accent: #eab308; --border-card: rgba(250, 204, 21, 0.35); --accent-muted: rgba(234, 179, 8, 0.2); }
+
+/* Gen 2 */
+[data-game="gold"]            { --accent: #d97706; --border-card: rgba(251, 191, 36, 0.35); --accent-muted: rgba(217, 119, 6, 0.2); }
+[data-game="silver"]          { --accent: #94a3b8; --border-card: rgba(203, 213, 225, 0.35);--accent-muted: rgba(148, 163, 184, 0.2); }
+[data-game="crystal"]         { --accent: #06b6d4; --border-card: rgba(34, 211, 238, 0.35);  --accent-muted: rgba(6, 182, 212, 0.2); }
+
+/* Gen 3 */
+[data-game="ruby"]            { --accent: #b91c1c; --border-card: rgba(248, 113, 113, 0.35);--accent-muted: rgba(185, 28, 28, 0.2); }
+[data-game="sapphire"]        { --accent: #1d4ed8; --border-card: rgba(96, 165, 250, 0.35); --accent-muted: rgba(29, 78, 216, 0.2); }
+[data-game="emerald"]         { --accent: #059669; --border-card: rgba(52, 211, 153, 0.35); --accent-muted: rgba(5, 150, 105, 0.2); }
+[data-game="firered"]         { --accent: #ea580c; --border-card: rgba(251, 146, 60, 0.35); --accent-muted: rgba(234, 88, 12, 0.2); }
+[data-game="leafgreen"]       { --accent: #16a34a; --border-card: rgba(74, 222, 128, 0.35); --accent-muted: rgba(220, 38, 38, 0.2); }
+
+/* Gen 4 */
+[data-game="diamond"]         { --accent: #38bdf8; --border-card: rgba(125, 211, 252, 0.35);--accent-muted: rgba(56, 189, 248, 0.2); }
+[data-game="pearl"]           { --accent: #f472b6; --border-card: rgba(249, 168, 212, 0.35);--accent-muted: rgba(244, 114, 182, 0.2); }
+[data-game="platinum"]        { --accent: #64748b; --border-card: rgba(148, 163, 184, 0.35);--accent-muted: rgba(100, 116, 139, 0.2); }
+[data-game="heartgold"]       { --accent: #f59e0b; --border-card: rgba(252, 211, 77, 0.35); --accent-muted: rgba(245, 158, 11, 0.2); }
+[data-game="soulsilver"]      { --accent: #a1a1aa; --border-card: rgba(228, 228, 231, 0.35);--accent-muted: rgba(161, 161, 170, 0.2); }
+
+/* Gen 5 */
+[data-game="black"]           { --accent: #525252; --border-card: rgba(115, 115, 115, 0.35);--accent-muted: rgba(38, 38, 38, 0.35); }
+[data-game="white"]           { --accent: #f8fafc; --border-card: rgba(255, 255, 255, 0.45);--accent-muted: rgba(248, 250, 252, 0.15); }
+[data-game="black2"]          { --accent: #0ea5e9; --border-card: rgba(56, 189, 248, 0.35); --accent-muted: rgba(14, 165, 233, 0.2); }
+[data-game="white2"]          { --accent: #f97316; --border-card: rgba(251, 146, 60, 0.35); --accent-muted: rgba(249, 115, 22, 0.2); }
+
+/* Gen 6 */
+[data-game="x"]               { --accent: #0284c7; --border-card: rgba(56, 189, 248, 0.35); --accent-muted: rgba(2, 132, 199, 0.2); }
+[data-game="y"]               { --accent: #e11d48; --border-card: rgba(251, 113, 133, 0.35);--accent-muted: rgba(225, 29, 72, 0.2); }
+[data-game="omegaruby"]       { --accent: #dc2626; --border-card: rgba(248, 113, 113, 0.35);--accent-muted: rgba(220, 38, 38, 0.2); }
+[data-game="alphasapphire"]   { --accent: #2563eb; --border-card: rgba(96, 165, 250, 0.35); --accent-muted: rgba(37, 99, 235, 0.2); }
+
+/* Gen 7 */
+[data-game="sun"]             { --accent: #f59e0b; --border-card: rgba(251, 191, 36, 0.35); --accent-muted: rgba(245, 158, 11, 0.2); }
+[data-game="moon"]            { --accent: #6366f1; --border-card: rgba(129, 140, 248, 0.35);--accent-muted: rgba(99, 102, 241, 0.2); }
+[data-game="ultrasun"]        { --accent: #ea580c; --border-card: rgba(249, 115, 22, 0.35); --accent-muted: rgba(234, 88, 12, 0.2); }
+[data-game="ultramoon"]       { --accent: #4f46e5; --border-card: rgba(99, 102, 241, 0.35); --accent-muted: rgba(79, 70, 229, 0.2); }
+[data-game="letsgopikachu"]   { --accent: #eab308; --border-card: rgba(250, 204, 21, 0.35); --accent-muted: rgba(234, 179, 8, 0.2); }
+[data-game="letsgoeevee"]      { --accent: #b45309; --border-card: rgba(217, 119, 6, 0.35);  --accent-muted: rgba(180, 83, 9, 0.2); }
+
+/* Gen 8 */
+[data-game="sword"]           { --accent: #0ea5e9; --border-card: rgba(56, 189, 248, 0.35); --accent-muted: rgba(14, 165, 233, 0.2); }
+[data-game="shield"]          { --accent: #e11d48; --border-card: rgba(251, 113, 133, 0.35);--accent-muted: rgba(225, 29, 72, 0.2); }
+[data-game="brilliantdiamond"]{ --accent: #0284c7; --border-card: rgba(56, 189, 248, 0.35); --accent-muted: rgba(2, 132, 199, 0.2); }
+[data-game="shiningpearl"]    { --accent: #db2777; --border-card: rgba(244, 114, 182, 0.35);--accent-muted: rgba(219, 39, 119, 0.2); }
+[data-game="legendsarceus"]   { --accent: #64748b; --border-card: rgba(148, 163, 184, 0.35);--accent-muted: rgba(30, 41, 59, 0.25); }
+
+/* Gen 9 */
+[data-game="scarlet"]         { --accent: #dc2626; --border-card: rgba(239, 68, 68, 0.35);  --accent-muted: rgba(220, 38, 38, 0.2); }
+[data-game="violet"]          { --accent: #7c3aed; --border-card: rgba(167, 139, 250, 0.35);--accent-muted: rgba(124, 58, 237, 0.2); }
+[data-game="legendsza"]       { --accent: #10b981; --border-card: rgba(52, 211, 153, 0.35); --accent-muted: rgba(16, 185, 129, 0.2); }
+
+/* Gen 10 */
+[data-game="winds"]           { --accent: #2dd4bf; --border-card: rgba(94, 234, 212, 0.35); --accent-muted: rgba(45, 212, 191, 0.2); }
+[data-game="waves"]           { --accent: #0284c7; --border-card: rgba(56, 189, 248, 0.35); --accent-muted: rgba(2, 132, 199, 0.2); }
+
+/* =========================================================
+   3. MANUAL THEME OVERRIDES
+   ========================================================= */
+[data-theme="pokedex"] {
+  --bg-card: #18181b;
+  --border-card: #dc2626;
+  --accent: #ef4444;
+  --accent-muted: rgba(239, 68, 68, 0.2);
+}
+[data-theme="dmg"] {
+  --bg-card: #8b956d;
+  --border-card: #0f380f;
+  --text-main: #0f380f;
+  --text-muted: #306230;
+  --accent: #0f380f;
+  --accent-muted: rgba(15, 56, 15, 0.2);
+  --warn-bg: #9bbc0f;
+  --warn-border: #0f380f;
+  --warn-text: #0f380f;
+}
+[data-theme="slate"] {
+  --bg-card: #0f172a;
+  --border-card: #334155;
+  --accent: #64748b;
+  --accent-muted: rgba(100, 116, 139, 0.2);
+}
+
+/* =========================================================
+   4. LAYOUT & UTILITY CLASSES
+   ========================================================= */
+body {
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
+  display: flex;
+  gap: 10px;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ev-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 12px;
+  width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  color: var(--text-main);
+}
+
+.ev-warning {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--warn-text);
+  background: var(--warn-bg);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid var(--warn-border);
+  display: block;
+}
+
+.dash-toggle-btn-off,
+.toggle-btn-off {
+  opacity: 0.35 !important;
+  border-color: var(--btn-off-border) !important;
+  color: var(--btn-off-text) !important;
+  background: var(--btn-off-bg) !important;
+}

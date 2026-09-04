@@ -231,9 +231,11 @@ const walkthroughData = {
 
 // Updates local storage / track state when manually unchecked
 function onPokemonCheckboxChange(checkbox) {
-    const name = checkbox.getAttribute('data-poke-name');
+    const rawName = checkbox.getAttribute('data-poke-name') || '';
+    const name = rawName.split('(')[0].trim();
+    if (!name) return;
+
     let deselected = JSON.parse(localStorage.getItem('deselected_pokemon') || '[]');
-    
     if (!checkbox.checked) {
         if (!deselected.includes(name)) deselected.push(name);
     } else {
@@ -299,10 +301,12 @@ function trackAllRoutePokemon(e) {
     }
 
     // 1. Gather all candidates
-    const checkedBoxes = activeContainer.querySelectorAll('.route-poke-checkbox:checked');
-    if (checkedBoxes.length > 0) {
+    const allBoxes = activeContainer.querySelectorAll('.route-poke-checkbox');
+    if (allBoxes.length > 0) {
+        const checkedBoxes = activeContainer.querySelectorAll('.route-poke-checkbox:checked');
         checkedBoxes.forEach(cb => registerCandidate(cb));
     } else {
+        // Only use text/attribute fallback if no checkboxes exist in this view
         activeContainer.querySelectorAll('.poke-name, [data-poke-name]').forEach(el => registerCandidate(el));
     }
 
@@ -475,20 +479,14 @@ function loadSelectedPartTasks() {
 
 // 4. Step Prev / Next (In-Place)
 async function navigateTask(direction) {
-    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
     try {
-        const res = await fetch(`${endpoint}?task_nav=${encodeURIComponent(direction)}`);
-        if (res.ok) {
-            const text = (await res.text()).trim();
-            // Guard against full HTML page dumps
-            if (text.includes('|') && !text.startsWith('<')) {
-                const [prog, name] = text.split('|');
-                updateTaskCardUI(prog, name);
-            }
-        }
+        const res = await fetch(`/?action=task_nav&step=${direction}`);
+        const data = await res.json(); // if your endpoint returns the new state
+        // OR simply reload only if needed, but the Python guard above will prevent the wipe regardless!
     } catch (err) {
-        console.error("Task nav failed:", err);
+        console.error(err);
     }
+    window.location.href = window.location.pathname.includes('/remote') ? '/remote' : '/';
 }
 
 // 5. Restore Saved Version on Page Load
@@ -503,6 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
             onWalkthroughGameChange();
         }
     }
+    const deselected = JSON.parse(localStorage.getItem('deselected_pokemon') || '[]');
+document.querySelectorAll('.route-poke-checkbox').forEach(cb => {
+    const name = (cb.getAttribute('data-poke-name') || '').split('(')[0].trim();
+    if (deselected.includes(name)) {
+        cb.checked = false;
+    }
+});
 });       function updateTargetEVDisplay(selectedVer) {
             const evDisplay = document.getElementById('target-ev-yield-display');
             if (!evDisplay) return;
