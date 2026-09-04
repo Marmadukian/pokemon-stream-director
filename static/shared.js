@@ -781,7 +781,29 @@ function filterPokemon() {
     });
     box.style.display = 'block';
 }
+/**
+ * Checks whether an area's versions array matches the active global version.
+ */
+function isAreaInVersion(areaVersions, chosenGame) {
+    if (!chosenGame || chosenGame === 'modern' || chosenGame === 'all') {
+        return true;
+    }
+    if (!areaVersions || !Array.isArray(areaVersions) || areaVersions.length === 0) {
+        return true; // Fallback: don't hide areas if they have no version metadata
+    }
 
+    const cleanChosen = chosenGame.toLowerCase().trim();
+    const areaLower = areaVersions.map(v => v.toLowerCase().trim());
+
+    // 1. Direct match (e.g., area has "platinum" and chosen is "platinum")
+    if (areaLower.includes(cleanChosen)) {
+        return true;
+    }
+
+    // 2. Compound match (e.g., chosen is "diamond-pearl", check "diamond" or "pearl")
+    const subVersions = cleanChosen.split('-');
+    return subVersions.some(sub => areaLower.includes(sub));
+}
 // --- 1. Version Filter & Persistence ---
 function filterGameVersion(forcedGame) {
     const select = document.getElementById('game-filter-select') || document.getElementById('route-version-filter');
@@ -983,51 +1005,51 @@ function cleanStr(str) {
 
 // --- 2. Location Search Autocomplete ---
 function filterLocations() {
-    const input = document.getElementById('location-input') || document.getElementById('route-search-input');
-    const box = document.getElementById('location-results') || document.getElementById('route-live-results');
-    const locationsList = (typeof locationAreas !== 'undefined') ? locationAreas : ((typeof allLocations !== 'undefined') ? allLocations : []);
+    const input = document.getElementById('location-input');
+    const resultsContainer = document.getElementById('location-results');
+    if (!input || !resultsContainer || typeof locationAreas === 'undefined') return;
 
-    if (!input || !box || locationsList.length === 0) return;
-
-    const val = input.value.toLowerCase().trim();
-    if (!val || val.length < 2) {
-        box.style.display = 'none';
-        box.innerHTML = '';
+    const query = input.value.toLowerCase().trim();
+    if (!query) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = '';
         return;
     }
 
-    const tokens = val.split(/\s+/).filter(Boolean);
-    const matches = locationsList.filter(loc => {
-        const name = (loc.name || '').toLowerCase();
-        const slug = (loc.slug || '').toLowerCase();
-        return tokens.every(token => name.includes(token) || slug.includes(token));
-    }).slice(0, 10);
+    // Read the active game version from central state / storage
+    const activeVersion = (localStorage.getItem(VERSION_STORAGE_KEY) || 'modern').toLowerCase().trim();
 
+    // 1. Filter by query AND compatible game version
+    const matches = locationAreas.filter(area => {
+        const matchesName = area.name.toLowerCase().includes(query) || area.slug.toLowerCase().includes(query);
+        if (!matchesName) return false;
+
+        return isAreaInVersion(area.versions, activeVersion);
+    }).slice(0, 15); // Cap to 15 suggestions
+
+    // 2. Render filtered list
     if (matches.length === 0) {
-        box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400 italic">No locations found.</div>';
-        box.style.display = 'block';
+        resultsContainer.innerHTML = `
+            <div class="px-3 py-2 text-xs text-slate-500 italic">
+                No matching locations in ${activeVersion === 'modern' ? 'any game' : activeVersion}.
+            </div>`;
+        resultsContainer.style.display = 'block';
+        if (typeof anchorDropdown === 'function') anchorDropdown('location-input', 'location-results');
         return;
     }
 
-    box.innerHTML = '';
-    const endpoint = window.location.pathname.includes('/remote') ? '/remote' : '/';
-    const currentVer = localStorage.getItem('selected_pokemon_version') || 'ALL';
+    resultsContainer.innerHTML = matches.map(area => `
+        <div class="px-3 py-1.5 hover:bg-slate-700/60 cursor-pointer text-xs text-slate-200 border-b border-slate-700/30 flex justify-between items-center"
+             onclick="selectLocation('${area.slug}')">
+            <span>${area.name}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${area.versions.length} ver</span>
+        </div>
+    `).join('');
 
-    matches.forEach(loc => {
-        const item = document.createElement('div');
-        item.className = "px-4 py-2 hover:bg-slate-700/80 flex items-center justify-between border-b border-slate-700/40 last:border-none transition";
-        item.innerHTML = `
-            <div>
-                <span class="font-bold text-slate-200 text-xs">${loc.name}</span>
-                <span class="font-mono text-[10px] text-indigo-400 block">${loc.slug}</span>
-            </div>
-            <div class="flex gap-1.5">
-                <a href="${endpoint}?action=set_location&slug=${encodeURIComponent(loc.slug)}&ver=${encodeURIComponent(currentVer)}" onclick="document.getElementById('location-input').value='';" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2 py-0.5 rounded">View Route</a>
-            </div>
-        `;
-        box.appendChild(item);
-    });
-    box.style.display = 'block';
+    resultsContainer.style.display = 'block';
+    if (typeof anchorDropdown === 'function') {
+        anchorDropdown('location-input', 'location-results');
+    }
 }
 
 
