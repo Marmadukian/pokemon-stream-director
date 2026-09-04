@@ -43,12 +43,15 @@ Choose whichever setup option fits your system:
 
 ### Option 2: Portable ZIP (Zero-Install / For Smart App Control)
 If Windows 11 Smart App Control (SAC) blocks the installer, use this standalone version:
-
 1. Download **`Pokemon Stream Director v1.0.zip`**.
 2. **Important:** Right-click the `.zip` file -> select **Properties** -> check **Unblock** at the bottom -> click **Apply**.
 3. Extract the folder anywhere (e.g., Desktop or Downloads).
 4. Run **`RunServer.bat`** to verify dependencies and start the local server.
 
+1. Download **`Pokemon Stream Director v1.0.zip`**.
+2. **Important:** Right-click the `.zip` file -> select **Properties** -> check **Unblock** at the bottom -> click **Apply**.
+3. Extract the folder anywhere (e.g., Desktop or Downloads).
+4. Run **`RunServer.bat`** to verify dependencies and start the local server.
 ---
 
 ## Automation & Stream Deck API
