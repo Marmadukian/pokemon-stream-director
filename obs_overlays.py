@@ -75,6 +75,7 @@ def handle_obs_catch_rate(params):
     
     return html, ("Content-Type", "text/html")
 
+
 def handle_obs_hub(params):
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -85,48 +86,84 @@ def handle_obs_hub(params):
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-6">
-    
-    <div class="max-w-2xl w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-        <div class="text-center mb-8">
+
+    <div class="max-w-2xl w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-8">
+        <div class="text-center">
             <h1 class="text-2xl font-black uppercase tracking-wider text-emerald-400 mb-2">OBS Overlays Hub</h1>
-            <p class="text-slate-400 text-sm">Select an overlay to view it in this window.</p>
+            <p class="text-slate-400 text-sm">Select an overlay to view it, or configure custom version overrides per endpoint.</p>
         </div>
-        
+
+        <!-- Global / Override Settings Card -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wide">Global OBS Game Override</label>
+                    <p class="text-[11px] text-slate-500">Forces a locked game context across overlays, or follows global state.</p>
+                </div>
+                <select id="obs-global-version-select" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-medium">
+                    <option value="global">Follow Global Active Version</option>
+                    <option value="modern">Modern / All Games</option>
+                    <option value="red-blue">Red / Blue</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="gold-silver">Gold / Silver</option>
+                    <option value="crystal">Crystal</option>
+                    <option value="ruby-sapphire">Ruby / Sapphire</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="firered-leafgreen">FireRed / LeafGreen</option>
+                    <option value="colosseum">Colosseum / XD</option>
+                    <option value="diamond-pearl">Diamond / Pearl</option>
+                    <option value="platinum">Platinum</option>
+                    <option value="heartgold-soulsilver">HeartGold / SoulSilver</option>
+                    <option value="black-white">Black / White</option>
+                    <option value="black-2-white-2">Black 2 / White 2</option>
+                    <option value="x-y">X / Y</option>
+                    <option value="omega-ruby-alpha-sapphire">OR / AS</option>
+                    <option value="sun-moon">Sun / Moon</option>
+                    <option value="ultra-sun-ultra-moon">US / UM</option>
+                    <option value="lets-go-pikachu-lets-go-eevee">Let's Go Pikachu / Eevee</option>
+                    <option value="sword-shield">Sword / Shield</option>
+                    <option value="brilliant-diamond-and-shining-pearl">BD / SP</option>
+                    <option value="legends-arceus">Legends: Arceus</option>
+                    <option value="scarlet-violet">Scarlet / Violet</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Overlay Buttons Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <a href="/obs/target" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">🎯</span>
                 <span>Active Target</span>
             </a>
-            
+
             <a href="/obs/team" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">🛡️</span>
                 <span>Party Team</span>
             </a>
-            
+
             <a href="/obs/tocatch" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-sky-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">📋</span>
                 <span>To Catch List</span>
             </a>
-            
+
             <a href="/obs/shiny" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">✨</span>
                 <span>Shiny Hunt</span>
             </a>
-            
+
             <a href="/obs/evs" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-rose-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">💪</span>
                 <span>EV Tracker</span>
             </a>
-            
+
             <a href="/obs/catchrate" class="flex flex-col items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-purple-500 text-slate-200 hover:text-white py-5 rounded-2xl font-bold transition-all shadow-lg active:scale-95">
                 <span class="text-2xl mb-1">🧮</span>
                 <span>Catch Odds</span>
             </a>
         </div>
-        
+
         <!-- Navigation Footer -->
-        <div class="mt-8 text-center pt-6 border-t border-slate-800/80">
+        <div class="text-center pt-4 border-t border-slate-800/80">
             <a href="/" class="text-slate-500 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors px-4 py-2">
                 ← Back to Dashboard
             </a>
@@ -139,9 +176,8 @@ def handle_obs_hub(params):
 
 </body>
 </html>"""
-    
-    return html, ("Content-Type", "text/html")
 
+    return html, ("Content-Type", "text/html")
 
 def handle_obs_exp(params):
     state = load_exp_state()
